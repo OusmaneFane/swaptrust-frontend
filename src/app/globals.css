@@ -1,0 +1,39 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-app text-ink font-body antialiased;
+    -webkit-tap-highlight-color: transparent;
+  }
+  h1,
+  h2,
+  h3 {
+    @apply font-display text-ink;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply rounded-card border border-line/80 bg-card/95 shadow-card backdrop-blur-card;
+  }
+  .btn-primary {
+    @apply rounded-pill bg-gradient-to-r from-primary to-primary-dark px-6 py-3 font-semibold text-white
+           shadow-md shadow-primary/25 transition-all duration-200 hover:shadow-lg hover:shadow-primary/30
+           active:scale-95;
+  }
+  .input-field {
+    @apply w-full rounded-input border border-line bg-card px-4 py-3 text-ink shadow-sm
+           placeholder:text-ink-faint transition-colors duration-200
+           focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15;
+  }
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+}
