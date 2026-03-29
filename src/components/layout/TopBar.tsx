@@ -27,12 +27,20 @@ export function TopBar({ className }: { className?: string }) {
         Swap<span className="text-primary">Trust</span>
       </Link>
       <div className="flex items-center gap-3">
-        {user?.isAdmin ? (
+        {user?.role === 'ADMIN' ? (
           <Link
             href="/admin"
             className="hidden rounded-pill border border-amber-500/40 bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-800 md:inline"
           >
             Admin
+          </Link>
+        ) : null}
+        {user?.role === 'OPERATOR' ? (
+          <Link
+            href="/operateur"
+            className="hidden rounded-pill border border-primary/40 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary md:inline"
+          >
+            Opérateur
           </Link>
         ) : null}
         <Link

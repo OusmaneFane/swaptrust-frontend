@@ -1,31 +1,73 @@
 import type { User } from './user';
 
-/** Filtre GET /transactions — `direction` côté API. */
-export type TransactionListDirection = 'sent' | 'received';
-
 export type TransactionStatus =
   | 'INITIATED'
-  | 'SENDER_SENT'
-  | 'RECEIVER_CONFIRMED'
-  | 'RUB_SENT'
+  | 'CLIENT_SENT'
+  | 'OPERATOR_VERIFIED'
+  | 'OPERATOR_SENT'
   | 'COMPLETED'
   | 'DISPUTED'
   | 'CANCELLED';
 
 export interface Transaction {
   id: number;
-  orderId: number;
-  sender: User;
-  receiver: User;
+  requestId: number;
+  client: User;
+  operator: User;
   amountCfa: number;
   amountRub: number;
   rate: number;
   commissionAmount: number;
   status: TransactionStatus;
-  proofUrl: string | null;
-  initiatedAt: string;
+  clientProofUrl: string | null;
+  operatorProofUrl: string | null;
+  operatorPaymentNumber: string | null;
+  clientReceiveNumber: string | null;
+  operatorNote: string | null;
+  takenAt: string | null;
+  clientSentAt: string | null;
+  operatorSentAt: string | null;
   completedAt: string | null;
   expiresAt: string;
+}
+
+/** Étapes affichées sur la timeline côté client (5 phases). */
+export const CLIENT_TRANSACTION_FLOW: {
+  statuses: TransactionStatus[];
+  label: string;
+  description: string;
+}[] = [
+  {
+    statuses: ['INITIATED'],
+    label: 'Opérateur assigné',
+    description: 'Envoyez vos fonds sur le numéro indiqué',
+  },
+  {
+    statuses: ['CLIENT_SENT'],
+    label: 'Paiement envoyé',
+    description: "L'opérateur vérifie votre reçu…",
+  },
+  {
+    statuses: ['OPERATOR_VERIFIED'],
+    label: 'Vérification',
+    description: 'Le reçu est validé, préparation de l’envoi',
+  },
+  {
+    statuses: ['OPERATOR_SENT'],
+    label: 'Fonds en route',
+    description: 'Vérifiez votre compte puis confirmez',
+  },
+  {
+    statuses: ['COMPLETED'],
+    label: 'Échange terminé',
+    description: 'Transaction clôturée',
+  },
+];
+
+export function clientTimelineStepIndex(status: TransactionStatus): number {
+  if (status === 'DISPUTED' || status === 'CANCELLED') return -1;
+  const i = CLIENT_TRANSACTION_FLOW.findIndex((s) => s.statuses.includes(status));
+  return i >= 0 ? i : 0;
 }
 
 export const TRANSACTION_STEPS: Record<
@@ -34,33 +76,33 @@ export const TRANSACTION_STEPS: Record<
 > = {
   INITIATED: {
     step: 1,
-    label: 'Échange initié',
-    description: 'Les deux parties ont accepté',
+    label: 'Assigné',
+    description: 'En attente de l’envoi client',
   },
-  SENDER_SENT: {
+  CLIENT_SENT: {
     step: 2,
-    label: 'Paiement envoyé',
-    description: 'En attente de confirmation',
+    label: 'Reçu client',
+    description: 'À vérifier',
   },
-  RECEIVER_CONFIRMED: {
+  OPERATOR_VERIFIED: {
     step: 3,
-    label: 'Réception confirmée',
-    description: 'Les CFA ont bien été reçus',
+    label: 'Reçu validé',
+    description: 'Envoyer les fonds au client',
   },
-  RUB_SENT: {
+  OPERATOR_SENT: {
     step: 4,
-    label: 'Roubles envoyés',
-    description: 'En attente de confirmation',
+    label: 'Fonds envoyés',
+    description: 'En attente de confirmation client',
   },
   COMPLETED: {
     step: 5,
-    label: 'Transaction complète',
-    description: '🎉 Échange réussi !',
+    label: 'Terminé',
+    description: 'Clôturée',
   },
   DISPUTED: {
     step: -1,
-    label: 'Litige ouvert',
-    description: 'Un admin va intervenir',
+    label: 'Litige',
+    description: 'Intervention admin',
   },
   CANCELLED: {
     step: -1,

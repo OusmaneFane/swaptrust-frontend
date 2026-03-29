@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import type { UserRole } from '@/types/user';
 import { useQuery } from '@tanstack/react-query';
 import { authApi } from '@/services/api';
 import { Spinner } from '@/components/ui/Spinner';
@@ -14,7 +15,8 @@ import { LogoutButton } from '@/components/layout/LogoutButton';
 export function KycGate({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { data: session, status, update } = useSession();
-  const isAdmin = Boolean(session?.user?.isAdmin);
+  const role = (session?.user?.role ?? 'CLIENT') as UserRole;
+  const staff = role === 'ADMIN' || role === 'OPERATOR';
 
   const {
     data: user,
@@ -23,14 +25,14 @@ export function KycGate({ children }: { children: React.ReactNode }) {
   } = useQuery({
     queryKey: ['auth', 'me', 'kyc-gate'],
     queryFn: () => authApi.me(),
-    enabled: status === 'authenticated' && !isAdmin,
+    enabled: status === 'authenticated' && !staff,
     staleTime: 30_000,
     refetchInterval: (q) =>
       q.state.data?.kycStatus === 'PENDING' ? 12_000 : false,
   });
 
   useEffect(() => {
-    if (status !== 'authenticated' || isAdmin) return;
+    if (status !== 'authenticated' || staff) return;
     if (isPending || !user) return;
     if (user.kycStatus === 'VERIFIED') {
       if (session?.user?.kycStatus !== 'VERIFIED') {
@@ -39,7 +41,7 @@ export function KycGate({ children }: { children: React.ReactNode }) {
       return;
     }
     router.replace('/kyc');
-  }, [status, isAdmin, isPending, user, session?.user?.kycStatus, update, router]);
+  }, [status, staff, isPending, user, session?.user?.kycStatus, update, router]);
 
   if (status === 'loading') {
     return (
@@ -55,7 +57,7 @@ export function KycGate({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (isAdmin) return <>{children}</>;
+  if (staff) return <>{children}</>;
 
   if (status !== 'authenticated') return <>{children}</>;
 

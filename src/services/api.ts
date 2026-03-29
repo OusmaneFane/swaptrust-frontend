@@ -1,11 +1,20 @@
 import axios from 'axios';
 import { getSession, signOut } from 'next-auth/react';
-import type { ApiResponse, Order, Transaction, Message, Review, Dispute, User } from '@/types';
-import type { OrderApiRaw } from '@/types/order-api';
+import type {
+  ApiResponse,
+  ExchangeRequest,
+  Transaction,
+  Message,
+  Review,
+  Dispute,
+  User,
+  UserRole,
+  TransactionDetail,
+} from '@/types';
 import type {
   AuthTokens,
   CreateDisputeDto,
-  CreateOrderDto,
+  CreateRequestDto,
   CreateReviewDto,
   ExchangeRate,
   KpiDashboard,
@@ -13,7 +22,6 @@ import type {
   KycStatusResponse,
   LoginDto,
   NotificationPrefs,
-  OrderFilters,
   RatesCalculateResult,
   RegisterDto,
   TransactionFilters,
@@ -21,8 +29,10 @@ import type {
 } from '@/types/api-dtos';
 import type { AppNotification } from '@/types/api-dtos';
 import { getApiBaseUrl } from '@/lib/api-base';
-import { keysToSnakeCase } from '@/lib/object-case';
-import { normalizeOrderFromApi } from '@/lib/normalize-order';
+import {
+  normalizeTransactionDetailFromApi,
+  normalizeTransactionFromApi,
+} from '@/lib/normalize-transaction-api';
 import { parseDecimalLike } from '@/lib/parse-decimal-json';
 
 const api = axios.create({
@@ -101,50 +111,16 @@ function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null;
 }
 
-function parseOrdersListPayload(data: unknown): { items: OrderApiRaw[]; total: number } | null {
-  if (!isRecord(data)) return null;
-  if (Array.isArray(data.items)) {
-    return {
-      items: data.items as OrderApiRaw[],
-      total: typeof data.total === 'number' ? data.total : data.items.length,
-    };
+function extractExchangeRequestList(raw: unknown): ExchangeRequest[] {
+  const inner = unwrapApi<unknown>(raw);
+  if (Array.isArray(inner)) return inner as ExchangeRequest[];
+  if (isRecord(inner) && Array.isArray(inner.items)) {
+    return inner.items as ExchangeRequest[];
   }
-  if (Array.isArray(data.data)) {
-    return { items: data.data as OrderApiRaw[], total: data.data.length };
+  if (isRecord(inner) && Array.isArray(inner.data)) {
+    return inner.data as ExchangeRequest[];
   }
-  return null;
-}
-
-function normalizeOrdersList(data: unknown): { items: Order[]; total: number } {
-  const parsed = parseOrdersListPayload(data);
-  if (!parsed) return { items: [], total: 0 };
-  return {
-    items: parsed.items.map((raw) => normalizeOrderFromApi(raw)),
-    total: parsed.total,
-  };
-}
-
-function orderBodyUseSnakeCase(): boolean {
-  return (
-    process.env.NEXT_PUBLIC_ORDER_API_SNAKE_CASE === '1' ||
-    process.env.ORDER_API_SNAKE_CASE === '1'
-  );
-}
-
-function buildOrderFiltersParams(f: OrderFilters): Record<string, unknown> {
-  return {
-    type: f.type,
-    paymentMethod: f.paymentMethod,
-    minAmount: f.minAmount,
-    maxAmount: f.maxAmount,
-    page: f.page,
-    limit: f.limit,
-    skip: f.skip,
-    take: f.take,
-    status: f.status,
-    currencyFrom: f.currencyFrom,
-    currencyTo: f.currencyTo,
-  };
+  return [];
 }
 
 interface RateHistoryRow {
@@ -194,13 +170,14 @@ function mapCurrentToExchangeRate(
 }
 
 function extractTransactionList(raw: unknown): Transaction[] {
+  let rows: unknown[] = [];
   if (raw == null) return [];
-  if (Array.isArray(raw)) return raw as Transaction[];
-  if (isRecord(raw)) {
-    if (Array.isArray(raw.items)) return raw.items as Transaction[];
-    if (Array.isArray(raw.data)) return raw.data as Transaction[];
+  if (Array.isArray(raw)) rows = raw;
+  else if (isRecord(raw)) {
+    if (Array.isArray(raw.items)) rows = raw.items;
+    else if (Array.isArray(raw.data)) rows = raw.data;
   }
-  return [];
+  return rows.map((row) => normalizeTransactionFromApi(row));
 }
 
 function extractUserList(raw: unknown): User[] {
@@ -275,57 +252,42 @@ export const kycApi = {
     api.put(`/kyc/admin/${id}/reject`, { note }),
 };
 
-// ─── ORDERS ─────────────────────────────────────────────────────────────────
+// ─── DEMANDES CLIENT ────────────────────────────────────────────────────────
 
-export const ordersApi = {
-  list: async (params?: OrderFilters): Promise<{ items: Order[]; total: number }> => {
-    const { data } = await api.get<unknown>('/orders', {
-      params: stripUndefined(buildOrderFiltersParams(params ?? {})),
-    });
-    return normalizeOrdersList(unwrapApi(data));
+export const requestsApi = {
+  create: (dto: CreateRequestDto) =>
+    postUnwrapped<ExchangeRequest>('/requests', dto),
+
+  mine: async (): Promise<ExchangeRequest[]> => {
+    const { data } = await api.get<unknown>('/requests/mine');
+    return extractExchangeRequestList(data);
   },
 
-  create: async (dto: CreateOrderDto): Promise<Order> => {
-    const payload: Record<string, unknown> = {
-      type: dto.type,
-      amountFrom: dto.amountFrom,
-      currencyFrom: dto.currencyFrom,
-      currencyTo: dto.currencyTo,
-      paymentMethod: dto.paymentMethod,
-      phoneReceive: dto.phoneReceive,
-    };
-    if (dto.note !== undefined && dto.note !== '') payload.note = dto.note;
-    const json = orderBodyUseSnakeCase() ? keysToSnakeCase(payload) : payload;
-    const { data } = await api.post<unknown>('/orders', json);
-    return normalizeOrderFromApi(unwrapApi<OrderApiRaw>(data));
-  },
+  getById: (id: number) => getUnwrapped<ExchangeRequest>(`/requests/${id}`),
 
-  mine: async (): Promise<{ items: Order[]; total: number }> => {
-    const { data } = await api.get<unknown>('/orders/mine');
-    return normalizeOrdersList(unwrapApi(data));
-  },
-
-  getById: (id: number) =>
-    getUnwrapped<OrderApiRaw>(`/orders/${id}`).then((raw) =>
-      normalizeOrderFromApi(raw),
-    ),
-
-  getMatches: async (id: number): Promise<Order[]> => {
-    const { data } = await api.get<unknown>(`/orders/${id}/matches`);
-    const inner = unwrapApi<unknown>(data);
-    if (Array.isArray(inner)) {
-      return (inner as OrderApiRaw[]).map(normalizeOrderFromApi);
-    }
-    return [];
-  },
-
-  update: (id: number, dto: Partial<CreateOrderDto>) =>
-    putUnwrapped<OrderApiRaw>(`/orders/${id}`, dto).then(normalizeOrderFromApi),
-
-  cancel: (id: number) => deleteUnwrapped(`/orders/${id}`),
+  cancel: (id: number) => deleteUnwrapped(`/requests/${id}`),
 };
 
-// ─── TRANSACTIONS ───────────────────────────────────────────────────────────
+// ─── PREUVES (JWT, blob) ─────────────────────────────────────────────────────
+
+export const proofsApi = {
+  /** GET /proofs/:filename — Authorization comme le reste de l’API. */
+  getBlob: async (
+    filename: string,
+  ): Promise<{ blob: Blob; contentType: string }> => {
+    const { data, headers } = await api.get<Blob>(
+      `/proofs/${encodeURIComponent(filename)}`,
+      { responseType: 'blob' },
+    );
+    const contentType =
+      String(headers['content-type'] ?? '')
+        .split(';')[0]
+        ?.trim() ?? '';
+    return { blob: data, contentType };
+  },
+};
+
+// ─── TRANSACTIONS CLIENT ────────────────────────────────────────────────────
 
 export const transactionsApi = {
   list: async (params?: TransactionFilters): Promise<Transaction[]> => {
@@ -337,25 +299,22 @@ export const transactionsApi = {
     return extractTransactionList(unwrapApi(data));
   },
 
-  initiate: (dto: { senderOrderId: number; receiverOrderId: number }) =>
-    postUnwrapped<Transaction>('/transactions', dto),
+  getById: (id: number) =>
+    getUnwrapped<unknown>(`/transactions/${id}`).then(normalizeTransactionFromApi),
 
-  getById: (id: number) => getUnwrapped<Transaction>(`/transactions/${id}`),
-
-  confirmSend: (id: number, proofFile: File) => {
+  clientSend: (id: number, proofFile: File) => {
     const form = new FormData();
     form.append('proof', proofFile);
-    return api
-      .post<unknown>(`/transactions/${id}/confirm-send`, form, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      })
-      .then((r) => unwrapApi<Transaction>(r.data));
+    return api.post<unknown>(`/transactions/${id}/client-send`, form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
   },
 
-  confirmReceive: (id: number) =>
-    postUnwrapped<Transaction>(`/transactions/${id}/confirm-receive`),
+  clientConfirm: (id: number) =>
+    postUnwrapped<unknown>(`/transactions/${id}/client-confirm`),
 
-  cancel: (id: number) => postUnwrapped<Transaction>(`/transactions/${id}/cancel`),
+  dispute: (id: number, dto: CreateDisputeDto) =>
+    postUnwrapped<unknown>(`/transactions/${id}/dispute`, dto),
 };
 
 // ─── CHAT ───────────────────────────────────────────────────────────────────
@@ -461,16 +420,93 @@ export const ratesApi = {
     }),
 };
 
+// ─── OPÉRATEUR ───────────────────────────────────────────────────────────────
+
+export const operatorApi = {
+  getPendingRequests: async (): Promise<ExchangeRequest[]> => {
+    const { data } = await api.get<unknown>('/operator/requests');
+    return extractExchangeRequestList(data);
+  },
+
+  getRequestDetail: (id: number) =>
+    getUnwrapped<ExchangeRequest>(`/operator/requests/${id}`),
+
+  takeRequest: (
+    id: number,
+    dto: { operatorPaymentNumber: string; operatorNote?: string },
+  ) =>
+    postUnwrapped<unknown>(`/operator/requests/${id}/take`, dto).then(
+      normalizeTransactionFromApi,
+    ),
+
+  getMyTransactions: async (filters?: TransactionFilters): Promise<Transaction[]> => {
+    const { data } = await api.get<unknown>('/operator/transactions', {
+      params: filters
+        ? stripUndefined(filters as Record<string, unknown>)
+        : undefined,
+    });
+    return extractTransactionList(unwrapApi(data));
+  },
+
+  getTransactionDetail: (id: number) =>
+    getUnwrapped<unknown>(`/operator/transactions/${id}`).then(
+      normalizeTransactionDetailFromApi,
+    ),
+
+  verifyClientProof: (id: number) =>
+    api.post(`/operator/transactions/${id}/verify-client-proof`),
+
+  operatorSend: (id: number, proofFile: File) => {
+    const form = new FormData();
+    form.append('proof', proofFile);
+    return api.post<unknown>(`/operator/transactions/${id}/send`, form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+
+  addNote: (id: number, note: string) =>
+    api.post(`/operator/transactions/${id}/note`, { note }),
+
+  cancel: (id: number, reason: string) =>
+    api.post(`/operator/transactions/${id}/cancel`, { reason }),
+};
+
 // ─── ADMIN ──────────────────────────────────────────────────────────────────
 
 export const adminApi = {
   dashboard: () => getUnwrapped<KpiDashboard>('/admin/dashboard'),
 
+  allUsers: (params?: Record<string, string>) =>
+    getUnwrapped<User[]>('/admin/users', params as Record<string, unknown>),
+
+  /** @deprecated Utiliser allUsers */
   users: (params?: Record<string, string>) =>
     getUnwrapped<User[]>('/admin/users', params as Record<string, unknown>),
 
   banUser: (id: number) => api.put(`/admin/users/${id}/ban`),
 
+  assignRole: (userId: number, role: UserRole) =>
+    api.put(`/admin/users/${userId}/role`, { role }),
+
+  listOperators: () => getUnwrapped<User[]>('/admin/operators'),
+
+  revokeOperator: (userId: number) =>
+    api.delete(`/admin/operators/${userId}`),
+
+  allRequests: async (params?: Record<string, string>) => {
+    const { data } = await api.get<unknown>('/admin/requests', { params });
+    return extractExchangeRequestList(data);
+  },
+
+  pendingRequests: async () => {
+    const { data } = await api.get<unknown>('/admin/requests/pending');
+    return extractExchangeRequestList(data);
+  },
+
+  allTransactions: (params?: Record<string, string>) =>
+    getUnwrapped<Transaction[]>('/admin/transactions', params as Record<string, unknown>),
+
+  /** @deprecated Utiliser allTransactions */
   transactions: (params?: Record<string, string>) =>
     getUnwrapped<Transaction[]>('/admin/transactions', params as Record<string, unknown>),
 
@@ -480,6 +516,11 @@ export const adminApi = {
     api.put(`/admin/disputes/${id}/resolve`, { resolution }),
 
   kycPending: () => getUnwrapped<KycDocument[]>('/admin/kyc/pending'),
+
+  approveKyc: (id: number) => api.put(`/kyc/admin/${id}/approve`),
+
+  rejectKyc: (id: number, note: string) =>
+    api.put(`/kyc/admin/${id}/reject`, { note }),
 };
 
 export default api;

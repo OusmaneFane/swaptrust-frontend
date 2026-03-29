@@ -1,6 +1,6 @@
 import type { Order } from '@/types/order';
 import { parseDecimalLike } from '@/lib/parse-decimal-json';
-import type { User } from '@/types/user';
+import type { User, UserRole } from '@/types/user';
 import type { OrderApiRaw } from '@/types/order-api';
 
 function normalizeAmount(v: unknown): number {
@@ -27,22 +27,36 @@ function isKycStatus(
   );
 }
 
+function parseUserRole(v: unknown): UserRole {
+  if (v === 'ADMIN' || v === 'admin') return 'ADMIN';
+  if (v === 'OPERATOR' || v === 'operator') return 'OPERATOR';
+  return 'CLIENT';
+}
+
 function listUserToUser(raw: OrderApiRaw): User {
   const u = raw.user;
   const id = u?.id ?? raw.userId;
+  const ur = u as Record<string, unknown> | undefined;
   return {
     id,
     name: u?.name ?? 'Utilisateur',
     email: typeof u?.email === 'string' ? u.email : '',
-    phoneMali: null,
-    phoneRussia: null,
-    countryResidence: 'OTHER',
+    phoneMali: typeof ur?.phoneMali === 'string' ? ur.phoneMali : null,
+    phoneRussia: typeof ur?.phoneRussia === 'string' ? ur.phoneRussia : null,
+    countryResidence:
+      ur?.countryResidence === 'MALI' ||
+      ur?.countryResidence === 'RUSSIA' ||
+      ur?.countryResidence === 'OTHER'
+        ? ur.countryResidence
+        : 'OTHER',
     kycStatus: isKycStatus(u?.kycStatus) ? u.kycStatus : 'NOT_SUBMITTED',
+    role: parseUserRole(ur?.role),
     ratingAvg: typeof u?.ratingAvg === 'number' ? u.ratingAvg : 0,
-    transactionsCount: 0,
+    transactionsCount:
+      typeof ur?.transactionsCount === 'number' ? ur.transactionsCount : 0,
     avatar: typeof u?.avatar === 'string' ? u.avatar : null,
-    isAdmin: false,
-    createdAt: '',
+    isBanned: ur?.isBanned === true,
+    createdAt: typeof ur?.createdAt === 'string' ? ur.createdAt : '',
   };
 }
 

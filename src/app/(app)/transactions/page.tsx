@@ -20,9 +20,9 @@ const PERIOD_PRESETS: { value: string; label: string }[] = [
 
 const STATUS_OPTIONS: TransactionStatus[] = [
   'INITIATED',
-  'SENDER_SENT',
-  'RECEIVER_CONFIRMED',
-  'RUB_SENT',
+  'CLIENT_SENT',
+  'OPERATOR_VERIFIED',
+  'OPERATOR_SENT',
   'COMPLETED',
   'DISPUTED',
   'CANCELLED',
@@ -113,7 +113,9 @@ export default function TransactionsListPage() {
                 <p className="mt-2 font-medium">
                   {formatCFA(t.amountCfa)} ↔ {formatRUB(t.amountRub)}
                 </p>
-                <p className="text-xs text-ink-faint">{fromNow(t.initiatedAt)}</p>
+                <p className="text-xs text-ink-faint">
+                  {t.takenAt ? fromNow(t.takenAt) : '—'}
+                </p>
               </Link>
             </li>
           ))}

@@ -1,19 +1,15 @@
 /**
- * Compatibilité — préférer `ordersApi` depuis `@/services/api`.
+ * Anciennes routes « ordres » remplacées par `requestsApi` (`@/services/api`).
  */
-import type { OrderFilters, CreateOrderDto } from '@/types/api-dtos';
-import { ordersApi } from '@/services/api';
-export type { OrderFilters, CreateOrderDto } from '@/types/api-dtos';
-export { formatOrderCreateError } from '@/lib/format-order-error';
+import type { CreateRequestDto } from '@/types/api-dtos';
+import { requestsApi } from '@/services/api';
 
-export async function fetchOrders(filters: OrderFilters) {
-  return ordersApi.list(filters);
+export type { CreateRequestDto };
+
+export async function fetchMyRequests() {
+  return requestsApi.mine();
 }
 
-export async function fetchOrder(id: number) {
-  return ordersApi.getById(id);
-}
-
-export async function createOrder(body: CreateOrderDto) {
-  return ordersApi.create(body);
+export async function createRequest(body: CreateRequestDto) {
+  return requestsApi.create(body);
 }

@@ -1,5 +1,6 @@
 import axios from 'axios';
 import type { ApiResponse } from '@/types';
+import type { UserRole } from '@/types/user';
 import { fetchAuthMeProfile } from '@/lib/auth-me-server';
 import api from '@/services/api';
 
@@ -22,7 +23,7 @@ export interface LoggedInUser {
   id: string;
   email: string;
   name: string;
-  isAdmin?: boolean;
+  role: UserRole;
 }
 
 export interface AuthTokens {
@@ -30,16 +31,18 @@ export interface AuthTokens {
   user: LoggedInUser;
 }
 
-/** Déduit le statut admin depuis un objet user ou les claims JWT. */
-function deriveIsAdmin(obj: Record<string, unknown>): boolean {
-  if (obj.isAdmin === true) return true;
+/** Déduit le rôle depuis un objet user ou les claims JWT. */
+function deriveRole(obj: Record<string, unknown>): UserRole {
   const role = obj.role;
-  if (role === 'ADMIN' || role === 'admin') return true;
+  if (role === 'ADMIN' || role === 'admin') return 'ADMIN';
+  if (role === 'OPERATOR' || role === 'operator') return 'OPERATOR';
+  if (obj.isAdmin === true) return 'ADMIN';
   if (Array.isArray(obj.roles)) {
     for (const r of obj.roles) {
       if (typeof r !== 'string') continue;
       const u = r.toUpperCase();
-      if (u === 'ADMIN' || u === 'ROLE_ADMIN' || u.endsWith('_ADMIN')) return true;
+      if (u === 'ADMIN' || u === 'ROLE_ADMIN' || u.endsWith('_ADMIN')) return 'ADMIN';
+      if (u === 'OPERATOR' || u.includes('OPERATOR')) return 'OPERATOR';
     }
   }
   const realm = obj.realm_access;
@@ -49,10 +52,14 @@ function deriveIsAdmin(obj: Record<string, unknown>): boolean {
     Array.isArray((realm as Record<string, unknown>).roles)
   ) {
     for (const r of (realm as Record<string, unknown>).roles as unknown[]) {
-      if (typeof r === 'string' && r.toUpperCase().includes('ADMIN')) return true;
+      if (typeof r === 'string') {
+        const up = r.toUpperCase();
+        if (up.includes('ADMIN')) return 'ADMIN';
+        if (up.includes('OPERATOR')) return 'OPERATOR';
+      }
     }
   }
-  return false;
+  return 'CLIENT';
 }
 
 function getAuthLoginPath(): string {
@@ -84,7 +91,7 @@ function decodeUserFromJwt(accessToken: string): LoggedInUser | undefined {
       id: String(sub),
       email,
       name,
-      isAdmin: deriveIsAdmin(json),
+      role: deriveRole(json),
     };
   } catch {
     return undefined;
@@ -128,7 +135,7 @@ function pickUser(obj: Record<string, unknown>): LoggedInUser | undefined {
       : typeof u.fullName === 'string'
         ? u.fullName
         : email || idStr;
-  return { id: idStr, email, name, isAdmin: deriveIsAdmin(u) };
+  return { id: idStr, email, name, role: deriveRole(u) };
 }
 
 /** Extrait token + user depuis plusieurs formes de réponses Nest / enveloppes ApiResponse. */
@@ -177,6 +184,7 @@ function parseLoginResponse(
       id: fallbackEmail,
       email: fallbackEmail,
       name: fallbackEmail,
+      role: 'CLIENT',
     };
   }
 
@@ -254,12 +262,12 @@ export async function login(
           id: me.id,
           email: me.email || parsed.user.email || payload.email,
           name: me.name || parsed.user.name,
-          isAdmin: me.isAdmin,
+          role: me.role,
         },
       };
     } else if (process.env.NODE_ENV === 'development') {
       console.warn(
-        '[authService] GET /auth/me indisponible — isAdmin repose uniquement sur le JWT / pickUser',
+        '[authService] GET /auth/me indisponible — rôle repose sur le JWT / pickUser',
       );
     }
 
@@ -271,8 +279,8 @@ export async function login(
       console.log(
         '[authService] utilisateur session (JWT puis enrichissement /auth/me) →',
         parsed.user,
-        '| isAdmin:',
-        parsed.user.isAdmin,
+        '| role:',
+        parsed.user.role,
       );
     }
     return parsed;

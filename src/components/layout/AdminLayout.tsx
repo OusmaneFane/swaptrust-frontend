@@ -12,6 +12,7 @@ import {
   X,
   BadgeCheck,
   Sparkles,
+  UserCog,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { LogoutButton } from '@/components/layout/LogoutButton';
@@ -20,6 +21,7 @@ const links = [
   { href: '/admin', label: 'Vue d’ensemble', Icon: LayoutDashboard },
   { href: '/admin/kyc', label: 'Vérifications KYC', Icon: BadgeCheck },
   { href: '/admin/utilisateurs', label: 'Utilisateurs', Icon: Users },
+  { href: '/admin/operateurs', label: 'Opérateurs', Icon: UserCog },
   { href: '/admin/transactions', label: 'Transactions', Icon: ArrowLeftRight },
   { href: '/admin/litiges', label: 'Litiges', Icon: Scale },
 ] as const;

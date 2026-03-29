@@ -2,7 +2,7 @@ import NextAuth from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
 import { login } from '@/services/authService';
 import { fetchAuthMeKycStatus } from '@/lib/auth-me-server';
-import type { User } from '@/types/user';
+import type { User, UserRole } from '@/types/user';
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
@@ -22,11 +22,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         });
         if (!tokens?.accessToken || !tokens.user?.id) return null;
         return {
-          id: tokens.user.id,
+          id: String(tokens.user.id),
           email: tokens.user.email || String(credentials.email),
           name: tokens.user.name || tokens.user.email || 'Utilisateur',
           accessToken: tokens.accessToken,
-          isAdmin: tokens.user.isAdmin,
+          role: tokens.user.role ?? 'CLIENT',
         };
       },
     }),
@@ -37,8 +37,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const accessToken = user.accessToken as string;
         token.accessToken = accessToken;
         token.id = user.id;
-        if ('isAdmin' in user && typeof user.isAdmin === 'boolean') {
-          token.isAdmin = user.isAdmin;
+        const ur = (user as { role?: UserRole }).role;
+        if (ur === 'CLIENT' || ur === 'OPERATOR' || ur === 'ADMIN') {
+          token.role = ur;
         }
         const fromApi = await fetchAuthMeKycStatus(accessToken);
         token.kycStatus = fromApi ?? 'NOT_SUBMITTED';
@@ -64,6 +65,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         ) {
           token.kycStatus = ks as User['kycStatus'];
         }
+        const sr = s.role;
+        if (sr === 'CLIENT' || sr === 'OPERATOR' || sr === 'ADMIN') {
+          token.role = sr;
+        }
       }
       return token;
     },
@@ -75,7 +80,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           '';
         session.accessToken =
           typeof token.accessToken === 'string' ? token.accessToken : undefined;
-        session.user.isAdmin = Boolean(token.isAdmin);
+        session.user.role =
+          token.role === 'ADMIN' ||
+          token.role === 'OPERATOR' ||
+          token.role === 'CLIENT'
+            ? token.role
+            : 'CLIENT';
         if (
           token.kycStatus === 'NOT_SUBMITTED' ||
           token.kycStatus === 'PENDING' ||

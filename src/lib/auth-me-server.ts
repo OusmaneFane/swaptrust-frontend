@@ -1,13 +1,21 @@
 import { getApiBaseUrl } from '@/lib/api-base';
-import type { User } from '@/types/user';
+import type { User, UserRole } from '@/types/user';
 
 /** Champs utiles après login quand la réponse ne contient que les jetons. */
 export type AuthMeLoginFields = {
   id: string;
   email: string;
   name: string;
-  isAdmin: boolean;
+  role: UserRole;
 };
+
+function parseRole(inner: Record<string, unknown>): UserRole {
+  const r = inner.role;
+  if (r === 'ADMIN' || r === 'admin') return 'ADMIN';
+  if (r === 'OPERATOR' || r === 'operator') return 'OPERATOR';
+  if (inner.isAdmin === true) return 'ADMIN';
+  return 'CLIENT';
+}
 
 /**
  * Profil courant (GET /auth/me) — même source que le client après connexion.
@@ -39,15 +47,11 @@ export async function fetchAuthMeProfile(
         : typeof inner.fullName === 'string'
           ? inner.fullName
           : email || String(idRaw);
-    const isAdmin =
-      inner.isAdmin === true ||
-      inner.role === 'ADMIN' ||
-      inner.role === 'admin';
     return {
       id: String(idRaw).trim(),
       email,
       name,
-      isAdmin: Boolean(isAdmin),
+      role: parseRole(inner),
     };
   } catch {
     return null;

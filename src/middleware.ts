@@ -1,19 +1,34 @@
 import { auth } from '@/auth';
+import type { UserRole } from '@/types/user';
+
+function roleFromAuth(auth: { user?: unknown } | null): UserRole {
+  const u = auth?.user as { role?: UserRole } | undefined;
+  const r = u?.role;
+  if (r === 'ADMIN' || r === 'OPERATOR' || r === 'CLIENT') return r;
+  return 'CLIENT';
+}
+
+function isStaff(role: UserRole): boolean {
+  return role === 'ADMIN' || role === 'OPERATOR';
+}
 
 const protectedPrefixes = [
   '/tableau-de-bord',
-  '/ordres',
+  '/mes-demandes',
+  '/demandes',
   '/transactions',
   '/profil',
   '/notifications',
   '/kyc',
   '/admin',
+  '/operateur',
 ];
 
-/** Pages réservées aux utilisateurs avec KYC approuvé (hors admin). */
+/** Pages réservées aux utilisateurs avec KYC approuvé (hors admin / opérateur). */
 const appClientPrefixes = [
   '/tableau-de-bord',
-  '/ordres',
+  '/mes-demandes',
+  '/demandes',
   '/transactions',
   '/profil',
   '/notifications',
@@ -37,6 +52,22 @@ function isKycPath(pathname: string): boolean {
 
 export default auth((req) => {
   const { pathname } = req.nextUrl;
+  const role = roleFromAuth(req.auth);
+  const kycOk = req.auth?.user?.kycStatus === 'VERIFIED';
+  const staff = isStaff(role);
+
+  if (pathname === '/ordres' || pathname === '/ordres/') {
+    return Response.redirect(new URL('/mes-demandes', req.nextUrl));
+  }
+  if (pathname === '/ordres/creer') {
+    return Response.redirect(new URL('/demandes/nouvelle', req.nextUrl));
+  }
+  const ordreMatch = /^\/ordres\/(\d+)/.exec(pathname);
+  if (ordreMatch) {
+    return Response.redirect(
+      new URL(`/demandes/${ordreMatch[1]}`, req.nextUrl),
+    );
+  }
 
   if (!req.auth && isProtectedPath(pathname)) {
     const url = new URL('/connexion', req.nextUrl.origin);
@@ -44,38 +75,44 @@ export default auth((req) => {
     return Response.redirect(url);
   }
 
-  if (
-    req.auth &&
-    (pathname === '/connexion' || pathname === '/inscription')
-  ) {
-    const u = req.auth.user;
-    if (u?.isAdmin || u?.kycStatus === 'VERIFIED') {
+  if (req.auth && (pathname === '/connexion' || pathname === '/inscription')) {
+    if (role === 'ADMIN') {
+      return Response.redirect(new URL('/admin', req.nextUrl));
+    }
+    if (role === 'OPERATOR') {
+      return Response.redirect(new URL('/operateur', req.nextUrl));
+    }
+    if (kycOk) {
       return Response.redirect(new URL('/tableau-de-bord', req.nextUrl));
     }
     return Response.redirect(new URL('/kyc', req.nextUrl));
   }
 
+  if (req.auth && role === 'CLIENT' && pathname.startsWith('/operateur')) {
+    return Response.redirect(new URL('/tableau-de-bord', req.nextUrl));
+  }
+
+  if (req.auth && role === 'CLIENT' && (pathname === '/admin' || pathname.startsWith('/admin/'))) {
+    return Response.redirect(new URL('/tableau-de-bord', req.nextUrl));
+  }
+
+  if (req.auth && role === 'OPERATOR' && (pathname === '/admin' || pathname.startsWith('/admin/'))) {
+    return Response.redirect(new URL('/operateur', req.nextUrl));
+  }
+
   if (
     req.auth &&
-    (pathname === '/admin' || pathname.startsWith('/admin/')) &&
-    !req.auth.user?.isAdmin
+    (pathname === '/operateur' || pathname.startsWith('/operateur/')) &&
+    !staff
   ) {
     return Response.redirect(new URL('/tableau-de-bord', req.nextUrl));
   }
 
-  const u = req.auth?.user;
-  const kycOk = u?.kycStatus === 'VERIFIED';
-
-  if (
-    req.auth &&
-    !u?.isAdmin &&
-    isAppClientPath(pathname) &&
-    !kycOk
-  ) {
+  if (req.auth && !staff && isAppClientPath(pathname) && !kycOk) {
     return Response.redirect(new URL('/kyc', req.nextUrl));
   }
 
-  if (req.auth && !u?.isAdmin && isKycPath(pathname) && kycOk) {
+  if (req.auth && !staff && isKycPath(pathname) && kycOk) {
     return Response.redirect(new URL('/tableau-de-bord', req.nextUrl));
   }
 

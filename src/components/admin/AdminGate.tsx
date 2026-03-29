@@ -8,13 +8,14 @@ import { Skeleton } from '@/components/ui/Skeleton';
 export function AdminGate({ children }: { children: React.ReactNode }) {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const isAdmin = session?.user?.role === 'ADMIN';
 
   useEffect(() => {
     if (status === 'loading') return;
-    if (!session?.user?.isAdmin) {
+    if (!isAdmin) {
       router.replace('/tableau-de-bord');
     }
-  }, [session?.user?.isAdmin, status, router]);
+  }, [isAdmin, status, router]);
 
   if (status === 'loading') {
     return (
@@ -25,7 +26,7 @@ export function AdminGate({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!session?.user?.isAdmin) {
+  if (!isAdmin) {
     return null;
   }
 

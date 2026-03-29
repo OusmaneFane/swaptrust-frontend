@@ -12,9 +12,9 @@ import { cn } from '@/lib/utils';
 
 const statusTone: Record<string, string> = {
   INITIATED: 'text-ink-muted',
-  SENDER_SENT: 'text-sky-600',
-  RECEIVER_CONFIRMED: 'text-primary-dark',
-  RUB_SENT: 'text-violet-600',
+  CLIENT_SENT: 'text-sky-600',
+  OPERATOR_VERIFIED: 'text-primary-dark',
+  OPERATOR_SENT: 'text-violet-600',
   COMPLETED: 'text-success',
   DISPUTED: 'text-danger animate-pulse',
   CANCELLED: 'text-danger/80',
@@ -33,7 +33,7 @@ export default function AdminTransactionsPage() {
     <div className="space-y-6">
       <div className="rounded-card border border-primary/20 bg-gradient-to-r from-primary/8 to-accent/5 px-5 py-4 text-sm text-ink-secondary shadow-sm">
         <strong className="font-semibold text-ink">Surveillance passive.</strong>{' '}
-        L’escrow est géré par les clients. Cette vue correspond à{' '}
+        Suivi des échanges opérateur ↔ client. Cette vue correspond à{' '}
         <code className="rounded bg-card px-1.5 py-0.5 font-mono text-xs text-ink-secondary shadow-sm">
           GET /admin/transactions
         </code>{' '}
@@ -50,9 +50,9 @@ export default function AdminTransactionsPage() {
         >
           <option value="">Tous statuts</option>
           <option value="INITIATED">Initié</option>
-          <option value="SENDER_SENT">Envoyé</option>
-          <option value="RECEIVER_CONFIRMED">Réception OK</option>
-          <option value="RUB_SENT">RUB envoyés</option>
+          <option value="CLIENT_SENT">Reçu client</option>
+          <option value="OPERATOR_VERIFIED">Reçu validé</option>
+          <option value="OPERATOR_SENT">Envoyé par opérateur</option>
           <option value="COMPLETED">Terminé</option>
           <option value="DISPUTED">Litige</option>
           <option value="CANCELLED">Annulé</option>
@@ -67,8 +67,8 @@ export default function AdminTransactionsPage() {
               <thead className="border-b border-line bg-surface/80 text-xs font-semibold uppercase tracking-wide text-ink-muted">
                 <tr>
                   <th className="p-4 font-medium">ID</th>
-                  <th className="p-4 font-medium">Expéditeur</th>
-                  <th className="p-4 font-medium">Destinataire</th>
+                  <th className="p-4 font-medium">Client</th>
+                  <th className="p-4 font-medium">Opérateur</th>
                   <th className="p-4 font-medium">CFA</th>
                   <th className="p-4 font-medium">RUB</th>
                   <th className="p-4 font-medium">Statut</th>
@@ -83,15 +83,15 @@ export default function AdminTransactionsPage() {
                     onClick={() => setDetail(t)}
                   >
                     <td className="p-4 font-semibold text-ink">#{t.id}</td>
-                    <td className="p-4 text-ink-secondary">{t.sender.name}</td>
-                    <td className="p-4 text-ink-secondary">{t.receiver.name}</td>
+                    <td className="p-4 text-ink-secondary">{t.client.name}</td>
+                    <td className="p-4 text-ink-secondary">{t.operator.name}</td>
                     <td className="p-4 font-medium text-ink">{formatCFA(t.amountCfa)}</td>
                     <td className="p-4 font-medium text-ink">{formatRUB(t.amountRub)}</td>
                     <td className={cn('p-4 text-xs font-bold', statusTone[t.status])}>
                       {t.status}
                     </td>
                     <td className="p-4 text-xs text-ink-faint">
-                      {fullDate(t.initiatedAt)}
+                      {fullDate(t.takenAt ?? t.expiresAt)}
                     </td>
                   </tr>
                 ))}
@@ -114,7 +114,8 @@ export default function AdminTransactionsPage() {
             <p className="font-display text-lg font-semibold text-ink">
               {formatCFA(detail.amountCfa)} ↔ {formatRUB(detail.amountRub)}
             </p>
-            <p>Preuve côté client : {detail.proofUrl ?? '—'}</p>
+            <p>Preuve client : {detail.clientProofUrl ?? '—'}</p>
+            <p>Preuve opérateur : {detail.operatorProofUrl ?? '—'}</p>
             <p>
               Statut :{' '}
               <span className={cn('font-semibold', statusTone[detail.status])}>

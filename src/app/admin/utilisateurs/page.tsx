@@ -5,6 +5,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { adminApi, kycApi } from '@/services/api';
 import type { User } from '@/types';
+import type { UserRole } from '@/types/user';
+import { RoleBadge } from '@/components/operator/RoleBadge';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Skeleton } from '@/components/ui/Skeleton';
@@ -34,6 +36,21 @@ export default function AdminUsersPage() {
     }
     return m;
   }, [pendingDocs]);
+
+  const assignRoleMut = useMutation({
+    mutationFn: ({ userId, role }: { userId: number; role: UserRole }) =>
+      adminApi.assignRole(userId, role),
+    onSuccess: (_, { role }) => {
+      const msg =
+        role === 'OPERATOR'
+          ? 'Opérateur désigné avec succès'
+          : 'Rôle mis à jour';
+      toast.success(msg);
+      void qc.invalidateQueries({ queryKey: ['admin', 'users'] });
+      void qc.invalidateQueries({ queryKey: ['admin', 'operators'] });
+    },
+    onError: () => toast.error('Impossible de modifier le rôle'),
+  });
 
   const banMut = useMutation({
     mutationFn: (id: number) => adminApi.banUser(id),
@@ -115,6 +132,7 @@ export default function AdminUsersPage() {
                 <tr>
                   <th className="p-4 font-medium">Nom</th>
                   <th className="p-4 font-medium">Email</th>
+                  <th className="p-4 font-medium">Rôle</th>
                   <th className="p-4 font-medium">KYC</th>
                   <th className="p-4 font-medium">Échanges</th>
                   <th className="p-4 font-medium">Note</th>
@@ -128,6 +146,7 @@ export default function AdminUsersPage() {
                     u.kycStatus === 'PENDING'
                       ? kycDocIdForUser(u.id)
                       : undefined;
+                  const role = u.role ?? 'CLIENT';
                   return (
                     <tr
                       key={u.id}
@@ -135,6 +154,9 @@ export default function AdminUsersPage() {
                     >
                       <td className="p-4 font-semibold text-ink">{u.name}</td>
                       <td className="p-4 text-ink-secondary">{u.email}</td>
+                      <td className="p-4">
+                        <RoleBadge role={role} />
+                      </td>
                       <td className="p-4">
                         <span
                           className={cn(
@@ -159,7 +181,48 @@ export default function AdminUsersPage() {
                         {fullDate(u.createdAt)}
                       </td>
                       <td className="p-4">
-                        <div className="flex flex-wrap gap-1.5">
+                        <div className="flex flex-col gap-2">
+                          <div className="flex flex-wrap gap-1.5">
+                            {role === 'ADMIN' ? (
+                              <span className="text-xs text-ink-faint">
+                                Admin principal
+                              </span>
+                            ) : (
+                              <>
+                                {role === 'CLIENT' ? (
+                                  <button
+                                    type="button"
+                                    className="rounded-md border border-primary/30 px-2 py-1 text-xs font-medium text-primary hover:bg-primary/10"
+                                    disabled={assignRoleMut.isPending}
+                                    onClick={() =>
+                                      assignRoleMut.mutate({
+                                        userId: u.id,
+                                        role: 'OPERATOR',
+                                      })
+                                    }
+                                  >
+                                    Désigner opérateur
+                                  </button>
+                                ) : null}
+                                {role === 'OPERATOR' ? (
+                                  <button
+                                    type="button"
+                                    className="rounded-md border border-danger/30 px-2 py-1 text-xs font-medium text-danger hover:bg-danger/5"
+                                    disabled={assignRoleMut.isPending}
+                                    onClick={() =>
+                                      assignRoleMut.mutate({
+                                        userId: u.id,
+                                        role: 'CLIENT',
+                                      })
+                                    }
+                                  >
+                                    Révoquer opérateur
+                                  </button>
+                                ) : null}
+                              </>
+                            )}
+                          </div>
+                          <div className="flex flex-wrap gap-1.5">
                           {u.kycStatus === 'PENDING' && docId != null ? (
                             <>
                               <Button
@@ -206,6 +269,7 @@ export default function AdminUsersPage() {
                           >
                             Bannir
                           </Button>
+                          </div>
                         </div>
                       </td>
                     </tr>

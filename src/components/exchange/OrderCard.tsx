@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import type { Order } from '@/types';
+import type { Order, OrderStatus } from '@/types';
 import { formatCFA, formatRUB, fromNow } from '@/lib/utils';
 import { Badge } from '@/components/ui/Badge';
 import { Avatar } from '@/components/ui/Avatar';
@@ -16,12 +16,27 @@ const methodLabels: Record<string, string> = {
   OTHER: 'Autre',
 };
 
+/** Libellés côté client (sans mention « opérateur »). */
+const ORDER_STATUS_CLIENT: Record<
+  OrderStatus,
+  { label: string; tone: 'default' | 'success' | 'warning' | 'danger' | 'muted' }
+> = {
+  ACTIVE: { label: 'En attente de traitement', tone: 'warning' },
+  MATCHED: { label: 'Échange en préparation', tone: 'default' },
+  IN_PROGRESS: { label: 'Transfert en cours', tone: 'default' },
+  COMPLETED: { label: 'Échange terminé', tone: 'success' },
+  CANCELLED: { label: 'Annulé', tone: 'danger' },
+  DISPUTED: { label: 'Litige ouvert', tone: 'danger' },
+};
+
 type Props = {
   order: Order;
   /** Marché public : téléphone masqué, lien vers la fiche ordre. */
   variant?: 'market' | 'default';
   href?: string;
   className?: string;
+  /** Affiche le statut avec libellés compréhensibles pour le client. */
+  showClientStatus?: boolean;
 };
 
 export function OrderCard({
@@ -29,10 +44,12 @@ export function OrderCard({
   variant = 'default',
   href,
   className,
+  showClientStatus = false,
 }: Props) {
   const isCfa = order.type === 'SEND_CFA';
   const isMarket = variant === 'market';
   const to = href ?? `/ordres/${order.id}`;
+  const statusMeta = ORDER_STATUS_CLIENT[order.status];
 
   return (
     <Link
@@ -53,7 +70,14 @@ export function OrderCard({
             </p>
           </div>
         </div>
-        <Badge tone="muted">{methodLabels[order.paymentMethod] ?? order.paymentMethod}</Badge>
+        <div className="flex shrink-0 flex-col items-end gap-1">
+          <Badge tone="muted">
+            {methodLabels[order.paymentMethod] ?? order.paymentMethod}
+          </Badge>
+          {showClientStatus ? (
+            <Badge tone={statusMeta.tone}>{statusMeta.label}</Badge>
+          ) : null}
+        </div>
       </div>
       <div className="mt-4 flex flex-wrap items-end justify-between gap-2">
         <div>

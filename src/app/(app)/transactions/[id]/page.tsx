@@ -4,22 +4,61 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { MessageCircle, AlertTriangle, Star } from 'lucide-react';
+import {
+  MessageCircle,
+  AlertTriangle,
+  Star,
+  Copy,
+  Check,
+} from 'lucide-react';
 import { TransactionTimeline } from '@/components/exchange/TransactionTimeline';
+import { ClientSendButton } from '@/components/client/ClientSendButton';
+import { ClientConfirmButton } from '@/components/client/ClientConfirmButton';
+import { ProofViewer } from '@/components/shared/ProofViewer';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { Input } from '@/components/ui/Input';
-import {
-  useTransaction,
-  useConfirmSend,
-  useConfirmReceive,
-} from '@/hooks/useTransaction';
+import { useTransaction } from '@/hooks/useTransaction';
 import { formatCFA, formatRUB } from '@/lib/utils';
 import { sameUserId } from '@/lib/same-user';
-import { disputesApi, reviewsApi } from '@/services/api';
+import { transactionsApi, reviewsApi } from '@/services/api';
 import { toast } from 'sonner';
+
+function CopyableNumber({ value }: { value: string }) {
+  const [copied, setCopied] = useState(false);
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(value.replace(/\s/g, ''));
+      setCopied(true);
+      toast.success('Numéro copié');
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error('Copie impossible');
+    }
+  }
+  return (
+    <div className="flex items-center gap-2">
+      <span className="font-mono text-lg font-semibold text-ink">{value}</span>
+      <button
+        type="button"
+        onClick={() => void copy()}
+        className="rounded-input border border-line p-2 text-primary hover:bg-surface-hover"
+        aria-label="Copier le numéro"
+      >
+        {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+      </button>
+    </div>
+  );
+}
+
+function operatorShortName(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 0) return '?';
+  if (parts.length === 1) return parts[0]!.slice(0, 1) + '.';
+  return `${parts[0]!.charAt(0)}. ${parts[parts.length - 1]}`;
+}
 
 export default function TransactionDetailPage() {
   const params = useParams();
@@ -27,8 +66,6 @@ export default function TransactionDetailPage() {
   const id = Number(params.id);
   const { data: session } = useSession();
   const { data: tx, isLoading } = useTransaction(id);
-  const confirmSend = useConfirmSend(id);
-  const confirmReceive = useConfirmReceive(id);
   const [disputeOpen, setDisputeOpen] = useState(false);
   const [disputeReason, setDisputeReason] = useState('');
   const [reviewOpen, setReviewOpen] = useState(false);
@@ -36,20 +73,14 @@ export default function TransactionDetailPage() {
   const [reviewComment, setReviewComment] = useState('');
 
   const sessionId = session?.user?.id;
-  const isSender =
-    tx && sessionId != null && sameUserId(sessionId, tx.sender.id);
-  const isReceiver =
-    tx && sessionId != null && sameUserId(sessionId, tx.receiver.id);
-
-  function onProofFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    confirmSend.mutate(file);
-  }
+  const isClient =
+    tx && sessionId != null && sameUserId(sessionId, tx.client.id);
 
   async function submitDispute() {
     try {
-      await disputesApi.open(id, { reason: disputeReason || 'Problème signalé' });
+      await transactionsApi.dispute(id, {
+        reason: disputeReason || 'Problème signalé',
+      });
       toast.success('Litige ouvert');
       setDisputeOpen(false);
       router.refresh();
@@ -69,9 +100,7 @@ export default function TransactionDetailPage() {
   }
 
   const showDispute =
-    tx &&
-    tx.status !== 'COMPLETED' &&
-    tx.status !== 'CANCELLED';
+    tx && tx.status !== 'COMPLETED' && tx.status !== 'CANCELLED';
 
   if (isLoading || !tx) {
     return (
@@ -82,10 +111,27 @@ export default function TransactionDetailPage() {
     );
   }
 
+  if (!isClient) {
+    return (
+      <div className="space-y-4 text-center">
+        <p className="text-sm text-ink-muted">Accès réservé au client de la transaction.</p>
+        <Link href="/transactions" className="text-primary hover:underline">
+          Retour
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto max-w-lg space-y-6 pb-8 lg:max-w-xl">
-      <div className="flex items-center justify-between gap-2">
-        <h1 className="font-display text-xl font-bold">Transaction #{tx.id}</h1>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h1 className="font-display text-xl font-bold">Transaction #{tx.id}</h1>
+          <p className="text-sm text-ink-muted">
+            Opérateur : {operatorShortName(tx.operator.name)} · ⭐{' '}
+            {tx.operator.ratingAvg?.toFixed(1) ?? '—'}
+          </p>
+        </div>
         <Link
           href={`/transactions/${id}/chat`}
           className="inline-flex items-center gap-2 rounded-pill border border-line px-3 py-1.5 text-sm text-primary hover:bg-surface-hover"
@@ -96,84 +142,66 @@ export default function TransactionDetailPage() {
       </div>
 
       <Card className="space-y-2 text-sm">
-        <p>
-          <span className="text-ink-muted">CFA :</span>{' '}
-          <span className="font-semibold">{formatCFA(tx.amountCfa)}</span>
-        </p>
-        <p>
-          <span className="text-ink-muted">RUB :</span>{' '}
-          <span className="font-semibold">{formatRUB(tx.amountRub)}</span>
-        </p>
-        <p className="text-ink-faint">
-          Votre rôle : {isSender ? 'Émetteur' : 'Récepteur'}
-        </p>
+        <div className="flex justify-between">
+          <span className="text-ink-muted">Montant CFA</span>
+          <span className="font-semibold text-ink">{formatCFA(tx.amountCfa)}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-ink-muted">Montant RUB</span>
+          <span className="font-semibold text-ink">{formatRUB(tx.amountRub)}</span>
+        </div>
+        <div className="flex justify-between text-xs">
+          <span className="text-ink-muted">Taux (réf.)</span>
+          <span>1 000 CFA ≈ {((1000 * tx.rate) / 100).toFixed(2)} ₽</span>
+        </div>
       </Card>
 
       <TransactionTimeline status={tx.status} />
 
-      <div className="flex flex-col gap-3">
-        {tx.status === 'INITIATED' && isSender && (
-          <label className="btn-primary cursor-pointer py-2 text-center text-sm">
-            J’ai envoyé les fonds (preuve)
-            <input
-              type="file"
-              className="hidden"
-              accept="image/*"
-              onChange={onProofFile}
-              disabled={confirmSend.isPending}
-            />
-          </label>
-        )}
+      {tx.status === 'INITIATED' && tx.operatorPaymentNumber ? (
+        <Card className="space-y-3 p-5">
+          <p className="text-sm font-medium text-ink">Envoyez sur ce numéro</p>
+          <div className="rounded-input border border-primary/25 bg-primary/[0.04] p-4">
+            <CopyableNumber value={tx.operatorPaymentNumber} />
+            <p className="mt-2 text-xs text-ink-muted">
+              {tx.operator.name} — montant : {formatCFA(tx.amountCfa)} (CFA) /{' '}
+              {formatRUB(tx.amountRub)} (₽)
+            </p>
+          </div>
+        </Card>
+      ) : null}
 
-        {tx.status === 'SENDER_SENT' && isReceiver && (
-          <Button
-            type="button"
-            className="w-full"
-            loading={confirmReceive.isPending}
-            onClick={() => confirmReceive.mutate()}
-          >
-            J’ai bien reçu les CFA
-          </Button>
-        )}
+      {tx.status === 'INITIATED' ? <ClientSendButton transactionId={id} /> : null}
 
-        {tx.status === 'RECEIVER_CONFIRMED' && isReceiver && (
-          <label className="btn-primary cursor-pointer py-2 text-center text-sm">
-            J’ai envoyé les roubles (preuve)
-            <input
-              type="file"
-              className="hidden"
-              accept="image/*"
-              onChange={onProofFile}
-              disabled={confirmSend.isPending}
-            />
-          </label>
-        )}
+      {tx.status === 'CLIENT_SENT' || tx.status === 'OPERATOR_VERIFIED' ? (
+        <p className="text-center text-sm text-ink-muted">
+          L’opérateur vérifie votre reçu…
+        </p>
+      ) : null}
 
-        {tx.status === 'RUB_SENT' && isSender && (
-          <Button
-            type="button"
-            className="w-full"
-            loading={confirmReceive.isPending}
-            onClick={() => confirmReceive.mutate()}
-          >
-            J’ai bien reçu les roubles
-          </Button>
-        )}
+      {tx.operatorProofUrl &&
+      (tx.status === 'OPERATOR_SENT' || tx.status === 'COMPLETED') ? (
+        <div>
+          <p className="mb-2 text-sm font-medium text-ink">Reçu de l’opérateur</p>
+          <ProofViewer url={tx.operatorProofUrl} label="Reçu opérateur" />
+        </div>
+      ) : null}
 
-        {tx.status === 'COMPLETED' && (
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full gap-2"
-            onClick={() => setReviewOpen(true)}
-          >
-            <Star className="h-4 w-4" />
-            Laisser un avis
-          </Button>
-        )}
-      </div>
+      {tx.status === 'OPERATOR_SENT' ? <ClientConfirmButton transactionId={id} /> : null}
 
-      {showDispute && (
+      {tx.status === 'COMPLETED' ? (
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full gap-2"
+          onClick={() => setReviewOpen(true)}
+        >
+          <Star className="h-4 w-4" />
+          Laisser un avis
+        </Button>
+      ) : null}
+
+      {showDispute ? (
         <Button
           type="button"
           variant="ghost"
@@ -183,7 +211,7 @@ export default function TransactionDetailPage() {
           <AlertTriangle className="mr-2 inline h-4 w-4" />
           Signaler un problème
         </Button>
-      )}
+      ) : null}
 
       <BottomSheet open={disputeOpen} onClose={() => setDisputeOpen(false)} title="Litige">
         <textarea

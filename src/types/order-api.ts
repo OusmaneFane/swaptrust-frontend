@@ -29,6 +29,8 @@ export interface OrderApiRaw {
   createdAt: string;
   updatedAt?: string;
   user?: OrderListUserApi;
+  /** Présent sur certaines listes Nest (relation). */
+  transaction?: unknown;
 }
 
 /** Représentation JSON de Prisma Decimal / decimal.js. */

@@ -17,7 +17,7 @@ import { cn } from '@/lib/utils';
 
 const side = [
   { href: '/tableau-de-bord', label: 'Tableau de bord', Icon: LayoutDashboard },
-  { href: '/ordres', label: 'Ordres', Icon: ListOrdered },
+  { href: '/mes-demandes', label: 'Mes demandes', Icon: ListOrdered },
   { href: '/transactions', label: 'Transactions', Icon: ArrowLeftRight },
   { href: '/notifications', label: 'Notifications', Icon: Bell },
   { href: '/profil', label: 'Profil', Icon: User },

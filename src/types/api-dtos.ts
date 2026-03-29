@@ -1,4 +1,5 @@
 import type { OrderType, PaymentMethod } from './order';
+import type { RequestType } from './request';
 
 /** KYC */
 export interface KycStatusResponse {
@@ -35,6 +36,9 @@ export interface ExchangeRate {
 export interface RatesCalculateResult {
   result: number;
   rate: number;
+  /** Montant commission en même unité minoritaire que le montant envoyé (si fourni par l’API). */
+  commissionAmount?: number;
+  commissionRate?: number;
 }
 
 /** Admin dashboard */
@@ -106,6 +110,15 @@ export interface CreateOrderDto {
   currencyTo: 'XOF' | 'RUB';
   paymentMethod: PaymentMethod;
   phoneReceive: string;
+  note?: string;
+}
+
+/** POST /requests */
+export interface CreateRequestDto {
+  type: RequestType;
+  amountWanted: number;
+  paymentMethod: PaymentMethod;
+  phoneToSend: string;
   note?: string;
 }
 

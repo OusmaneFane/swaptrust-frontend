@@ -51,7 +51,7 @@ export function LandingView({ initialRate }: { initialRate: ExchangeRate }) {
         </div>
       </header>
 
-      <main className="relative z-10 mx-auto max-w-6xl px-4 pb-24 pt-8 lg:px-8 lg:pt-16">
+      <main className="relative z-10 mx-auto max-w-10xl px-4 pb-24 pt-8 lg:px-8 lg:pt-16">
         <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
           <div>
             <motion.p
@@ -146,18 +146,18 @@ export function LandingView({ initialRate }: { initialRate: ExchangeRate }) {
           >
             {[
               {
-                title: 'Publiez ou choisissez une offre',
-                desc: 'Montant, moyen de paiement et taux transparents.',
+                title: 'Publiez votre besoin',
+                desc: 'Montant en CFA ou roubles, moyen de paiement et taux affiché clairement.',
                 Icon: TrendingUp,
               },
               {
-                title: 'Escrow sécurisé',
-                desc: 'Les fonds suivent un parcours clair jusqu’à la libération.',
+                title: 'Un opérateur prend le relais',
+                desc: 'Prise en charge, numéro d’envoi et suivi jusqu’à la clôture.',
                 Icon: Lock,
               },
               {
                 title: 'Chat & preuves',
-                desc: 'Échangez en direct et joignez vos justificatifs.',
+                desc: 'Échangez en direct et joignez vos reçus à chaque étape.',
                 Icon: Shield,
               },
             ].map(({ title, desc, Icon }, i) => (

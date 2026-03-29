@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 
 const items = [
   { href: '/tableau-de-bord', label: 'Accueil', Icon: LayoutDashboard },
-  { href: '/ordres', label: 'Ordres', Icon: ListOrdered },
+  { href: '/mes-demandes', label: 'Demandes', Icon: ListOrdered },
   { href: '/transactions', label: 'Échanges', Icon: ArrowLeftRight },
   { href: '/profil', label: 'Profil', Icon: User },
 ] as const;

@@ -15,17 +15,13 @@ export async function fetchTransactions(
   return { items };
 }
 
-export async function confirmSend(
+export async function clientSendProof(
   id: number,
   proofFile: File,
-): Promise<Transaction> {
-  return transactionsApi.confirmSend(id, proofFile);
+): Promise<void> {
+  await transactionsApi.clientSend(id, proofFile);
 }
 
-export async function confirmReceive(id: number): Promise<Transaction> {
-  return transactionsApi.confirmReceive(id);
-}
-
-export async function cancelTransaction(id: number): Promise<Transaction> {
-  return transactionsApi.cancel(id);
+export async function clientConfirmReceive(id: number): Promise<void> {
+  await transactionsApi.clientConfirm(id);
 }

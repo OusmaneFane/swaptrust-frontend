@@ -16,29 +16,33 @@ import {
   Percent,
 } from 'lucide-react';
 import { RateDisplay } from '@/components/exchange/RateDisplay';
-import { OrderCard } from '@/components/exchange/OrderCard';
+import { RequestCard } from '@/components/exchange/RequestCard';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Avatar } from '@/components/ui/Avatar';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useExchangeRate } from '@/hooks/useExchangeRate';
-import { authApi, ordersApi, transactionsApi } from '@/services/api';
+import { authApi, requestsApi, transactionsApi } from '@/services/api';
 import { cn, formatCFA, formatRUB, fromNow } from '@/lib/utils';
+import {
+  CLIENT_TRANSACTION_FLOW,
+  clientTimelineStepIndex,
+} from '@/types/transaction';
 
 const quickActions = [
   {
-    href: '/ordres/creer',
-    label: 'Nouvel échange',
-    sub: 'Publier une offre',
+    href: '/demandes/nouvelle',
+    label: 'Nouvelle demande',
+    sub: 'Besoin en CFA ou ₽',
     Icon: Plus,
     ring: 'ring-blue-500/15',
     iconBg: 'bg-gradient-to-br from-primary to-primary-dark text-white shadow-md shadow-primary/25',
     card: 'border-blue-200/80 bg-gradient-to-br from-blue-50/90 via-card to-card hover:border-primary/35 hover:shadow-md hover:shadow-primary/10',
   },
   {
-    href: '/ordres',
-    label: 'Mes ordres',
-    sub: 'Suivi & filtres',
+    href: '/mes-demandes',
+    label: 'Mes demandes',
+    sub: 'Statut & détail',
     Icon: ListOrdered,
     ring: 'ring-teal-500/15',
     iconBg: 'bg-gradient-to-br from-accent to-emerald-600 text-white shadow-md shadow-accent/25',
@@ -47,7 +51,7 @@ const quickActions = [
   {
     href: '/transactions',
     label: 'Mes transactions',
-    sub: 'Historique',
+    sub: 'Historique des échanges',
     Icon: History,
     ring: 'ring-amber-500/15',
     iconBg: 'bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-md shadow-amber-500/20',
@@ -71,9 +75,9 @@ function statCards(args: {
 }) {
   return [
     {
-      title: 'Mes ordres',
+      title: 'Mes demandes',
       value: String(args.myOrderCount),
-      hint: 'Publiés',
+      hint: 'Publiées',
       Icon: Wallet,
       className:
         'border-slate-200/90 bg-gradient-to-br from-slate-50/90 to-card text-ink',
@@ -148,26 +152,20 @@ export default function TableauDeBordPage() {
     queryKey: ['auth', 'me'],
     queryFn: () => authApi.me(),
   });
-  const { data: mineOrders, isLoading: mineLoading } = useQuery({
-    queryKey: ['orders', 'mine'],
-    queryFn: () => ordersApi.mine(),
+  const { data: myRequests = [], isLoading: mineLoading } = useQuery({
+    queryKey: ['requests', 'mine'],
+    queryFn: () => requestsApi.mine(),
   });
   const { data: recentTx } = useQuery({
     queryKey: ['transactions', 'dashboard'],
     queryFn: () => transactionsApi.list({ limit: 5 }),
   });
-  const { data: marketOrders, isLoading: marketLoading } = useQuery({
-    queryKey: ['orders', 'market', 'dash'],
-    queryFn: () => ordersApi.list({ skip: 0, take: 12, status: 'ACTIVE' }),
-  });
 
   const kyc = me?.kycStatus ?? 'NOT_SUBMITTED';
   const firstName =
     (me?.name ?? session?.user?.name)?.split(' ')[0] ?? 'toi';
-  const myCount = mineOrders?.items?.length ?? 0;
-  const marketItems =
-    marketOrders?.items?.filter((o) => o.user.id !== me?.id) ?? [];
-  const displayMarket = marketItems.slice(0, 10);
+  const myCount = myRequests.length;
+  const displayRequests = myRequests.slice(0, 4);
   const activeTx =
     recentTx?.filter(
       (t) =>
@@ -220,17 +218,17 @@ export default function TableauDeBordPage() {
                 </Badge>
                 {!mineLoading && myCount > 0 && (
                   <span className="rounded-full bg-accent-soft px-2.5 py-0.5 text-xs font-medium text-accent">
-                    {myCount} ordre{myCount > 1 ? 's' : ''} à vous
+                    {myCount} demande{myCount > 1 ? 's' : ''}
                   </span>
                 )}
               </div>
             </div>
           </div>
           <Link
-            href="/ordres/creer"
+            href="/demandes/nouvelle"
             className="inline-flex items-center gap-2 rounded-pill bg-gradient-to-r from-primary to-primary-dark px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-primary/25 transition hover:opacity-95 active:scale-[0.98]"
           >
-            Créer une offre
+            Nouvelle demande
             <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
@@ -340,23 +338,35 @@ export default function TableauDeBordPage() {
             </h2>
           </div>
           <ul className="space-y-2">
-            {activeTx.map((t) => (
-              <li key={t.id}>
-                <Link
-                  href={`/transactions/${t.id}`}
-                  className="glass-card flex flex-wrap items-center justify-between gap-2 p-4 text-sm hover:border-primary/30"
-                >
-                  <div>
-                    <p className="font-medium text-ink">#{t.id}</p>
-                    <p className="text-ink-muted">
-                      {formatCFA(t.amountCfa)} ↔ {formatRUB(t.amountRub)}
-                    </p>
-                    <p className="text-xs text-ink-faint">{fromNow(t.initiatedAt)}</p>
-                  </div>
-                  <Badge tone="muted">{t.status}</Badge>
-                </Link>
-              </li>
-            ))}
+            {activeTx.map((t) => {
+              const si = clientTimelineStepIndex(t.status);
+              const stepLabel =
+                si >= 0
+                  ? `Étape ${si + 1}/${CLIENT_TRANSACTION_FLOW.length}`
+                  : null;
+              return (
+                <li key={t.id}>
+                  <Link
+                    href={`/transactions/${t.id}`}
+                    className="glass-card flex flex-wrap items-center justify-between gap-2 p-4 text-sm hover:border-primary/30"
+                  >
+                    <div>
+                      <p className="font-medium text-ink">Transaction #{t.id}</p>
+                      {stepLabel ? (
+                        <p className="text-xs font-medium text-primary">{stepLabel}</p>
+                      ) : null}
+                      <p className="text-ink-muted">
+                        {formatCFA(t.amountCfa)} · {formatRUB(t.amountRub)}
+                      </p>
+                      <p className="text-xs text-ink-faint">
+                        {t.takenAt ? fromNow(t.takenAt) : '—'}
+                      </p>
+                    </div>
+                    <Badge tone="muted">{t.status}</Badge>
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         </section>
       )}
@@ -366,40 +376,40 @@ export default function TableauDeBordPage() {
           <div className="flex items-center gap-2">
             <span className="h-8 w-1 rounded-full bg-gradient-to-b from-accent to-primary" />
             <h2 className="font-display text-lg font-semibold text-ink">
-              Offres du marché
+              Mes demandes en cours
             </h2>
           </div>
           <Link
-            href="/ordres"
+            href="/mes-demandes"
             className="inline-flex items-center gap-1 rounded-pill border border-line bg-card px-3 py-1.5 text-sm font-medium text-primary shadow-sm transition hover:border-primary/30 hover:bg-surface-hover"
           >
             Voir tout
             <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>
-        {marketLoading ? (
+        {mineLoading ? (
           <div className="space-y-3">
             <Skeleton className="h-28 w-full rounded-card" />
             <Skeleton className="h-28 w-full rounded-card" />
           </div>
-        ) : displayMarket.length ? (
+        ) : displayRequests.length ? (
           <div className="space-y-3">
-            {displayMarket.map((o) => (
-              <OrderCard key={o.id} order={o} variant="market" />
+            {displayRequests.map((r) => (
+              <RequestCard key={r.id} request={r} showStatus href={`/demandes/${r.id}`} />
             ))}
           </div>
         ) : (
           <Card className="border-dashed border-primary/25 bg-gradient-to-br from-surface to-card text-center">
-            <p className="text-sm font-medium text-ink">Aucun ordre pour le moment</p>
+            <p className="text-sm font-medium text-ink">Aucune demande publiée</p>
             <p className="mt-1 text-sm text-ink-muted">
-              Publiez une offre pour apparaître ici et échanger en confiance.
+              Décrivez le montant et le moyen de paiement ; nous nous occupons de la suite.
             </p>
             <Link
-              href="/ordres/creer"
+              href="/demandes/nouvelle"
               className="btn-primary mt-4 inline-flex items-center gap-2"
             >
               <Plus className="h-4 w-4" />
-              Créer mon premier échange
+              Nouvelle demande
             </Link>
           </Card>
         )}

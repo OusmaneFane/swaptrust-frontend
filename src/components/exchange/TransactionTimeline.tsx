@@ -2,17 +2,25 @@
 
 import { motion } from 'framer-motion';
 import type { TransactionStatus } from '@/types';
-import { TRANSACTION_STEPS } from '@/types/transaction';
+import {
+  CLIENT_TRANSACTION_FLOW,
+  clientTimelineStepIndex,
+  TRANSACTION_STEPS,
+} from '@/types/transaction';
 import { cn } from '@/lib/utils';
 import { Check } from 'lucide-react';
 
-const FLOW: TransactionStatus[] = [
-  'INITIATED',
-  'SENDER_SENT',
-  'RECEIVER_CONFIRMED',
-  'RUB_SENT',
-  'COMPLETED',
-];
+function isStepDone(status: TransactionStatus, stepIndex: number): boolean {
+  if (status === 'DISPUTED' || status === 'CANCELLED') return false;
+  if (status === 'COMPLETED') return true;
+  return clientTimelineStepIndex(status) > stepIndex;
+}
+
+function isStepCurrent(status: TransactionStatus, stepIndex: number): boolean {
+  if (status === 'DISPUTED' || status === 'CANCELLED') return false;
+  if (status === 'COMPLETED') return false;
+  return clientTimelineStepIndex(status) === stepIndex;
+}
 
 export function TransactionTimeline({ status }: { status: TransactionStatus }) {
   if (status === 'DISPUTED' || status === 'CANCELLED') {
@@ -25,16 +33,13 @@ export function TransactionTimeline({ status }: { status: TransactionStatus }) {
     );
   }
 
-  const activeIndex = FLOW.indexOf(status);
-
   return (
     <ol className="relative space-y-0">
-      {FLOW.map((key, i) => {
-        const meta = TRANSACTION_STEPS[key];
-        const done = i < activeIndex;
-        const current = i === activeIndex;
+      {CLIENT_TRANSACTION_FLOW.map((meta, i) => {
+        const done = isStepDone(status, i);
+        const current = isStepCurrent(status, i);
         return (
-          <li key={key} className="flex gap-4">
+          <li key={meta.label} className="flex gap-4">
             <div className="flex flex-col items-center">
               <motion.div
                 className={cn(
@@ -47,9 +52,9 @@ export function TransactionTimeline({ status }: { status: TransactionStatus }) {
                 animate={current ? { scale: [1, 1.05, 1] } : {}}
                 transition={{ repeat: current ? Infinity : 0, duration: 2 }}
               >
-                {done ? <Check className="h-5 w-5" /> : meta.step}
+                {done ? <Check className="h-5 w-5" /> : i + 1}
               </motion.div>
-              {i < FLOW.length - 1 ? (
+              {i < CLIENT_TRANSACTION_FLOW.length - 1 ? (
                 <div
                   className={cn(
                     'my-1 min-h-[24px] w-0.5 flex-1',
@@ -58,7 +63,7 @@ export function TransactionTimeline({ status }: { status: TransactionStatus }) {
                 />
               ) : null}
             </div>
-            <div className={cn('pb-8', i === FLOW.length - 1 && 'pb-0')}>
+            <div className={cn('pb-8', i === CLIENT_TRANSACTION_FLOW.length - 1 && 'pb-0')}>
               <p
                 className={cn(
                   'font-semibold',
