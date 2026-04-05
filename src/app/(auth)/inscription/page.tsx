@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
-import { useForm } from 'react-hook-form';
+import { useForm, type UseFormRegister, type UseFormWatch, type FieldErrors } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
@@ -12,18 +12,39 @@ import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { StepIndicator } from '@/components/exchange/StepIndicator';
+import {
+  PhoneInputSection,
+  type PhoneFormFields,
+} from '@/components/auth/PhoneInputSection';
+import { registerPayloadPhones } from '@/lib/phone-api-format';
 import { register as registerUser } from '@/services/authService';
 
-const schema = z.object({
-  name: z.string().min(2, 'Nom requis'),
-  email: z.string().email('Email invalide'),
-  password: z.string().min(8, 'Minimum 8 caractères'),
-  phoneMali: z.string().optional(),
-  phoneRussia: z.string().optional(),
-  countryResidence: z.enum(['MALI', 'RUSSIA', 'OTHER']),
-});
+const registerSchema = z
+  .object({
+    name: z.string().min(2, 'Nom requis'),
+    email: z.string().email('Email invalide'),
+    password: z.string().min(8, 'Minimum 8 caractères'),
+    phoneMali: z
+      .string()
+      .transform((s) => s.replace(/\D/g, ''))
+      .refine((s) => s === '' || s.length === 8, {
+        message: 'Saisissez 8 chiffres pour le Mali',
+      }),
+    phoneRussia: z
+      .string()
+      .transform((s) => s.replace(/\D/g, ''))
+      .refine((s) => s === '' || s.length === 10, {
+        message: 'Saisissez 10 chiffres pour la Russie',
+      }),
+    countryResidence: z.enum(['MALI', 'RUSSIA', 'OTHER']),
+  })
+  .refine((data) => Boolean(data.phoneMali || data.phoneRussia), {
+    message:
+      'Au moins un numéro de téléphone est requis pour recevoir les notifications WhatsApp',
+    path: ['phoneMali'],
+  });
 
-type FormValues = z.infer<typeof schema>;
+type FormValues = z.infer<typeof registerSchema>;
 
 const steps = ['Infos', 'Téléphones', 'Mot de passe', 'Confirmation'];
 
@@ -38,8 +59,12 @@ export default function InscriptionPage() {
     watch,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
-    resolver: zodResolver(schema),
-    defaultValues: { countryResidence: 'MALI' },
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      countryResidence: 'MALI',
+      phoneMali: '',
+      phoneRussia: '',
+    },
   });
 
   async function nextStep() {
@@ -55,12 +80,15 @@ export default function InscriptionPage() {
 
   async function onSubmit(values: FormValues) {
     try {
+      const phones = registerPayloadPhones({
+        phoneMaliDigits: values.phoneMali,
+        phoneRussiaDigits: values.phoneRussia,
+      });
       await registerUser({
         name: values.name,
         email: values.email,
         password: values.password,
-        phoneMali: values.phoneMali || undefined,
-        phoneRussia: values.phoneRussia || undefined,
+        ...phones,
         countryResidence: values.countryResidence,
       });
       toast.success('Compte créé');
@@ -70,7 +98,7 @@ export default function InscriptionPage() {
         redirect: false,
       });
       if (signed?.ok) {
-        router.push('/kyc');
+        router.push('/inscription/success');
         router.refresh();
       } else {
         router.push('/connexion');
@@ -92,20 +120,14 @@ export default function InscriptionPage() {
       <div className="mt-6">
         <StepIndicator step={step} total={4} labels={steps} />
       </div>
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="mt-8 space-y-5"
-      >
+      <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-5">
         {step === 1 ? (
           <>
             <Input label="Nom complet" error={errors.name?.message} {...register('name')} />
             <Input label="Email" type="email" error={errors.email?.message} {...register('email')} />
             <div>
               <label className="mb-2 block text-sm text-ink-secondary">Pays de résidence</label>
-              <select
-                className="input-field"
-                {...register('countryResidence')}
-              >
+              <select className="input-field" {...register('countryResidence')}>
                 <option value="MALI">Mali</option>
                 <option value="RUSSIA">Russie</option>
                 <option value="OTHER">Autre</option>
@@ -114,10 +136,11 @@ export default function InscriptionPage() {
           </>
         ) : null}
         {step === 2 ? (
-          <>
-            <Input label="Téléphone Mali (optionnel)" {...register('phoneMali')} />
-            <Input label="Téléphone Russie (optionnel)" {...register('phoneRussia')} />
-          </>
+          <PhoneInputSection
+            register={register as unknown as UseFormRegister<PhoneFormFields>}
+            errors={errors as FieldErrors<PhoneFormFields>}
+            watch={watch as unknown as UseFormWatch<PhoneFormFields>}
+          />
         ) : null}
         {step === 3 ? (
           <Input
@@ -137,6 +160,18 @@ export default function InscriptionPage() {
             </p>
             <p>
               <span className="text-ink-faint">Pays :</span> {watch('countryResidence')}
+            </p>
+            <p>
+              <span className="text-ink-faint">WhatsApp Mali :</span>{' '}
+              {watch('phoneMali')
+                ? `+223 ${watch('phoneMali').replace(/(\d{2})(?=\d)/g, '$1 ').trim()}`
+                : '—'}
+            </p>
+            <p>
+              <span className="text-ink-faint">WhatsApp Russie :</span>{' '}
+              {watch('phoneRussia')
+                ? `+7 ${watch('phoneRussia').replace(/(\d{3})(?=\d)/g, '$1 ').trim()}`
+                : '—'}
             </p>
           </div>
         ) : null}

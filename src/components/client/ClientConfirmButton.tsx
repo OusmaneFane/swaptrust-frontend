@@ -4,9 +4,12 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useClientConfirm } from '@/hooks/useTransaction';
 
-type Props = { transactionId: number };
+type Props = {
+  transactionId: number;
+  onWhatsappNotify?: () => void;
+};
 
-export function ClientConfirmButton({ transactionId }: Props) {
+export function ClientConfirmButton({ transactionId, onWhatsappNotify }: Props) {
   const [showConfirm, setShowConfirm] = useState(false);
   const router = useRouter();
   const mutation = useClientConfirm(transactionId);
@@ -44,7 +47,10 @@ export function ClientConfirmButton({ transactionId }: Props) {
               disabled={mutation.isPending}
               onClick={() =>
                 mutation.mutate(undefined, {
-                  onSuccess: () => router.push('/tableau-de-bord'),
+                  onSuccess: () => {
+                    onWhatsappNotify?.();
+                    router.push('/tableau-de-bord');
+                  },
                 })
               }
             >

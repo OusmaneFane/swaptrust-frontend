@@ -4,9 +4,12 @@ import { useState } from 'react';
 import { Upload, X } from 'lucide-react';
 import { useClientSendProof } from '@/hooks/useTransaction';
 
-type Props = { transactionId: number };
+type Props = {
+  transactionId: number;
+  onWhatsappNotify?: () => void;
+};
 
-export function ClientSendButton({ transactionId }: Props) {
+export function ClientSendButton({ transactionId, onWhatsappNotify }: Props) {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const mutation = useClientSendProof(transactionId);
@@ -56,7 +59,12 @@ export function ClientSendButton({ transactionId }: Props) {
         type="button"
         className="btn-primary w-full"
         disabled={!file || mutation.isPending}
-        onClick={() => file && mutation.mutate(file)}
+        onClick={() =>
+          file &&
+          mutation.mutate(file, {
+            onSuccess: () => onWhatsappNotify?.(),
+          })
+        }
       >
         {mutation.isPending ? 'Envoi en cours…' : 'Confirmer l’envoi'}
       </button>

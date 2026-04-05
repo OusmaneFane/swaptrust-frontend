@@ -7,22 +7,28 @@ import {
   LayoutDashboard,
   Users,
   ArrowLeftRight,
+  ArrowRightLeft,
   Scale,
   Menu,
   X,
   BadgeCheck,
   Sparkles,
   UserCog,
+  Landmark,
+  Inbox,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { LogoutButton } from '@/components/layout/LogoutButton';
 
 const links = [
   { href: '/admin', label: 'Vue d’ensemble', Icon: LayoutDashboard },
+  { href: '/admin/demandes', label: 'Demandes à traiter', Icon: Inbox },
+  { href: '/operateur', label: 'Espace opérateur', Icon: ArrowRightLeft },
   { href: '/admin/kyc', label: 'Vérifications KYC', Icon: BadgeCheck },
   { href: '/admin/utilisateurs', label: 'Utilisateurs', Icon: Users },
   { href: '/admin/operateurs', label: 'Opérateurs', Icon: UserCog },
   { href: '/admin/transactions', label: 'Transactions', Icon: ArrowLeftRight },
+  { href: '/admin/platform-accounts', label: 'Comptes SwapTrust', Icon: Landmark },
   { href: '/admin/litiges', label: 'Litiges', Icon: Scale },
 ] as const;
 
@@ -39,10 +45,15 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [drawer, setDrawer] = useState(false);
 
-  const isActive = (href: string) =>
-    href === '/admin'
-      ? pathname === '/admin' || pathname === '/admin/'
-      : pathname === href || pathname.startsWith(`${href}/`);
+  const isActive = (href: string) => {
+    if (href === '/admin') {
+      return pathname === '/admin' || pathname === '/admin/';
+    }
+    if (href === '/operateur') {
+      return pathname === '/operateur' || pathname.startsWith('/operateur/');
+    }
+    return pathname === href || pathname.startsWith(`${href}/`);
+  };
 
   const nav = (
     <nav className="flex flex-col gap-1">

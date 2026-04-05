@@ -9,14 +9,33 @@ import { toast } from 'sonner';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
+import { WhatsappSection } from '@/components/profile/WhatsappSection';
+import { profileMaliToApi, profileRussiaToApi } from '@/lib/phone-api-format';
 import { authApi, usersApi } from '@/services/api';
 
-const schema = z.object({
-  name: z.string().min(2),
-  phoneMali: z.string().optional(),
-  phoneRussia: z.string().optional(),
-  countryResidence: z.enum(['MALI', 'RUSSIA', 'OTHER']).optional(),
-});
+const schema = z
+  .object({
+    name: z.string().min(2),
+    phoneMali: z.string().optional(),
+    phoneRussia: z.string().optional(),
+    countryResidence: z.enum(['MALI', 'RUSSIA', 'OTHER']).optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.phoneMali?.trim() && !profileMaliToApi(data.phoneMali)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Mali : 8 chiffres ou 223 + 8 chiffres (sans +)',
+        path: ['phoneMali'],
+      });
+    }
+    if (data.phoneRussia?.trim() && !profileRussiaToApi(data.phoneRussia)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Russie : 10 chiffres ou 7 + 10 chiffres (sans +)',
+        path: ['phoneRussia'],
+      });
+    }
+  });
 
 type FormValues = z.infer<typeof schema>;
 
@@ -69,10 +88,12 @@ export default function ModifierProfilPage() {
   });
 
   function onSubmit(values: FormValues) {
+    const m = values.phoneMali?.trim();
+    const r = values.phoneRussia?.trim();
     updateMut.mutate({
       name: values.name,
-      phoneMali: values.phoneMali || undefined,
-      phoneRussia: values.phoneRussia || undefined,
+      phoneMali: m ? profileMaliToApi(m) ?? undefined : undefined,
+      phoneRussia: r ? profileRussiaToApi(r) ?? undefined : undefined,
       countryResidence: values.countryResidence,
     });
   }
@@ -84,6 +105,7 @@ export default function ModifierProfilPage() {
         <p className="text-sm text-ink-muted">Chargement…</p>
       ) : (
         <>
+          {me ? <WhatsappSection user={me} /> : null}
           <div>
             <label className="mb-2 block text-sm text-ink-secondary">Avatar</label>
             {preview || me?.avatar ? (

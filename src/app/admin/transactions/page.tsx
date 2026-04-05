@@ -1,7 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
+import { ExternalLink } from 'lucide-react';
 import { adminApi } from '@/services/api';
 import type { Transaction } from '@/types';
 import { Card } from '@/components/ui/Card';
@@ -73,6 +75,7 @@ export default function AdminTransactionsPage() {
                   <th className="p-4 font-medium">RUB</th>
                   <th className="p-4 font-medium">Statut</th>
                   <th className="p-4 font-medium">Date</th>
+                  <th className="p-4 font-medium">Pilotage</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-line bg-card">
@@ -92,6 +95,16 @@ export default function AdminTransactionsPage() {
                     </td>
                     <td className="p-4 text-xs text-ink-faint">
                       {fullDate(t.takenAt ?? t.expiresAt)}
+                    </td>
+                    <td className="p-4">
+                      <Link
+                        href={`/operateur/transactions/${t.id}`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+                      >
+                        <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+                        Opérateur
+                      </Link>
                     </td>
                   </tr>
                 ))}
@@ -125,6 +138,13 @@ export default function AdminTransactionsPage() {
             <p className="text-xs text-ink-muted">
               Aucune action admin sur ce flux — observation uniquement.
             </p>
+            <Link
+              href={`/operateur/transactions/${detail.id}`}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-pill border border-primary/30 bg-primary/10 py-3 text-sm font-semibold text-primary hover:bg-primary/15"
+            >
+              <ExternalLink className="h-4 w-4" aria-hidden />
+              Ouvrir la fiche opérateur (actions)
+            </Link>
           </div>
         ) : null}
       </BottomSheet>

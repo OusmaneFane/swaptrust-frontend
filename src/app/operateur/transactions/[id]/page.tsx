@@ -1,27 +1,27 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
-import { toast } from 'sonner';
-import { operatorApi } from '@/services/api';
-import { Card } from '@/components/ui/Card';
-import { Skeleton } from '@/components/ui/Skeleton';
-import { Badge } from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
-import { ProofViewer } from '@/components/shared/ProofViewer';
-import { formatCFA, formatRUB, fullDate } from '@/lib/utils';
-import { TRANSACTION_STEPS } from '@/types/transaction';
-import type { OperatorLog, OperatorLogAction } from '@/types';
-import { PAYMENT_METHOD_LABELS } from '@/constants/payment-methods';
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import { toast } from "sonner";
+import { operatorApi } from "@/services/api";
+import { Card } from "@/components/ui/Card";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
+import { ProofViewer } from "@/components/shared/ProofViewer";
+import { formatCFA, formatRUB, fullDate } from "@/lib/utils";
+import { TRANSACTION_STEPS } from "@/types/transaction";
+import type { OperatorLog, OperatorLogAction } from "@/types";
+import { PAYMENT_METHOD_LABELS } from "@/constants/payment-methods";
 
 const ACTION_LABEL: Record<OperatorLogAction, string> = {
-  TAKEN: 'Pris en charge',
-  CLIENT_PROOF_VIEWED: 'Reçu client consulté',
-  OPERATOR_SENT: 'Envoi opérateur',
-  COMPLETED: 'Clôturé',
-  NOTE: 'Note',
+  TAKEN: "Pris en charge",
+  CLIENT_PROOF_VIEWED: "Reçu client consulté",
+  OPERATOR_SENT: "Envoi opérateur",
+  COMPLETED: "Clôturé",
+  NOTE: "Note",
 };
 
 export default function OperateurTransactionDetailPage() {
@@ -31,8 +31,12 @@ export default function OperateurTransactionDetailPage() {
   const id = Number(params.id);
   const [proofFile, setProofFile] = useState<File | null>(null);
 
-  const { data: tx, isLoading, isError } = useQuery({
-    queryKey: ['operator', 'transaction', id],
+  const {
+    data: tx,
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ["operator", "transaction", id],
     queryFn: () => operatorApi.getTransactionDetail(id),
     enabled: Number.isFinite(id),
     refetchInterval: 10_000,
@@ -41,40 +45,40 @@ export default function OperateurTransactionDetailPage() {
   const verifyMut = useMutation({
     mutationFn: () => operatorApi.verifyClientProof(id),
     onSuccess: () => {
-      toast.success('Reçu validé');
-      void qc.invalidateQueries({ queryKey: ['operator', 'transaction', id] });
+      toast.success("Reçu validé");
+      void qc.invalidateQueries({ queryKey: ["operator", "transaction", id] });
     },
-    onError: () => toast.error('Action impossible'),
+    onError: () => toast.error("Action impossible"),
   });
 
   const sendMut = useMutation({
     mutationFn: (file: File) => operatorApi.operatorSend(id, file),
     onSuccess: () => {
-      toast.success('Reçu envoyé — en attente du client');
+      toast.success("Reçu envoyé — en attente du client");
       setProofFile(null);
-      void qc.invalidateQueries({ queryKey: ['operator', 'transaction', id] });
-      void qc.invalidateQueries({ queryKey: ['operator', 'transactions'] });
+      void qc.invalidateQueries({ queryKey: ["operator", "transaction", id] });
+      void qc.invalidateQueries({ queryKey: ["operator", "transactions"] });
     },
-    onError: () => toast.error('Envoi impossible'),
+    onError: () => toast.error("Envoi impossible"),
   });
 
   const addNote = useMutation({
     mutationFn: (note: string) => operatorApi.addNote(id, note),
     onSuccess: () => {
-      toast.success('Note enregistrée');
-      void qc.invalidateQueries({ queryKey: ['operator', 'transaction', id] });
+      toast.success("Note enregistrée");
+      void qc.invalidateQueries({ queryKey: ["operator", "transaction", id] });
     },
-    onError: () => toast.error('Impossible d’ajouter la note'),
+    onError: () => toast.error("Impossible d’ajouter la note"),
   });
 
   const cancelMut = useMutation({
     mutationFn: (reason: string) => operatorApi.cancel(id, reason),
     onSuccess: () => {
-      toast.success('Transaction annulée');
-      void qc.invalidateQueries({ queryKey: ['operator'] });
-      router.push('/operateur');
+      toast.success("Transaction annulée");
+      void qc.invalidateQueries({ queryKey: ["operator"] });
+      router.push("/operateur");
     },
-    onError: () => toast.error('Annulation impossible'),
+    onError: () => toast.error("Annulation impossible"),
   });
 
   if (!Number.isFinite(id)) {
@@ -108,12 +112,12 @@ export default function OperateurTransactionDetailPage() {
   const req = tx.request;
 
   function onAddNote() {
-    const note = window.prompt('Note interne :') ?? '';
+    const note = window.prompt("Note interne :") ?? "";
     if (note.trim()) addNote.mutate(note.trim());
   }
 
   function onCancel() {
-    const reason = window.prompt('Motif d’annulation :') ?? '';
+    const reason = window.prompt("Motif d’annulation :") ?? "";
     if (reason.trim()) cancelMut.mutate(reason.trim());
   }
 
@@ -130,18 +134,22 @@ export default function OperateurTransactionDetailPage() {
       </div>
 
       <div>
-        <h1 className="font-display text-2xl font-bold text-ink">Transaction #{tx.id}</h1>
+        <h1 className="font-display text-2xl font-bold text-ink">
+          Transaction #{tx.id}
+        </h1>
         <p className="mt-1 text-sm text-ink-muted">
-          {tx.takenAt ? `Prise en charge ${fullDate(tx.takenAt)}` : '—'}
+          {tx.takenAt ? `Prise en charge ${fullDate(tx.takenAt)}` : "—"}
         </p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
         <Card className="space-y-3 border-line/90 p-4">
-          <p className="text-xs font-semibold uppercase text-ink-muted">Client</p>
+          <p className="text-xs font-semibold uppercase text-ink-muted">
+            Client
+          </p>
           <p className="font-semibold text-ink">{tx.client.name}</p>
           <p className="text-sm text-ink-secondary">
-            Réception : {tx.clientReceiveNumber ?? req?.phoneToSend ?? '—'}
+            Réception : {tx.clientReceiveNumber ?? req?.phoneToSend ?? "—"}
           </p>
           <p className="text-sm text-ink-muted">
             {formatCFA(tx.amountCfa)} · {formatRUB(tx.amountRub)}
@@ -156,9 +164,9 @@ export default function OperateurTransactionDetailPage() {
           <p className="text-xs font-semibold uppercase text-ink-muted">Vous</p>
           <p className="font-semibold text-ink">{tx.operator.name}</p>
           <p className="text-sm text-ink-secondary">
-            Numéro communiqué au client :{' '}
+            Numéro communiqué au client :{" "}
             <span className="font-mono text-ink">
-              {tx.operatorPaymentNumber ?? '—'}
+              {tx.operatorPaymentNumber ?? "—"}
             </span>
           </p>
           {tx.operatorNote ? (
@@ -169,7 +177,9 @@ export default function OperateurTransactionDetailPage() {
 
       <Card className="border-dashed border-line p-4">
         <p className="text-sm font-medium text-ink">Statut</p>
-        <p className="text-sm text-ink-secondary">{tx.status} — {meta.description}</p>
+        <p className="text-sm text-ink-secondary">
+          {tx.status} — {meta.description}
+        </p>
       </Card>
 
       {tx.clientProofUrl ? (
@@ -186,7 +196,7 @@ export default function OperateurTransactionDetailPage() {
         </section>
       ) : null}
 
-      {tx.status === 'CLIENT_SENT' ? (
+      {tx.status === "CLIENT_SENT" ? (
         <Card className="space-y-4 border-primary/25 bg-primary/[0.04] p-5">
           <h2 className="font-semibold text-ink">Action requise</h2>
           <p className="text-sm text-ink-secondary">
@@ -203,7 +213,7 @@ export default function OperateurTransactionDetailPage() {
         </Card>
       ) : null}
 
-      {tx.status === 'OPERATOR_VERIFIED' ? (
+      {tx.status === "OPERATOR_VERIFIED" ? (
         <Card className="space-y-4 border-primary/25 bg-primary/[0.04] p-5">
           <h2 className="font-semibold text-ink">Envoi au client</h2>
           <p className="text-sm text-ink-secondary">
@@ -256,7 +266,9 @@ export default function OperateurTransactionDetailPage() {
           {(tx.operatorLogs ?? []).length ? (
             tx.operatorLogs.map((log: OperatorLog) => (
               <li key={log.id} className="text-sm">
-                <span className="text-ink-faint">{fullDate(log.createdAt)}</span>{' '}
+                <span className="text-ink-faint">
+                  {fullDate(log.createdAt)}
+                </span>{" "}
                 <span className="font-medium text-primary">
                   {ACTION_LABEL[log.action]}
                 </span>
@@ -272,7 +284,7 @@ export default function OperateurTransactionDetailPage() {
       </section>
 
       <div className="flex flex-col gap-2 sm:flex-row">
-        {tx.status !== 'COMPLETED' && tx.status !== 'CANCELLED' ? (
+        {tx.status !== "COMPLETED" && tx.status !== "CANCELLED" ? (
           <>
             <Button
               type="button"

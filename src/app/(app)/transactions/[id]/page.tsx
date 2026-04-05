@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import { useQuery } from '@tanstack/react-query';
 import {
   MessageCircle,
   AlertTriangle,
@@ -21,31 +22,44 @@ import { BottomSheet } from '@/components/ui/BottomSheet';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { Input } from '@/components/ui/Input';
 import { useTransaction } from '@/hooks/useTransaction';
+import { resolveClientSendDestination } from '@/lib/resolve-client-send-destination';
+import { rubDisplayFor1000Cfa } from '@/lib/rate-xof-rub';
+import { formatAccountForDisplay } from '@/lib/swaptrust-receive';
+import {
+  formatGrossSendForClient,
+  formatMinorForSendRail,
+} from '@/lib/transaction-display';
 import { formatCFA, formatRUB } from '@/lib/utils';
 import { sameUserId } from '@/lib/same-user';
-import { transactionsApi, reviewsApi } from '@/services/api';
+import { authApi, transactionsApi, reviewsApi } from '@/services/api';
 import { toast } from 'sonner';
+import { showWhatsappToast } from '@/components/ui/WhatsappToast';
+import { userWhatsappNotifyPhone } from '@/lib/user-phones';
 
-function CopyableNumber({ value }: { value: string }) {
+function CopyableAccountValue({ raw }: { raw: string }) {
   const [copied, setCopied] = useState(false);
+  const display = formatAccountForDisplay(raw);
   async function copy() {
     try {
-      await navigator.clipboard.writeText(value.replace(/\s/g, ''));
+      const compact = raw.replace(/\s/g, '');
+      await navigator.clipboard.writeText(compact);
       setCopied(true);
-      toast.success('Numéro copié');
+      toast.success('Copié dans le presse-papiers');
       setTimeout(() => setCopied(false), 2000);
     } catch {
       toast.error('Copie impossible');
     }
   }
   return (
-    <div className="flex items-center gap-2">
-      <span className="font-mono text-lg font-semibold text-ink">{value}</span>
+    <div className="flex flex-wrap items-center gap-2">
+      <span className="break-all font-mono text-base font-semibold text-ink md:text-lg">
+        {display}
+      </span>
       <button
         type="button"
         onClick={() => void copy()}
         className="rounded-input border border-line p-2 text-primary hover:bg-surface-hover"
-        aria-label="Copier le numéro"
+        aria-label="Copier le numéro ou l’IBAN"
       >
         {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
       </button>
@@ -65,6 +79,11 @@ export default function TransactionDetailPage() {
   const router = useRouter();
   const id = Number(params.id);
   const { data: session } = useSession();
+  const { data: me } = useQuery({
+    queryKey: ['auth', 'me'],
+    queryFn: () => authApi.me(),
+  });
+  const notifyPhone = userWhatsappNotifyPhone(me);
   const { data: tx, isLoading } = useTransaction(id);
   const [disputeOpen, setDisputeOpen] = useState(false);
   const [disputeReason, setDisputeReason] = useState('');
@@ -122,6 +141,10 @@ export default function TransactionDetailPage() {
     );
   }
 
+  const swaptrustDestination = resolveClientSendDestination(tx);
+  const rateRef =
+    tx.googleRate != null && tx.googleRate > 0 ? tx.googleRate : tx.rate;
+
   return (
     <div className="mx-auto max-w-lg space-y-6 pb-8 lg:max-w-xl">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -142,36 +165,104 @@ export default function TransactionDetailPage() {
       </div>
 
       <Card className="space-y-2 text-sm">
-        <div className="flex justify-between">
-          <span className="text-ink-muted">Montant CFA</span>
-          <span className="font-semibold text-ink">{formatCFA(tx.amountCfa)}</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-ink-muted">Montant RUB</span>
-          <span className="font-semibold text-ink">{formatRUB(tx.amountRub)}</span>
-        </div>
+        {tx.grossAmount != null && tx.netAmount != null ? (
+          <>
+            <div className="flex justify-between">
+              <span className="text-ink-muted">Montant échangé (net)</span>
+              <span className="font-semibold text-ink">
+                {formatMinorForSendRail(tx, tx.netAmount)}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-ink-muted">Commission SwapTrust</span>
+              <span className="font-semibold text-accent">
+                {formatMinorForSendRail(tx, tx.commissionAmount)}
+              </span>
+            </div>
+            <div className="flex justify-between border-t border-line pt-2">
+              <span className="font-medium text-ink">Total à vous envoyer</span>
+              <span className="font-bold text-ink">
+                {formatMinorForSendRail(tx, tx.grossAmount)}
+              </span>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="flex justify-between">
+              <span className="text-ink-muted">Montant CFA</span>
+              <span className="font-semibold text-ink">{formatCFA(tx.amountCfa)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-ink-muted">Montant RUB</span>
+              <span className="font-semibold text-ink">{formatRUB(tx.amountRub)}</span>
+            </div>
+            {tx.commissionAmount > 0 ? (
+              <div className="flex justify-between text-xs">
+                <span className="text-ink-muted">Commission (réf.)</span>
+                <span>{formatMinorForSendRail(tx, tx.commissionAmount)}</span>
+              </div>
+            ) : null}
+          </>
+        )}
         <div className="flex justify-between text-xs">
-          <span className="text-ink-muted">Taux (réf.)</span>
-          <span>1 000 CFA ≈ {((1000 * tx.rate) / 100).toFixed(2)} ₽</span>
+          <span className="text-ink-muted">Taux Google (réf.)</span>
+          <span>1 000 CFA ≈ {rubDisplayFor1000Cfa(rateRef)} ₽</span>
         </div>
       </Card>
 
       <TransactionTimeline status={tx.status} />
 
-      {tx.status === 'INITIATED' && tx.operatorPaymentNumber ? (
+      {tx.status === 'INITIATED' && swaptrustDestination ? (
         <Card className="space-y-3 p-5">
-          <p className="text-sm font-medium text-ink">Envoyez sur ce numéro</p>
-          <div className="rounded-input border border-primary/25 bg-primary/[0.04] p-4">
-            <CopyableNumber value={tx.operatorPaymentNumber} />
-            <p className="mt-2 text-xs text-ink-muted">
-              {tx.operator.name} — montant : {formatCFA(tx.amountCfa)} (CFA) /{' '}
-              {formatRUB(tx.amountRub)} (₽)
+          <p className="text-sm font-medium text-ink">
+            Envoyez <span className="text-accent">exactement</span> sur ce compte SwapTrust
+          </p>
+          <div className="rounded-input border-2 border-primary/30 bg-gradient-to-br from-primary/[0.06] to-card p-4 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-wide text-primary">
+              Réception officielle
+            </p>
+            <p className="mt-1 font-medium text-ink">{swaptrustDestination.accountName}</p>
+            <div className="mt-3">
+              <CopyableAccountValue raw={swaptrustDestination.accountNumber} />
+            </div>
+            <p className="mt-4 rounded-input bg-muted/50 px-3 py-2 text-center font-display text-lg font-bold text-ink">
+              Montant exact : {formatGrossSendForClient(tx)}
+            </p>
+          </div>
+          <div className="flex gap-2 rounded-input border border-warning/35 bg-warning/10 p-3 text-xs text-ink-secondary">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" aria-hidden />
+            <p>
+              N’envoyez <strong className="text-ink">pas</strong> directement à l’opérateur : les fonds
+              passent toujours par SwapTrust, qui reverse le net à l’opérateur après commission.
             </p>
           </div>
         </Card>
       ) : null}
 
-      {tx.status === 'INITIATED' ? <ClientSendButton transactionId={id} /> : null}
+      {tx.status === 'INITIATED' && !swaptrustDestination ? (
+        <Card className="space-y-2 border-warning/30 bg-warning/10 p-4 text-sm text-ink-secondary">
+          <div className="flex gap-2">
+            <AlertTriangle className="h-5 w-5 shrink-0 text-warning" aria-hidden />
+            <div>
+              <p className="font-medium text-ink">Numéro SwapTrust indisponible</p>
+              <p className="mt-1 text-xs">
+                Le compte de réception officiel n’est pas encore renvoyé par l’API ou configuré
+                (variables <code className="rounded bg-muted px-1">NEXT_PUBLIC_SWAPTRUST_*</code>).
+                Contactez le support en indiquant la transaction #{tx.id}.
+              </p>
+            </div>
+          </div>
+        </Card>
+      ) : null}
+
+      {tx.status === 'INITIATED' ? (
+        <ClientSendButton
+          transactionId={id}
+          onWhatsappNotify={() => {
+            if (notifyPhone) showWhatsappToast(notifyPhone);
+          }}
+        />
+      ) : null}
 
       {tx.status === 'CLIENT_SENT' || tx.status === 'OPERATOR_VERIFIED' ? (
         <p className="text-center text-sm text-ink-muted">
@@ -187,7 +278,14 @@ export default function TransactionDetailPage() {
         </div>
       ) : null}
 
-      {tx.status === 'OPERATOR_SENT' ? <ClientConfirmButton transactionId={id} /> : null}
+      {tx.status === 'OPERATOR_SENT' ? (
+        <ClientConfirmButton
+          transactionId={id}
+          onWhatsappNotify={() => {
+            if (notifyPhone) showWhatsappToast(notifyPhone);
+          }}
+        />
+      ) : null}
 
       {tx.status === 'COMPLETED' ? (
         <Button

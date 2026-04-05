@@ -22,7 +22,9 @@ import { Badge } from '@/components/ui/Badge';
 import { Avatar } from '@/components/ui/Avatar';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useExchangeRate } from '@/hooks/useExchangeRate';
+import { NoWhatsappBanner } from '@/components/dashboard/NoWhatsappBanner';
 import { authApi, requestsApi, transactionsApi } from '@/services/api';
+import { userWhatsappNotifyPhone } from '@/lib/user-phones';
 import { cn, formatCFA, formatRUB, fromNow } from '@/lib/utils';
 import {
   CLIENT_TRANSACTION_FLOW,
@@ -174,8 +176,11 @@ export default function TableauDeBordPage() {
         t.status !== 'DISPUTED',
     ) ?? [];
 
+  const waPhone = userWhatsappNotifyPhone(me);
+
   return (
     <div className="mx-auto max-w-4xl space-y-8 lg:max-w-none">
+      {me ? <NoWhatsappBanner user={me} /> : null}
       <motion.header
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
@@ -361,8 +366,29 @@ export default function TableauDeBordPage() {
                       <p className="text-xs text-ink-faint">
                         {t.takenAt ? fromNow(t.takenAt) : '—'}
                       </p>
+                      <p className="mt-1 text-[11px] text-ink-faint">
+                        WhatsApp :{' '}
+                        {waPhone ? (
+                          <span className="text-emerald-600 dark:text-emerald-400">
+                            notifications actives
+                          </span>
+                        ) : (
+                          <span className="text-warning">non configuré</span>
+                        )}
+                      </p>
                     </div>
-                    <Badge tone="muted">{t.status}</Badge>
+                    <div className="flex flex-col items-end gap-1">
+                      <Badge tone="muted">{t.status}</Badge>
+                      {waPhone ? (
+                        <span className="rounded-pill border border-emerald-500/25 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-700 dark:text-emerald-400">
+                          WhatsApp
+                        </span>
+                      ) : (
+                        <span className="rounded-pill border border-line bg-muted/40 px-2 py-0.5 text-[10px] text-ink-faint">
+                          En attente config.
+                        </span>
+                      )}
+                    </div>
                   </Link>
                 </li>
               );

@@ -1,5 +1,5 @@
-import axios from 'axios';
-import { getSession, signOut } from 'next-auth/react';
+import axios from "axios";
+import { getSession, signOut } from "next-auth/react";
 import type {
   ApiResponse,
   ExchangeRequest,
@@ -9,11 +9,11 @@ import type {
   Dispute,
   User,
   UserRole,
-  TransactionDetail,
-} from '@/types';
+} from "@/types";
 import type {
   AuthTokens,
   CreateDisputeDto,
+  CreatePlatformAccountDto,
   CreateRequestDto,
   CreateReviewDto,
   ExchangeRate,
@@ -22,27 +22,30 @@ import type {
   KycStatusResponse,
   LoginDto,
   NotificationPrefs,
+  AdminRevenueSummary,
+  PlatformAccount,
   RatesCalculateResult,
   RegisterDto,
   TransactionFilters,
+  UpdatePlatformAccountDto,
   UpdateUserDto,
-} from '@/types/api-dtos';
-import type { AppNotification } from '@/types/api-dtos';
-import { getApiBaseUrl } from '@/lib/api-base';
+} from "@/types/api-dtos";
+import type { AppNotification } from "@/types/api-dtos";
+import { getApiBaseUrl } from "@/lib/api-base";
 import {
   normalizeTransactionDetailFromApi,
   normalizeTransactionFromApi,
-} from '@/lib/normalize-transaction-api';
-import { parseDecimalLike } from '@/lib/parse-decimal-json';
+} from "@/lib/normalize-transaction-api";
+import { parseDecimalLike } from "@/lib/parse-decimal-json";
 
 const api = axios.create({
   timeout: 15_000,
-  headers: { 'Content-Type': 'application/json' },
+  headers: { "Content-Type": "application/json" },
 });
 
 api.interceptors.request.use(async (config) => {
   config.baseURL = getApiBaseUrl();
-  if (typeof window === 'undefined') return config;
+  if (typeof window === "undefined") return config;
   const session = await getSession();
   if (session?.accessToken) {
     config.headers.Authorization = `Bearer ${session.accessToken}`;
@@ -53,8 +56,8 @@ api.interceptors.request.use(async (config) => {
 api.interceptors.response.use(
   (res) => res,
   async (error) => {
-    if (error.response?.status === 401 && typeof window !== 'undefined') {
-      await signOut({ callbackUrl: '/connexion' });
+    if (error.response?.status === 401 && typeof window !== "undefined") {
+      await signOut({ callbackUrl: "/connexion" });
     }
     return Promise.reject(error);
   },
@@ -63,16 +66,19 @@ api.interceptors.response.use(
 function unwrapApi<T>(body: unknown): T {
   if (
     body !== null &&
-    typeof body === 'object' &&
-    'data' in body &&
-    'success' in body
+    typeof body === "object" &&
+    "data" in body &&
+    "success" in body
   ) {
     return (body as ApiResponse<T>).data;
   }
   return body as T;
 }
 
-async function getUnwrapped<T>(path: string, params?: Record<string, unknown>): Promise<T> {
+async function getUnwrapped<T>(
+  path: string,
+  params?: Record<string, unknown>,
+): Promise<T> {
   const { data } = await api.get<unknown>(path, {
     params: params && stripUndefined(params),
   });
@@ -99,8 +105,12 @@ function stripUndefined(
 ): Record<string, string | number | boolean> {
   const out: Record<string, string | number | boolean> = {};
   for (const [k, v] of Object.entries(o)) {
-    if (v === undefined || v === '') continue;
-    if (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') {
+    if (v === undefined || v === "") continue;
+    if (
+      typeof v === "string" ||
+      typeof v === "number" ||
+      typeof v === "boolean"
+    ) {
       out[k] = v;
     }
   }
@@ -108,7 +118,7 @@ function stripUndefined(
 }
 
 function isRecord(v: unknown): v is Record<string, unknown> {
-  return typeof v === 'object' && v !== null;
+  return typeof v === "object" && v !== null;
 }
 
 function extractExchangeRequestList(raw: unknown): ExchangeRequest[] {
@@ -130,41 +140,86 @@ interface RateHistoryRow {
   fetchedAt?: string;
 }
 
-function trendFromHistory(rows: RateHistoryRow[]): 'up' | 'down' | 'stable' {
+function trendFromHistory(rows: RateHistoryRow[]): "up" | "down" | "stable" {
   const series = rows
-    .filter((r) => r.fromCurrency === 'XOF' && r.toCurrency === 'RUB')
+    .filter((r) => r.fromCurrency === "XOF" && r.toCurrency === "RUB")
     .sort(
       (a, b) =>
-        new Date(a.fetchedAt ?? 0).getTime() - new Date(b.fetchedAt ?? 0).getTime(),
+        new Date(a.fetchedAt ?? 0).getTime() -
+        new Date(b.fetchedAt ?? 0).getTime(),
     )
     .map((r) => parseDecimalLike(r.rate))
     .filter((n) => n > 0);
-  if (series.length < 2) return 'stable';
+  if (series.length < 2) return "stable";
   const a = series[series.length - 2]!;
   const b = series[series.length - 1]!;
   const rel = (b - a) / a;
-  if (rel > 0.00005) return 'up';
-  if (rel < -0.00005) return 'down';
-  return 'stable';
+  if (rel > 0.00005) return "up";
+  if (rel < -0.00005) return "down";
+  return "stable";
 }
 
+function trendFromApi(
+  raw: Record<string, unknown>,
+  fallback: "up" | "down" | "stable",
+): "up" | "down" | "stable" {
+  const t = raw.trend;
+  if (t === "up" || t === "down" || t === "stable") return t;
+  return fallback;
+}
+
+/**
+ * GET /rates/current — forme actuelle : `rate`, `rubPerXof`, `rateWithSpread`, `trend`, `percentChange24h`, …
+ * Ancienne forme encore acceptée : `XOF_RUB` / `RUB_XOF`.
+ */
 function mapCurrentToExchangeRate(
   raw: Record<string, unknown>,
-  trend: 'up' | 'down' | 'stable',
+  trendFallback: "up" | "down" | "stable",
 ): ExchangeRate {
+  const fetchedAt =
+    typeof raw.fetchedAt === "string"
+      ? raw.fetchedAt
+      : new Date().toISOString();
+
+  const rateNew = parseDecimalLike(raw.rate);
+  const rubPerXof = parseDecimalLike(raw.rubPerXof);
+  const rateWithSpread = parseDecimalLike(raw.rateWithSpread);
+  const rubWs = parseDecimalLike(raw.rubPerXofWithSpread);
+  const pct = parseDecimalLike(raw.percentChange24h ?? raw.percentChange);
+  const source = typeof raw.source === "string" ? raw.source : undefined;
+
+  if (Number.isFinite(rateNew) && rateNew > 0) {
+    const inv =
+      Number.isFinite(rubPerXof) && rubPerXof > 0 ? rubPerXof : 1 / rateNew;
+    return {
+      rate: rateNew,
+      inverseRate: inv,
+      fromCurrency: "XOF",
+      toCurrency: "RUB",
+      trend: trendFromApi(raw, trendFallback),
+      percentChange: Number.isFinite(pct) ? pct : 0,
+      fetchedAt,
+      rateWithSpread:
+        Number.isFinite(rateWithSpread) && rateWithSpread > 0
+          ? rateWithSpread
+          : undefined,
+      rubPerXofWithSpread:
+        Number.isFinite(rubWs) && rubWs > 0 ? rubWs : undefined,
+      source,
+    };
+  }
+
   const xofRub = Number(raw.XOF_RUB);
   const rubXof = Number(raw.RUB_XOF);
-  const fetchedAt =
-    typeof raw.fetchedAt === 'string' ? raw.fetchedAt : new Date().toISOString();
   const rate = Number.isFinite(xofRub) ? xofRub : 0;
   const inverse = Number.isFinite(rubXof) ? rubXof : 0;
   return {
     rate,
     inverseRate: inverse,
-    fromCurrency: 'XOF',
-    toCurrency: 'RUB',
-    trend,
-    percentChange: 0,
+    fromCurrency: "XOF",
+    toCurrency: "RUB",
+    trend: trendFromApi(raw, trendFallback),
+    percentChange: Number.isFinite(pct) ? pct : 0,
     fetchedAt,
   };
 }
@@ -190,40 +245,42 @@ function extractUserList(raw: unknown): User[] {
 // ─── AUTH ───────────────────────────────────────────────────────────────────
 
 export const authApi = {
-  register: (dto: RegisterDto) => api.post<unknown>('/auth/register', dto),
-  login: (dto: LoginDto) =>
-    api.post<unknown>('/auth/login', dto),
-  sendOtp: (phone: string) => api.post('/auth/otp/send', { phone }),
+  register: (dto: RegisterDto) => api.post<unknown>("/auth/register", dto),
+  login: (dto: LoginDto) => api.post<unknown>("/auth/login", dto),
+  sendOtp: (phone: string) => api.post("/auth/otp/send", { phone }),
   verifyOtp: (phone: string, code: string) =>
-    api.post('/auth/otp/verify', { phone, code }),
-  logout: () => api.post('/auth/logout'),
+    api.post("/auth/otp/verify", { phone, code }),
+  logout: () => api.post("/auth/logout"),
   refresh: (refreshToken: string) =>
-    postUnwrapped<AuthTokens>('/auth/refresh', { refreshToken }),
-  me: () => getUnwrapped<User>('/auth/me'),
+    postUnwrapped<AuthTokens>("/auth/refresh", { refreshToken }),
+  me: () => getUnwrapped<User>("/auth/me"),
 };
 
 // ─── USERS ──────────────────────────────────────────────────────────────────
 
 export const usersApi = {
-  updateMe: (dto: UpdateUserDto) => putUnwrapped<User>('/users/me', dto),
-  deleteMe: () => deleteUnwrapped('/users/me'),
+  updateMe: (dto: UpdateUserDto) => putUnwrapped<User>("/users/me", dto),
+  deleteMe: () => deleteUnwrapped("/users/me"),
   uploadAvatar: (file: File) => {
     const form = new FormData();
-    form.append('avatar', file);
-    return api.post<unknown>('/users/me/avatar', form, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    }).then((r) => unwrapApi<{ avatar: string }>(r.data));
+    form.append("avatar", file);
+    return api
+      .post<unknown>("/users/me/avatar", form, {
+        headers: { "Content-Type": "multipart/form-data" },
+      })
+      .then((r) => unwrapApi<{ avatar: string }>(r.data));
   },
   getProfile: (id: number) => getUnwrapped<User>(`/users/${id}`),
   getReviews: async (id: number): Promise<Review[]> => {
     const { data } = await api.get<unknown>(`/users/${id}/reviews`);
     const inner = unwrapApi<unknown>(data);
     if (Array.isArray(inner)) return inner as Review[];
-    if (isRecord(inner) && Array.isArray(inner.data)) return inner.data as Review[];
+    if (isRecord(inner) && Array.isArray(inner.data))
+      return inner.data as Review[];
     return [];
   },
   listAll: async (params?: Record<string, string>): Promise<User[]> => {
-    const { data } = await api.get<unknown>('/users', { params });
+    const { data } = await api.get<unknown>("/users", { params });
     return extractUserList(unwrapApi(data));
   },
 };
@@ -238,28 +295,54 @@ export const kycApi = {
     selfie: File;
   }) => {
     const form = new FormData();
-    form.append('docType', payload.docType);
-    form.append('front', payload.front);
-    form.append('back', payload.back);
-    form.append('selfie', payload.selfie);
-    return api.post<unknown>('/kyc/submit', form, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    }).then((r) => unwrapApi<unknown>(r.data));
+    form.append("docType", payload.docType);
+    form.append("front", payload.front);
+    form.append("back", payload.back);
+    form.append("selfie", payload.selfie);
+    return api
+      .post<unknown>("/kyc/submit", form, {
+        headers: { "Content-Type": "multipart/form-data" },
+      })
+      .then((r) => unwrapApi<unknown>(r.data));
   },
-  getStatus: () => getUnwrapped<KycStatusResponse>('/kyc/status'),
-  approve: (id: number) => api.put(`/kyc/admin/${id}/approve`),
-  reject: (id: number, note: string) =>
-    api.put(`/kyc/admin/${id}/reject`, { note }),
+  getStatus: () => getUnwrapped<KycStatusResponse>("/kyc/status"),
+  /**
+   * [Admin] PUT `/kyc/admin/:userId/approve` — URL complète avec base : `/api/v1/kyc/admin/{id}/approve`.
+   * Le `id` du path est l’**identifiant utilisateur**, pas l’id du document KYC.
+   */
+  approve: (userId: number) => api.put(`/kyc/admin/${userId}/approve`),
+  /**
+   * [Admin] PUT `/kyc/admin/:userId/reject` — même convention d’`id` utilisateur.
+   * Corps `{ note }` si fourni (selon ton DTO Nest).
+   */
+  reject: (userId: number, note?: string) =>
+    api.put(
+      `/kyc/admin/${userId}/reject`,
+      note?.trim() ? { note: note.trim() } : {},
+    ),
 };
 
 // ─── DEMANDES CLIENT ────────────────────────────────────────────────────────
 
+/** Corps strict pour `forbidNonWhitelisted` (Nest) : aucune clé en trop. */
+function bodyCreateRequest(dto: CreateRequestDto): CreateRequestDto {
+  const body: CreateRequestDto = {
+    type: dto.type,
+    amountWanted: dto.amountWanted,
+    paymentMethod: dto.paymentMethod,
+    phoneToSend: dto.phoneToSend,
+  };
+  const note = dto.note?.trim();
+  if (note) body.note = note;
+  return body;
+}
+
 export const requestsApi = {
   create: (dto: CreateRequestDto) =>
-    postUnwrapped<ExchangeRequest>('/requests', dto),
+    postUnwrapped<ExchangeRequest>("/requests", bodyCreateRequest(dto)),
 
   mine: async (): Promise<ExchangeRequest[]> => {
-    const { data } = await api.get<unknown>('/requests/mine');
+    const { data } = await api.get<unknown>("/requests/mine");
     return extractExchangeRequestList(data);
   },
 
@@ -277,12 +360,12 @@ export const proofsApi = {
   ): Promise<{ blob: Blob; contentType: string }> => {
     const { data, headers } = await api.get<Blob>(
       `/proofs/${encodeURIComponent(filename)}`,
-      { responseType: 'blob' },
+      { responseType: "blob" },
     );
     const contentType =
-      String(headers['content-type'] ?? '')
-        .split(';')[0]
-        ?.trim() ?? '';
+      String(headers["content-type"] ?? "")
+        .split(";")[0]
+        ?.trim() ?? "";
     return { blob: data, contentType };
   },
 };
@@ -291,7 +374,7 @@ export const proofsApi = {
 
 export const transactionsApi = {
   list: async (params?: TransactionFilters): Promise<Transaction[]> => {
-    const { data } = await api.get<unknown>('/transactions', {
+    const { data } = await api.get<unknown>("/transactions", {
       params: params
         ? stripUndefined(params as Record<string, unknown>)
         : undefined,
@@ -300,13 +383,15 @@ export const transactionsApi = {
   },
 
   getById: (id: number) =>
-    getUnwrapped<unknown>(`/transactions/${id}`).then(normalizeTransactionFromApi),
+    getUnwrapped<unknown>(`/transactions/${id}`).then(
+      normalizeTransactionFromApi,
+    ),
 
   clientSend: (id: number, proofFile: File) => {
     const form = new FormData();
-    form.append('proof', proofFile);
+    form.append("proof", proofFile);
     return api.post<unknown>(`/transactions/${id}/client-send`, form, {
-      headers: { 'Content-Type': 'multipart/form-data' },
+      headers: { "Content-Type": "multipart/form-data" },
     });
   },
 
@@ -326,7 +411,7 @@ export const chatApi = {
   sendMessage: (
     transactionId: number,
     content: string,
-    type: 'TEXT' | 'IMAGE' = 'TEXT',
+    type: "TEXT" | "IMAGE" = "TEXT",
   ) =>
     postUnwrapped<Message>(`/chat/transactions/${transactionId}/messages`, {
       content,
@@ -342,7 +427,8 @@ export const chatApi = {
 export const reviewsApi = {
   create: (transactionId: number, dto: CreateReviewDto) =>
     postUnwrapped<Review>(`/reviews/transactions/${transactionId}`, dto),
-  getForUser: (userId: number) => getUnwrapped<Review[]>(`/reviews/users/${userId}`),
+  getForUser: (userId: number) =>
+    getUnwrapped<Review[]>(`/reviews/users/${userId}`),
 };
 
 // ─── DISPUTES ───────────────────────────────────────────────────────────────
@@ -358,13 +444,13 @@ export const disputesApi = {
 
   addAttachment: (id: number, file: File) => {
     const form = new FormData();
-    form.append('file', file);
+    form.append("file", file);
     return api.post(`/disputes/${id}/attachments`, form, {
-      headers: { 'Content-Type': 'multipart/form-data' },
+      headers: { "Content-Type": "multipart/form-data" },
     });
   },
 
-  adminList: () => getUnwrapped<Dispute[]>('/disputes/admin'),
+  adminList: () => getUnwrapped<Dispute[]>("/disputes/admin"),
 
   adminResolve: (id: number, resolution: string) =>
     api.put(`/disputes/admin/${id}/resolve`, { resolution }),
@@ -373,47 +459,55 @@ export const disputesApi = {
 // ─── NOTIFICATIONS ──────────────────────────────────────────────────────────
 
 export const notificationsApi = {
-  list: () => getUnwrapped<AppNotification[]>('/notifications'),
-  markAllRead: () => api.put('/notifications/read-all'),
+  list: () => getUnwrapped<AppNotification[]>("/notifications"),
+  markAllRead: () => api.put("/notifications/read-all"),
   markOneRead: (id: number) => api.put(`/notifications/${id}/read`),
   delete: (id: number) => api.delete(`/notifications/${id}`),
-  getPrefs: () => getUnwrapped<NotificationPrefs>('/notifications/preferences'),
+  getPrefs: () => getUnwrapped<NotificationPrefs>("/notifications/preferences"),
   updatePrefs: (prefs: Partial<NotificationPrefs>) =>
-    putUnwrapped<NotificationPrefs>('/notifications/preferences', prefs),
+    putUnwrapped<NotificationPrefs>("/notifications/preferences", prefs),
 };
 
 // ─── RATES ──────────────────────────────────────────────────────────────────
 
 export const ratesApi = {
   current: async (): Promise<ExchangeRate> => {
-    const { data } = await api.get<unknown>('/rates/current');
+    const { data } = await api.get<unknown>("/rates/current");
     const raw = unwrapApi<Record<string, unknown>>(data);
-    return mapCurrentToExchangeRate(raw, 'stable');
+    return mapCurrentToExchangeRate(raw, "stable");
   },
 
-  /** Taux + tendance (historique 24h). */
+  /** Taux : tendance prioritaire depuis l’API, sinon historique. */
   currentWithTrend: async (): Promise<ExchangeRate> => {
     const [currentRes, historyRes] = await Promise.all([
-      api.get<unknown>('/rates/current'),
-      api.get<unknown>('/rates/history'),
+      api.get<unknown>("/rates/current"),
+      api.get<unknown>("/rates/history"),
     ]);
     const raw = unwrapApi<Record<string, unknown>>(currentRes.data);
     const histRaw = unwrapApi<unknown>(historyRes.data);
     const histRows = Array.isArray(histRaw)
       ? (histRaw as RateHistoryRow[])
       : [];
-    const trend = trendFromHistory(histRows);
+    const trendHist = trendFromHistory(histRows);
+    const trend =
+      raw.trend === "up" || raw.trend === "down" || raw.trend === "stable"
+        ? raw.trend
+        : trendHist;
     return mapCurrentToExchangeRate(raw, trend);
   },
 
   history: async (): Promise<RateHistoryRow[]> => {
-    const { data } = await api.get<unknown>('/rates/history');
+    const { data } = await api.get<unknown>("/rates/history");
     const inner = unwrapApi<unknown>(data);
     return Array.isArray(inner) ? (inner as RateHistoryRow[]) : [];
   },
 
-  calculate: (amount: number, from: 'XOF' | 'RUB', to: 'XOF' | 'RUB') =>
-    getUnwrapped<RatesCalculateResult>('/rates/calculate', {
+  /**
+   * `amount` en **plus petite unité** : centimes (XOF) ou kopecks (RUB).
+   * Ex. 1000 RUB affichés → `amount = 100_000`, `from = RUB`.
+   */
+  calculate: (amount: number, from: "XOF" | "RUB", to: "XOF" | "RUB") =>
+    getUnwrapped<RatesCalculateResult>("/rates/calculate", {
       amount: String(amount),
       from,
       to,
@@ -424,7 +518,7 @@ export const ratesApi = {
 
 export const operatorApi = {
   getPendingRequests: async (): Promise<ExchangeRequest[]> => {
-    const { data } = await api.get<unknown>('/operator/requests');
+    const { data } = await api.get<unknown>("/operator/requests");
     return extractExchangeRequestList(data);
   },
 
@@ -439,8 +533,10 @@ export const operatorApi = {
       normalizeTransactionFromApi,
     ),
 
-  getMyTransactions: async (filters?: TransactionFilters): Promise<Transaction[]> => {
-    const { data } = await api.get<unknown>('/operator/transactions', {
+  getMyTransactions: async (
+    filters?: TransactionFilters,
+  ): Promise<Transaction[]> => {
+    const { data } = await api.get<unknown>("/operator/transactions", {
       params: filters
         ? stripUndefined(filters as Record<string, unknown>)
         : undefined,
@@ -458,9 +554,9 @@ export const operatorApi = {
 
   operatorSend: (id: number, proofFile: File) => {
     const form = new FormData();
-    form.append('proof', proofFile);
+    form.append("proof", proofFile);
     return api.post<unknown>(`/operator/transactions/${id}/send`, form, {
-      headers: { 'Content-Type': 'multipart/form-data' },
+      headers: { "Content-Type": "multipart/form-data" },
     });
   },
 
@@ -474,53 +570,73 @@ export const operatorApi = {
 // ─── ADMIN ──────────────────────────────────────────────────────────────────
 
 export const adminApi = {
-  dashboard: () => getUnwrapped<KpiDashboard>('/admin/dashboard'),
+  dashboard: () => getUnwrapped<KpiDashboard>("/admin/dashboard"),
 
   allUsers: (params?: Record<string, string>) =>
-    getUnwrapped<User[]>('/admin/users', params as Record<string, unknown>),
+    getUnwrapped<User[]>("/admin/users", params as Record<string, unknown>),
 
   /** @deprecated Utiliser allUsers */
   users: (params?: Record<string, string>) =>
-    getUnwrapped<User[]>('/admin/users', params as Record<string, unknown>),
+    getUnwrapped<User[]>("/admin/users", params as Record<string, unknown>),
 
   banUser: (id: number) => api.put(`/admin/users/${id}/ban`),
 
   assignRole: (userId: number, role: UserRole) =>
     api.put(`/admin/users/${userId}/role`, { role }),
 
-  listOperators: () => getUnwrapped<User[]>('/admin/operators'),
+  listOperators: () => getUnwrapped<User[]>("/admin/operators"),
 
-  revokeOperator: (userId: number) =>
-    api.delete(`/admin/operators/${userId}`),
+  revokeOperator: (userId: number) => api.delete(`/admin/operators/${userId}`),
 
   allRequests: async (params?: Record<string, string>) => {
-    const { data } = await api.get<unknown>('/admin/requests', { params });
+    const { data } = await api.get<unknown>("/admin/requests", { params });
     return extractExchangeRequestList(data);
   },
 
   pendingRequests: async () => {
-    const { data } = await api.get<unknown>('/admin/requests/pending');
+    const { data } = await api.get<unknown>("/admin/requests/pending");
     return extractExchangeRequestList(data);
   },
 
   allTransactions: (params?: Record<string, string>) =>
-    getUnwrapped<Transaction[]>('/admin/transactions', params as Record<string, unknown>),
+    getUnwrapped<Transaction[]>(
+      "/admin/transactions",
+      params as Record<string, unknown>,
+    ),
 
   /** @deprecated Utiliser allTransactions */
   transactions: (params?: Record<string, string>) =>
-    getUnwrapped<Transaction[]>('/admin/transactions', params as Record<string, unknown>),
+    getUnwrapped<Transaction[]>(
+      "/admin/transactions",
+      params as Record<string, unknown>,
+    ),
 
-  disputes: () => getUnwrapped<Dispute[]>('/admin/disputes'),
+  disputes: () => getUnwrapped<Dispute[]>("/admin/disputes"),
 
   resolveDispute: (id: number, resolution: string) =>
     api.put(`/admin/disputes/${id}/resolve`, { resolution }),
 
-  kycPending: () => getUnwrapped<KycDocument[]>('/admin/kyc/pending'),
+  kycPending: () => getUnwrapped<KycDocument[]>("/admin/kyc/pending"),
 
-  approveKyc: (id: number) => api.put(`/kyc/admin/${id}/approve`),
+  approveKyc: (userId: number) => kycApi.approve(userId),
 
-  rejectKyc: (id: number, note: string) =>
-    api.put(`/kyc/admin/${id}/reject`, { note }),
+  rejectKyc: (userId: number, note?: string) => kycApi.reject(userId, note),
+
+  /** Numéros / IBAN de réception SwapTrust (admin). */
+  platformAccounts: () =>
+    getUnwrapped<PlatformAccount[]>("/admin/platform-accounts"),
+
+  createPlatformAccount: (dto: CreatePlatformAccountDto) =>
+    postUnwrapped<PlatformAccount>("/admin/platform-accounts", dto),
+
+  updatePlatformAccount: (id: number, dto: UpdatePlatformAccountDto) =>
+    putUnwrapped<PlatformAccount>(`/admin/platform-accounts/${id}`, dto),
+
+  deletePlatformAccount: (id: number) =>
+    deleteUnwrapped(`/admin/platform-accounts/${id}`),
+
+  revenueSummary: () =>
+    getUnwrapped<AdminRevenueSummary>("/admin/revenue/summary"),
 };
 
 export default api;

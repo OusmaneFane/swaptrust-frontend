@@ -23,17 +23,17 @@ export function AdminKycPendingList({ pending, compact }: Props) {
   };
 
   const approveMut = useMutation({
-    mutationFn: (id: number) => kycApi.approve(id),
-    onMutate: async (id) => {
+    mutationFn: (userId: number) => kycApi.approve(userId),
+    onMutate: async (userId) => {
       await qc.cancelQueries({ queryKey: ['admin', 'kyc', 'pending'] });
       const prev = qc.getQueryData<KycDocument[]>(['admin', 'kyc', 'pending']);
       qc.setQueryData<KycDocument[]>(
         ['admin', 'kyc', 'pending'],
-        (old) => old?.filter((d) => d.id !== id) ?? [],
+        (old) => old?.filter((d) => d.userId !== userId) ?? [],
       );
       return { prev };
     },
-    onError: (_e, _id, ctx) => {
+    onError: (_e, _userId, ctx) => {
       if (ctx?.prev) {
         qc.setQueryData(['admin', 'kyc', 'pending'], ctx.prev);
       }
@@ -46,14 +46,14 @@ export function AdminKycPendingList({ pending, compact }: Props) {
   });
 
   const rejectMut = useMutation({
-    mutationFn: ({ id, note }: { id: number; note: string }) =>
-      kycApi.reject(id, note),
-    onMutate: async ({ id }) => {
+    mutationFn: ({ userId, note }: { userId: number; note?: string }) =>
+      kycApi.reject(userId, note),
+    onMutate: async ({ userId }) => {
       await qc.cancelQueries({ queryKey: ['admin', 'kyc', 'pending'] });
       const prev = qc.getQueryData<KycDocument[]>(['admin', 'kyc', 'pending']);
       qc.setQueryData<KycDocument[]>(
         ['admin', 'kyc', 'pending'],
-        (old) => old?.filter((d) => d.id !== id) ?? [],
+        (old) => old?.filter((d) => d.userId !== userId) ?? [],
       );
       return { prev };
     },
@@ -136,7 +136,7 @@ export function AdminKycPendingList({ pending, compact }: Props) {
               type="button"
               className="py-2 text-xs shadow-sm"
               loading={approveMut.isPending}
-              onClick={() => approveMut.mutate(doc.id)}
+              onClick={() => approveMut.mutate(doc.userId)}
             >
               Approuver
             </Button>
@@ -146,8 +146,8 @@ export function AdminKycPendingList({ pending, compact }: Props) {
               className="border-danger/35 py-2 text-xs text-danger hover:bg-danger/5"
               loading={rejectMut.isPending}
               onClick={() => {
-                const note = window.prompt('Motif du rejet ?') ?? '';
-                if (note.trim()) rejectMut.mutate({ id: doc.id, note });
+                const note = window.prompt('Motif du rejet ? (optionnel)') ?? '';
+                rejectMut.mutate({ userId: doc.userId, note: note.trim() || undefined });
               }}
             >
               Rejeter

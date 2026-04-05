@@ -41,6 +41,19 @@ function OperatorNavLink({
   );
 }
 
+function AdminBackLink() {
+  const { data: session } = useSession();
+  if (session?.user?.role !== 'ADMIN') return null;
+  return (
+    <Link
+      href="/admin"
+      className="block rounded-input border border-primary/25 bg-primary/[0.06] px-3 py-2 text-center text-xs font-semibold text-primary transition-colors hover:bg-primary/10"
+    >
+      ← Retour administration
+    </Link>
+  );
+}
+
 function OperatorProfileCard() {
   const { data: session } = useSession();
   return (
@@ -96,6 +109,7 @@ export default function OperateurLayout({
           </div>
           <nav className="flex flex-1 flex-col gap-1 p-4">{nav}</nav>
           <div className="space-y-3 border-t border-line p-4">
+            <AdminBackLink />
             <OperatorProfileCard />
             <LogoutButton className="w-full justify-center" label="always" />
           </div>
@@ -122,6 +136,7 @@ export default function OperateurLayout({
             <div className="border-b border-line bg-card px-4 py-4 shadow-card lg:hidden">
               <nav className="flex flex-col gap-1">{nav}</nav>
               <div className="mt-4">
+                <AdminBackLink />
                 <OperatorProfileCard />
               </div>
               <LogoutButton

@@ -1,4 +1,13 @@
+import type { PaymentMethod } from './order';
 import type { User } from './user';
+
+/** Référence API : numéro / IBAN sur lequel le client envoie (SwapTrust, pas l’opérateur). */
+export interface PlatformReceiveAccount {
+  id?: number;
+  method?: PaymentMethod;
+  accountNumber: string;
+  accountName: string;
+}
 
 export type TransactionStatus =
   | 'INITIATED'
@@ -29,6 +38,20 @@ export interface Transaction {
   operatorSentAt: string | null;
   completedAt: string | null;
   expiresAt: string;
+  /** Méthode de la demande (pour fallback numéros SwapTrust publics). */
+  paymentMethod?: PaymentMethod;
+  /** Montant total à envoyer par le client (mineur, ex. centimes CFA). */
+  grossAmount?: number;
+  /** Montant net cédé à l’opérateur après commission. */
+  netAmount?: number;
+  /** Taux Google brut (référence), même échelle que GET /rates/current. */
+  googleRate?: number;
+  /** Pourcentage de commission appliqué (ex. 2). */
+  commissionPercent?: number;
+  /** Compte officiel SwapTrust — seul numéro visible au client pour l’envoi. */
+  platformAccount?: PlatformReceiveAccount | null;
+  platformToOperatorProofUrl?: string | null;
+  platformTransferredAt?: string | null;
 }
 
 /** Étapes affichées sur la timeline côté client (5 phases). */
@@ -40,7 +63,7 @@ export const CLIENT_TRANSACTION_FLOW: {
   {
     statuses: ['INITIATED'],
     label: 'Opérateur assigné',
-    description: 'Envoyez vos fonds sur le numéro indiqué',
+    description: 'Envoyez le montant exact sur le numéro SwapTrust indiqué',
   },
   {
     statuses: ['CLIENT_SENT'],

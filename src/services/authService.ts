@@ -13,7 +13,9 @@ export interface RegisterPayload {
   name: string;
   email: string;
   password: string;
+  /** `223` + 8 chiffres, sans `+` (ex. `22382791234`) */
   phoneMali?: string;
+  /** `7` + 10 chiffres, sans `+` (ex. `79968414684`) */
   phoneRussia?: string;
   countryResidence: 'MALI' | 'RUSSIA' | 'OTHER';
 }

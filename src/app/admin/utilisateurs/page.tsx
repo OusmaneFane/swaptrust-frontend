@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { adminApi, kycApi } from '@/services/api';
@@ -23,19 +23,6 @@ export default function AdminUsersPage() {
         kycFilter ? { kycStatus: kycFilter } : undefined,
       ),
   });
-
-  const { data: pendingDocs = [] } = useQuery({
-    queryKey: ['admin', 'kyc', 'pending'],
-    queryFn: () => adminApi.kycPending(),
-  });
-
-  const pendingDocIdByUserId = useMemo(() => {
-    const m = new Map<number, number>();
-    for (const d of pendingDocs) {
-      if (d.status === 'PENDING') m.set(d.userId, d.id);
-    }
-    return m;
-  }, [pendingDocs]);
 
   const assignRoleMut = useMutation({
     mutationFn: ({ userId, role }: { userId: number; role: UserRole }) =>
@@ -68,7 +55,7 @@ export default function AdminUsersPage() {
   };
 
   const approveMut = useMutation({
-    mutationFn: (documentId: number) => kycApi.approve(documentId),
+    mutationFn: (userId: number) => kycApi.approve(userId),
     onSuccess: () => {
       invalidateKyc();
       toast.success('KYC approuvé');
@@ -77,18 +64,14 @@ export default function AdminUsersPage() {
   });
 
   const rejectMut = useMutation({
-    mutationFn: ({ documentId, note }: { documentId: number; note: string }) =>
-      kycApi.reject(documentId, note),
+    mutationFn: ({ userId, note }: { userId: number; note?: string }) =>
+      kycApi.reject(userId, note),
     onSuccess: () => {
       invalidateKyc();
       toast.success('KYC rejeté');
     },
     onError: () => toast.error('Rejet impossible'),
   });
-
-  function kycDocIdForUser(userId: number): number | undefined {
-    return pendingDocIdByUserId.get(userId);
-  }
 
   return (
     <div className="space-y-6">
@@ -102,12 +85,11 @@ export default function AdminUsersPage() {
             <code className="rounded bg-muted px-1 font-mono text-xs">
               PUT /admin/users/{'{id}'}/ban
             </code>
-            . KYC : actions sur l’id du{' '}
-            <strong className="text-ink">dossier</strong> (
+            . KYC :{' '}
             <code className="rounded bg-muted px-1 font-mono text-xs">
-              GET /admin/kyc/pending
+              PUT /api/v1/kyc/admin/{'{userId}'}/approve|reject
             </code>
-            ).
+            .
           </p>
         </div>
         <select
@@ -142,10 +124,6 @@ export default function AdminUsersPage() {
               </thead>
               <tbody className="divide-y divide-line bg-card">
                 {users.map((u: User) => {
-                  const docId =
-                    u.kycStatus === 'PENDING'
-                      ? kycDocIdForUser(u.id)
-                      : undefined;
                   const role = u.role ?? 'CLIENT';
                   return (
                     <tr
@@ -223,13 +201,13 @@ export default function AdminUsersPage() {
                             )}
                           </div>
                           <div className="flex flex-wrap gap-1.5">
-                          {u.kycStatus === 'PENDING' && docId != null ? (
+                          {u.kycStatus === 'PENDING' ? (
                             <>
                               <Button
                                 type="button"
                                 className="py-1.5 text-xs"
                                 loading={approveMut.isPending}
-                                onClick={() => approveMut.mutate(docId)}
+                                onClick={() => approveMut.mutate(u.id)}
                               >
                                 KYC ✓
                               </Button>
@@ -239,19 +217,16 @@ export default function AdminUsersPage() {
                                 className="border-line py-1.5 text-xs"
                                 loading={rejectMut.isPending}
                                 onClick={() => {
-                                  const note = window.prompt('Motif ?') ?? '';
-                                  if (note.trim()) {
-                                    rejectMut.mutate({ documentId: docId, note });
-                                  }
+                                  const note = window.prompt('Motif ? (optionnel)') ?? '';
+                                  rejectMut.mutate({
+                                    userId: u.id,
+                                    note: note.trim() || undefined,
+                                  });
                                 }}
                               >
                                 KYC ✗
                               </Button>
                             </>
-                          ) : u.kycStatus === 'PENDING' ? (
-                            <span className="text-xs text-ink-faint">
-                              Dossier introuvable
-                            </span>
                           ) : null}
                           <Button
                             type="button"

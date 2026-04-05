@@ -43,6 +43,8 @@ function listUserToUser(raw: OrderApiRaw): User {
     email: typeof u?.email === 'string' ? u.email : '',
     phoneMali: typeof ur?.phoneMali === 'string' ? ur.phoneMali : null,
     phoneRussia: typeof ur?.phoneRussia === 'string' ? ur.phoneRussia : null,
+    whatsappPhone:
+      typeof ur?.whatsappPhone === 'string' ? ur.whatsappPhone : null,
     countryResidence:
       ur?.countryResidence === 'MALI' ||
       ur?.countryResidence === 'RUSSIA' ||

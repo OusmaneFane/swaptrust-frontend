@@ -21,24 +21,73 @@ export interface KycDocument {
   reviewedAt: string | null;
 }
 
-/** Taux — vue affichage (dérivée de GET /rates/current + historique). */
+/**
+ * GET /rates/current — `rate` = Google Finance brut (₽ pour 1 F CFA, transparent).
+ * Les demandes utilisent ce `rate` + commission à part. `rateWithSpread` est informatif seulement.
+ */
 export interface ExchangeRate {
+  /** ₽ (unité majeure) pour 1 franc CFA — facteur multiplicatif côté affichage (ex. 1000 F → 1000×rate ₽). */
   rate: number;
   fromCurrency?: string;
   toCurrency?: string;
   trend: 'up' | 'down' | 'stable';
+  /** Souvent `percentChange24h` de l’API. */
   percentChange: number;
   fetchedAt: string;
-  /** Présent quand la source API expose les deux sens. */
+  /** F CFA pour 1 ₽ (maj.) — égal à `rubPerXof` de l’API (~ 1/rate). */
   inverseRate?: number;
+  /** Informatif (marge) — ne pas fusionner dans le taux affiché comme taux « client ». */
+  rateWithSpread?: number;
+  rubPerXofWithSpread?: number;
+  /** Ex. `cache`, `live` */
+  source?: string;
 }
 
 export interface RatesCalculateResult {
+  /** Montant dans l’unité minoritaire de la devise `to` (centimes XOF ou kopecks RUB). */
   result: number;
   rate: number;
-  /** Montant commission en même unité minoritaire que le montant envoyé (si fourni par l’API). */
+  /**
+   * Commission en unité minoritaire de la devise **`from`**
+   * (kopecks si from=RUB, centimes si from=XOF), si l’API la renvoie.
+   */
   commissionAmount?: number;
   commissionRate?: number;
+}
+
+/** GET/POST /admin/platform-accounts — compte de réception SwapTrust côté client. */
+export interface PlatformAccount {
+  id: number;
+  method: PaymentMethod;
+  accountNumber: string;
+  accountName: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface CreatePlatformAccountDto {
+  method: PaymentMethod;
+  accountNumber: string;
+  accountName: string;
+  /** Défaut côté API souvent `true`. */
+  isActive?: boolean;
+}
+
+export interface UpdatePlatformAccountDto {
+  accountNumber?: string;
+  accountName?: string;
+  isActive?: boolean;
+}
+
+/** GET /admin/revenue/summary — volumes / commissions (CFA, flux NEED_RUB typique). */
+export interface AdminRevenueSummary {
+  period: string;
+  transactionCount: number;
+  /** Souvent en centimes CFA — afficher avec `formatCFA` si cohérent avec votre API. */
+  totalVolumeCfa: number;
+  totalCommissionCfa: number;
+  pendingTransfers: number;
+  pendingAmount: number;
 }
 
 /** Admin dashboard */
@@ -61,7 +110,9 @@ export interface RegisterDto {
   name: string;
   email: string;
   password: string;
+  /** `223` + 8 chiffres, sans `+` */
   phoneMali?: string;
+  /** `7` + 10 chiffres, sans `+` */
   phoneRussia?: string;
   countryResidence: 'MALI' | 'RUSSIA' | 'OTHER';
 }
@@ -73,7 +124,9 @@ export interface LoginDto {
 
 export interface UpdateUserDto {
   name?: string;
+  /** `223` + 8 chiffres, sans `+` */
   phoneMali?: string;
+  /** `7` + 10 chiffres, sans `+` */
   phoneRussia?: string;
   countryResidence?: 'MALI' | 'RUSSIA' | 'OTHER';
 }
@@ -118,6 +171,7 @@ export interface CreateRequestDto {
   type: RequestType;
   amountWanted: number;
   paymentMethod: PaymentMethod;
+  /** Indicatif pays + national, chiffres uniquement, sans `+` */
   phoneToSend: string;
   note?: string;
 }
