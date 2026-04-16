@@ -1,0 +1,10 @@
+<svg viewBox="0 0 200 52" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="26" cy="26" r="25" fill="#1F3A5F"/>
+  <circle cx="26" cy="26" r="24" fill="none" stroke="#2ECC71" stroke-width="1.2" opacity="0.5"/>
+  <line x1="12" y1="26" x2="33" y2="26" stroke="#2ECC71" stroke-width="3" stroke-linecap="round"/>
+  <polyline points="26,17 36,26 26,35" fill="none" stroke="#2ECC71" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="12" y1="19" x2="24" y2="19" stroke="#2ECC71" stroke-width="1.8" stroke-linecap="round" opacity="0.4"/>
+  <line x1="12" y1="33" x2="24" y2="33" stroke="#2ECC71" stroke-width="1.8" stroke-linecap="round" opacity="0.4"/>
+  <text x="62" y="32" font-family="Georgia,serif" font-size="22" font-weight="700" fill="#1F3A5F" letter-spacing="-0.5">Doni</text>
+  <text x="116" y="32" font-family="Georgia,serif" font-size="22" font-weight="300" fill="#27AE60" letter-spacing="-0.5">Send</text>
+</svg>

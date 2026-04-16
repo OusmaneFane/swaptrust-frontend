@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import type { User } from '@/types/user';
 
-const STORAGE_KEY = 'swaptrust:dismiss-no-whatsapp-banner';
+const STORAGE_KEY = 'donisend:dismiss-no-whatsapp-banner';
 
 function hasAnyPhone(user: User): boolean {
   return Boolean(user.phoneMali || user.phoneRussia);

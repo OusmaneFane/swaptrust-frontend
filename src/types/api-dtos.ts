@@ -55,7 +55,7 @@ export interface RatesCalculateResult {
   commissionRate?: number;
 }
 
-/** GET/POST /admin/platform-accounts — compte de réception SwapTrust côté client. */
+/** GET/POST /admin/platform-accounts — compte de réception DoniSend côté client. */
 export interface PlatformAccount {
   id: number;
   method: PaymentMethod;

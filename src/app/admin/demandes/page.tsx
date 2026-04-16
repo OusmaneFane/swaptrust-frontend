@@ -65,7 +65,7 @@ export default function AdminDemandesPage() {
           <strong className="text-ink">fiche transaction opérateur</strong> pour suivre l’échange
           (reçu client, envoi des fonds, etc.). Les clients paient sur les{' '}
           <Link href="/admin/platform-accounts" className="font-medium text-primary underline">
-            comptes SwapTrust
+            comptes DoniSend
           </Link>
           .
         </p>

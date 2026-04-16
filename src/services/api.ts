@@ -622,7 +622,7 @@ export const adminApi = {
 
   rejectKyc: (userId: number, note?: string) => kycApi.reject(userId, note),
 
-  /** Numéros / IBAN de réception SwapTrust (admin). */
+  /** Numéros / IBAN de réception DoniSend (admin). */
   platformAccounts: () =>
     getUnwrapped<PlatformAccount[]>("/admin/platform-accounts"),
 

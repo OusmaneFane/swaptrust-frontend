@@ -1,7 +1,7 @@
 import type { PaymentMethod } from './order';
 import type { User } from './user';
 
-/** Référence API : numéro / IBAN sur lequel le client envoie (SwapTrust, pas l’opérateur). */
+/** Référence API : numéro / IBAN sur lequel le client envoie (DoniSend, pas l’opérateur). */
 export interface PlatformReceiveAccount {
   id?: number;
   method?: PaymentMethod;
@@ -38,7 +38,7 @@ export interface Transaction {
   operatorSentAt: string | null;
   completedAt: string | null;
   expiresAt: string;
-  /** Méthode de la demande (pour fallback numéros SwapTrust publics). */
+  /** Méthode de la demande (pour fallback numéros DoniSend publics). */
   paymentMethod?: PaymentMethod;
   /** Montant total à envoyer par le client (mineur, ex. centimes CFA). */
   grossAmount?: number;
@@ -48,7 +48,7 @@ export interface Transaction {
   googleRate?: number;
   /** Pourcentage de commission appliqué (ex. 2). */
   commissionPercent?: number;
-  /** Compte officiel SwapTrust — seul numéro visible au client pour l’envoi. */
+  /** Compte officiel DoniSend — seul numéro visible au client pour l’envoi. */
   platformAccount?: PlatformReceiveAccount | null;
   platformToOperatorProofUrl?: string | null;
   platformTransferredAt?: string | null;
@@ -63,7 +63,7 @@ export const CLIENT_TRANSACTION_FLOW: {
   {
     statuses: ['INITIATED'],
     label: 'Opérateur assigné',
-    description: 'Envoyez le montant exact sur le numéro SwapTrust indiqué',
+    description: 'Envoyez le montant exact sur le numéro DoniSend indiqué',
   },
   {
     statuses: ['CLIENT_SENT'],

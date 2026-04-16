@@ -110,6 +110,10 @@ export default function InscriptionPage() {
 
   return (
     <Card className="p-8">
+      <div className="mb-6 text-center">
+        <h2 className="text-xl font-display font-semibold text-white">Créer votre compte</h2>
+        <p className="mt-1 text-sm text-text-secondary">Rejoignez DoniSend gratuitement</p>
+      </div>
       <h1 className="font-display text-2xl font-bold">Inscription</h1>
       <p className="mt-2 text-sm text-ink-muted">
         Déjà inscrit ?{' '}

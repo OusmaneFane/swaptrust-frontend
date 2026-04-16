@@ -1,15 +1,32 @@
 import type { Metadata } from 'next';
 import { Toaster } from 'sonner';
 import './globals.css';
+import { Inter, Sora } from 'next/font/google';
 import { AuthProvider } from '@/components/providers/AuthProvider';
 import { QueryProvider } from '@/components/providers/QueryProvider';
 import { SocketProvider } from '@/components/providers/SocketProvider';
 import { IntlProvider } from '@/components/providers/IntlProvider';
 
+const fontBody = Inter({
+  subsets: ['latin'],
+  variable: '--font-body',
+  display: 'swap',
+});
+
+const fontDisplay = Sora({
+  subsets: ['latin'],
+  variable: '--font-display',
+  display: 'swap',
+});
+
 export const metadata: Metadata = {
-  title: 'SwapTrust — Échange sécurisé CFA ↔ RUB',
+  title: 'DoniSend — Échange sécurisé CFA ↔ Roubles',
   description:
-    'Plateforme d’échange sécurisé entre francs CFA et roubles russes.',
+    'Échangez vos francs CFA contre des roubles russes en toute sécurité. Taux Google en temps réel, commission 2% transparente.',
+  keywords: ['échange CFA', 'roubles', 'maliens russie', 'transfert argent', 'donisend'],
+  icons: {
+    icon: '/favicon.svg',
+  },
 };
 
 export default function RootLayout({
@@ -18,7 +35,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr">
+    <html lang="fr" className={`${fontBody.variable} ${fontDisplay.variable}`}>
       <body className="min-h-screen">
         <IntlProvider>
           <AuthProvider>

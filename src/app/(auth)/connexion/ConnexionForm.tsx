@@ -50,6 +50,10 @@ export function ConnexionForm() {
 
   return (
     <Card className="p-8">
+      <div className="mb-6 text-center">
+        <h2 className="text-xl font-display font-semibold text-white">Bienvenue</h2>
+        <p className="mt-1 text-sm text-text-secondary">Connectez-vous à DoniSend</p>
+      </div>
       <h1 className="font-display text-2xl font-bold">Connexion</h1>
       <p className="mt-2 text-sm text-ink-muted">
         Pas encore de compte ?{' '}

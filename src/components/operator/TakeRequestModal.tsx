@@ -8,8 +8,8 @@ import type { ExchangeRequest, Transaction } from '@/types';
 import { adminApi, operatorApi } from '@/services/api';
 import {
   formatAccountForDisplay,
-  getSwaptrustReceiveFallback,
-} from '@/lib/swaptrust-receive';
+  getDonisendReceiveFallback,
+} from '@/lib/donisend-receive';
 import { formatCFA, formatRUB } from '@/lib/utils';
 import { PAYMENT_METHOD_LABELS } from '@/constants/payment-methods';
 
@@ -37,16 +37,16 @@ export function TakeRequestModal({
     retry: false,
   });
 
-  const envReceive = getSwaptrustReceiveFallback(request.paymentMethod);
+  const envReceive = getDonisendReceiveFallback(request.paymentMethod);
   const dbMatch = platformListOk
     ? platformAccounts?.find(
         (a) => a.method === request.paymentMethod && a.isActive,
       )
     : undefined;
-  /** Compte SwapTrust connu pour cette méthode → pas de saisie « numéro client ». */
-  const swaptrustReceive = dbMatch ?? envReceive;
-  const platformReceiveConfigured = swaptrustReceive != null;
-  const receiveLabel = swaptrustReceive?.accountName ?? 'SwapTrust';
+  /** Compte DoniSend connu pour cette méthode → pas de saisie « numéro client ». */
+  const donisendReceive = dbMatch ?? envReceive;
+  const platformReceiveConfigured = donisendReceive != null;
+  const receiveLabel = donisendReceive?.accountName ?? 'DoniSend';
 
   const mutation = useMutation({
     mutationFn: () =>
@@ -103,19 +103,19 @@ export function TakeRequestModal({
 
       {platformReceiveConfigured ? (
         <div className="rounded-input border border-success/30 bg-success/10 p-3 text-sm text-ink-secondary">
-          <p className="font-medium text-ink">Paiement client via SwapTrust</p>
+          <p className="font-medium text-ink">Paiement client via DoniSend</p>
           <p className="mt-1 text-xs leading-relaxed">
             Un compte de réception est déjà configuré pour{' '}
             <strong className="text-ink">
               {PAYMENT_METHOD_LABELS[request.paymentMethod]}
             </strong>{' '}
             ({receiveLabel}
-            {swaptrustReceive ? (
+            {donisendReceive ? (
               <>
                 {' '}
                 ·{' '}
                 <span className="font-mono text-ink">
-                  {formatAccountForDisplay(swaptrustReceive.accountNumber)}
+                  {formatAccountForDisplay(donisendReceive.accountNumber)}
                 </span>
               </>
             ) : null}
@@ -126,10 +126,10 @@ export function TakeRequestModal({
       ) : (
         <div>
           <label className="mb-1 block text-sm text-ink-muted">
-            Numéro sur lequel SwapTrust vous versera le net (après commission) *
+            Numéro sur lequel DoniSend vous versera le net (après commission) *
           </label>
           <p className="mb-2 text-[11px] leading-snug text-ink-faint">
-            Ce n’est pas le numéro affiché au client pour payer : sans compte SwapTrust configuré
+            Ce n’est pas le numéro affiché au client pour payer : sans compte DoniSend configuré
             pour cette méthode, l’API peut encore exiger votre coordonnée de réception
             opérateur.
           </p>

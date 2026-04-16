@@ -9,6 +9,8 @@ import { useSession } from 'next-auth/react';
 import { OperatorGate } from '@/components/operator/OperatorGate';
 import { LogoutButton } from '@/components/layout/LogoutButton';
 import { Avatar } from '@/components/ui/Avatar';
+import { Logo } from '@/components/ui/Logo';
+import { AppFooter } from '@/components/layout/AppFooter';
 import { cn } from '@/lib/utils';
 
 function OperatorNavLink({
@@ -102,8 +104,8 @@ export default function OperateurLayout({
       <div className="flex min-h-screen bg-app font-body">
         <aside className="hidden w-64 shrink-0 flex-col border-r border-line bg-card shadow-card lg:flex">
           <div className="border-b border-line p-6">
-            <p className="font-display text-lg font-bold text-ink">SwapTrust</p>
-            <span className="mt-2 inline-block rounded-pill bg-primary/15 px-2 py-1 text-xs font-semibold text-primary">
+            <Logo variant="dark" size="md" />
+            <span className="mt-2 inline-block rounded-pill bg-accent/15 px-2 py-1 text-xs font-semibold text-accent">
               Mode opérateur
             </span>
           </div>
@@ -118,7 +120,7 @@ export default function OperateurLayout({
         <div className="flex min-h-screen flex-1 flex-col">
           <header className="sticky top-0 z-30 flex items-center justify-between border-b border-line bg-card/95 px-4 py-3 shadow-sm backdrop-blur-md lg:hidden">
             <div>
-              <p className="font-display text-sm font-bold text-ink">SwapTrust</p>
+              <p className="font-display text-sm font-bold text-ink">DoniSend</p>
               <span className="text-[10px] font-medium uppercase tracking-wide text-primary">
                 Opérateur
               </span>
@@ -146,7 +148,10 @@ export default function OperateurLayout({
             </div>
           ) : null}
           <main className="flex-1 overflow-auto">
-            <div className="mx-auto max-w-6xl p-4 lg:p-6">{children}</div>
+            <div className="mx-auto max-w-6xl p-4 lg:p-6">
+              {children}
+              <AppFooter className="mt-10 hidden lg:block" />
+            </div>
           </main>
         </div>
       </div>

@@ -19,6 +19,8 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { LogoutButton } from '@/components/layout/LogoutButton';
+import { Logo } from '@/components/ui/Logo';
+import { AppFooter } from '@/components/layout/AppFooter';
 
 const links = [
   { href: '/admin', label: 'Vue d’ensemble', Icon: LayoutDashboard },
@@ -28,7 +30,7 @@ const links = [
   { href: '/admin/utilisateurs', label: 'Utilisateurs', Icon: Users },
   { href: '/admin/operateurs', label: 'Opérateurs', Icon: UserCog },
   { href: '/admin/transactions', label: 'Transactions', Icon: ArrowLeftRight },
-  { href: '/admin/platform-accounts', label: 'Comptes SwapTrust', Icon: Landmark },
+  { href: '/admin/platform-accounts', label: 'Comptes DoniSend', Icon: Landmark },
   { href: '/admin/litiges', label: 'Litiges', Icon: Scale },
 ] as const;
 
@@ -84,14 +86,12 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
       <aside className="hidden w-64 shrink-0 flex-col border-r border-line bg-card shadow-card lg:flex">
         <div className="border-b border-line p-5">
           <Link href="/admin" className="group block">
-            <div className="flex items-center gap-3 rounded-card bg-gradient-to-br from-primary to-primary-dark p-4 text-white shadow-md shadow-primary/25 transition-transform group-hover:scale-[1.02]">
+            <div className="flex items-center gap-3 rounded-card bg-gradient-to-br from-primary to-primary-mid p-4 text-white shadow-md shadow-primary/25 transition-transform group-hover:scale-[1.02]">
               <div className="flex h-10 w-10 items-center justify-center rounded-input bg-white/20 backdrop-blur">
                 <Sparkles className="h-5 w-5" aria-hidden />
               </div>
               <div>
-                <p className="font-display text-sm font-bold leading-tight">
-                  SwapTrust
-                </p>
+                <Logo variant="dark" size="sm" />
                 <p className="text-xs font-medium text-white/85">Administration</p>
               </div>
             </div>
@@ -150,7 +150,10 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
           </div>
         ) : null}
         <main className="flex-1 overflow-auto bg-gradient-to-b from-transparent via-app to-primary/[0.03] px-4 py-6 lg:px-10 lg:py-10">
-          <div className="mx-auto max-w-6xl">{children}</div>
+          <div className="mx-auto max-w-6xl">
+            {children}
+            <AppFooter className="mt-10 hidden lg:block" />
+          </div>
         </main>
       </div>
     </div>

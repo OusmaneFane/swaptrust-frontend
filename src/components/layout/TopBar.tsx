@@ -5,6 +5,7 @@ import { Bell } from 'lucide-react';
 import { LogoutButton } from '@/components/layout/LogoutButton';
 import { useSession } from 'next-auth/react';
 import { Avatar } from '@/components/ui/Avatar';
+import { Logo } from '@/components/ui/Logo';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { cn } from '@/lib/utils';
 
@@ -22,9 +23,10 @@ export function TopBar({ className }: { className?: string }) {
     >
       <Link
         href="/tableau-de-bord"
-        className="font-display text-lg font-bold tracking-tight text-ink"
+        className="inline-flex items-center"
+        aria-label="DoniSend"
       >
-        Swap<span className="text-primary">Trust</span>
+        <Logo variant="dark" size="md" />
       </Link>
       <div className="flex items-center gap-3">
         {user?.role === 'ADMIN' ? (

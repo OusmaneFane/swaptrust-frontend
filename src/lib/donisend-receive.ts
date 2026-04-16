@@ -1,23 +1,23 @@
 import type { PaymentMethod } from '@/types/order';
 
-export interface SwaptrustReceiveDisplay {
+export interface DonisendReceiveDisplay {
   accountName: string;
   accountNumber: string;
 }
 
 /**
- * Numéros de réception SwapTrust (fallback) quand l’API ne renvoie pas encore `platformAccount`.
+ * Numéros de réception DoniSend (fallback) quand l’API ne renvoie pas encore `platformAccount`.
  * Même sémantique que les variables serveur du prompt (préfixe NEXT_PUBLIC_ pour le client).
  */
-export function getSwaptrustReceiveFallback(
+export function getDonisendReceiveFallback(
   method: PaymentMethod,
-): SwaptrustReceiveDisplay | null {
+): DonisendReceiveDisplay | null {
   switch (method) {
     case 'ORANGE_MONEY': {
       const v = process.env.NEXT_PUBLIC_SWAPTRUST_ORANGE_MONEY?.trim();
       if (!v) return null;
       return {
-        accountName: 'SwapTrust — Orange Money',
+        accountName: 'DoniSend — Orange Money',
         accountNumber: v,
       };
     }
@@ -25,7 +25,7 @@ export function getSwaptrustReceiveFallback(
       const v = process.env.NEXT_PUBLIC_SWAPTRUST_WAVE?.trim();
       if (!v) return null;
       return {
-        accountName: 'SwapTrust — Wave',
+        accountName: 'DoniSend — Wave',
         accountNumber: v,
       };
     }
@@ -35,8 +35,8 @@ export function getSwaptrustReceiveFallback(
       const bank = process.env.NEXT_PUBLIC_SWAPTRUST_BANK_NAME?.trim();
       return {
         accountName: bank
-          ? `SwapTrust — ${bank}`
-          : 'SwapTrust — Virement bancaire',
+          ? `DoniSend — ${bank}`
+          : 'DoniSend — Virement bancaire',
         accountNumber: iban,
       };
     }

@@ -47,7 +47,7 @@ function normalizePlatformAccount(raw: unknown): PlatformReceiveAccount | null {
   return {
     ...(id != null ? { id } : {}),
     accountNumber: num,
-    accountName: String(raw.accountName ?? raw.account_name ?? 'SwapTrust'),
+    accountName: String(raw.accountName ?? raw.account_name ?? 'DoniSend'),
     method: (raw.method as PaymentMethod) ?? undefined,
   };
 }

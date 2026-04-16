@@ -43,7 +43,7 @@ export default function RegisterSuccessPage() {
       <div>
         <h1 className="font-display text-2xl font-bold text-ink">Compte créé !</h1>
         <p className="mt-2 text-sm text-ink-muted">
-          Bienvenue sur SwapTrust, {firstName}
+          Bienvenue sur DoniSend, {firstName}
         </p>
       </div>
 

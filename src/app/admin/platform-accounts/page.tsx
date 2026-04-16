@@ -20,7 +20,7 @@ import type {
 import type { PaymentMethod } from '@/types/order';
 import type { UseQueryResult } from '@tanstack/react-query';
 import { getApiErrorMessage } from '@/lib/api-error-message';
-import { formatAccountForDisplay } from '@/lib/swaptrust-receive';
+import { formatAccountForDisplay } from '@/lib/donisend-receive';
 import { formatCFA } from '@/lib/utils';
 
 const METHOD_OPTIONS = Object.keys(PAYMENT_METHOD_LABELS) as PaymentMethod[];
@@ -176,7 +176,7 @@ export default function AdminPlatformAccountsPage() {
             </Link>
           </p>
           <h1 className="mt-3 font-display text-3xl font-bold tracking-tight text-ink">
-            Comptes SwapTrust
+            Comptes DoniSend
           </h1>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink-secondary">
             Réception centralisée des paiements clients avant transfert net aux opérateurs. Gestion
@@ -350,7 +350,7 @@ export default function AdminPlatformAccountsPage() {
           />
           <Input
             label="Nom affiché (client)"
-            placeholder="SwapTrust — Orange Money"
+            placeholder="DoniSend — Orange Money"
             value={form.accountName}
             onChange={(e) => setForm((f) => ({ ...f, accountName: e.target.value }))}
           />

@@ -354,7 +354,7 @@ export default function NouvelleDemandePage() {
             <p className="rounded-input border border-primary/20 bg-primary/[0.04] p-3 text-xs text-ink-secondary">
               Après prise en charge, vous recevrez les instructions pour envoyer le{' '}
               <strong className="text-ink">montant total</strong> sur un{' '}
-              <strong className="text-ink">numéro SwapTrust officiel</strong> (jamais directement
+              <strong className="text-ink">numéro DoniSend officiel</strong> (jamais directement
               sur le portable de l’opérateur).
             </p>
             <p className="rounded-input border border-warning/30 bg-warning/10 p-3 text-xs text-ink-secondary">

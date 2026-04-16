@@ -13,6 +13,7 @@ import { TopBar } from '@/components/layout/TopBar';
 import { BottomNavBar } from '@/components/layout/BottomNavBar';
 import { LogoutButton } from '@/components/layout/LogoutButton';
 import { KycGate } from '@/components/layout/KycGate';
+import { AppFooter } from '@/components/layout/AppFooter';
 import { cn } from '@/lib/utils';
 
 const side = [
@@ -69,10 +70,11 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           <div className="lg:hidden">
             <TopBar />
           </div>
-          <main
-            className={`flex-1 px-4 pt-4 lg:px-8 lg:pb-8 ${hideBottomNav ? 'pb-8' : 'pb-24'}`}
-          >
-            {children}
+          <main className="flex-1 px-4 pt-4 lg:px-8 lg:pb-0">
+            <div className={hideBottomNav ? 'pb-8' : 'pb-24'}>
+              {children}
+            </div>
+            <AppFooter className="mt-10 hidden lg:block" />
           </main>
         </div>
       </div>

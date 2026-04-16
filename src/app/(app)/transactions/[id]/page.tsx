@@ -24,7 +24,7 @@ import { Input } from '@/components/ui/Input';
 import { useTransaction } from '@/hooks/useTransaction';
 import { resolveClientSendDestination } from '@/lib/resolve-client-send-destination';
 import { rubDisplayFor1000Cfa } from '@/lib/rate-xof-rub';
-import { formatAccountForDisplay } from '@/lib/swaptrust-receive';
+import { formatAccountForDisplay } from '@/lib/donisend-receive';
 import {
   formatGrossSendForClient,
   formatMinorForSendRail,
@@ -141,7 +141,7 @@ export default function TransactionDetailPage() {
     );
   }
 
-  const swaptrustDestination = resolveClientSendDestination(tx);
+  const donisendDestination = resolveClientSendDestination(tx);
   const rateRef =
     tx.googleRate != null && tx.googleRate > 0 ? tx.googleRate : tx.rate;
 
@@ -174,7 +174,7 @@ export default function TransactionDetailPage() {
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-ink-muted">Commission SwapTrust</span>
+              <span className="text-ink-muted">Commission DoniSend</span>
               <span className="font-semibold text-accent">
                 {formatMinorForSendRail(tx, tx.commissionAmount)}
               </span>
@@ -212,18 +212,18 @@ export default function TransactionDetailPage() {
 
       <TransactionTimeline status={tx.status} />
 
-      {tx.status === 'INITIATED' && swaptrustDestination ? (
+      {tx.status === 'INITIATED' && donisendDestination ? (
         <Card className="space-y-3 p-5">
           <p className="text-sm font-medium text-ink">
-            Envoyez <span className="text-accent">exactement</span> sur ce compte SwapTrust
+            Envoyez <span className="text-accent">exactement</span> sur ce compte DoniSend
           </p>
           <div className="rounded-input border-2 border-primary/30 bg-gradient-to-br from-primary/[0.06] to-card p-4 shadow-sm">
             <p className="text-xs font-semibold uppercase tracking-wide text-primary">
               Réception officielle
             </p>
-            <p className="mt-1 font-medium text-ink">{swaptrustDestination.accountName}</p>
+            <p className="mt-1 font-medium text-ink">{donisendDestination.accountName}</p>
             <div className="mt-3">
-              <CopyableAccountValue raw={swaptrustDestination.accountNumber} />
+              <CopyableAccountValue raw={donisendDestination.accountNumber} />
             </div>
             <p className="mt-4 rounded-input bg-muted/50 px-3 py-2 text-center font-display text-lg font-bold text-ink">
               Montant exact : {formatGrossSendForClient(tx)}
@@ -233,18 +233,18 @@ export default function TransactionDetailPage() {
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" aria-hidden />
             <p>
               N’envoyez <strong className="text-ink">pas</strong> directement à l’opérateur : les fonds
-              passent toujours par SwapTrust, qui reverse le net à l’opérateur après commission.
+              passent toujours par DoniSend, qui reverse le net à l’opérateur après commission.
             </p>
           </div>
         </Card>
       ) : null}
 
-      {tx.status === 'INITIATED' && !swaptrustDestination ? (
+      {tx.status === 'INITIATED' && !donisendDestination ? (
         <Card className="space-y-2 border-warning/30 bg-warning/10 p-4 text-sm text-ink-secondary">
           <div className="flex gap-2">
             <AlertTriangle className="h-5 w-5 shrink-0 text-warning" aria-hidden />
             <div>
-              <p className="font-medium text-ink">Numéro SwapTrust indisponible</p>
+              <p className="font-medium text-ink">Numéro DoniSend indisponible</p>
               <p className="mt-1 text-xs">
                 Le compte de réception officiel n’est pas encore renvoyé par l’API ou configuré
                 (variables <code className="rounded bg-muted px-1">NEXT_PUBLIC_SWAPTRUST_*</code>).
