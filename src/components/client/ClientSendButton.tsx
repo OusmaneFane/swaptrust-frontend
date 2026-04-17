@@ -16,9 +16,9 @@ export function ClientSendButton({ transactionId, onWhatsappNotify }: Props) {
 
   return (
     <div className="space-y-3">
-      <label className="glass-card flex cursor-pointer flex-col items-center gap-2 border border-dashed border-primary/30 p-4 transition-colors hover:border-primary/60">
+      <label className="flex cursor-pointer flex-col items-center gap-2 rounded-card border border-dashed border-primary/25 bg-white p-4 shadow-card transition-colors hover:border-primary/45 hover:bg-primary/[0.02]">
         <Upload className="text-primary" size={24} />
-        <span className="text-center text-sm text-ink-muted">
+        <span className="text-center text-sm text-text-muted">
           Appuyez pour prendre une photo ou choisir un fichier
         </span>
         <input

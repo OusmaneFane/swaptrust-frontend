@@ -75,13 +75,13 @@ export default function OperateurDashboardPage() {
           </>
         ) : (
           <>
-            <Card className="border-line/90 p-4 shadow-card">
+            <Card variant="glass" className="border-line/90 p-4 shadow-card">
               <p className="font-display text-2xl font-bold text-ink">
                 {pending.length}
               </p>
               <p className="text-sm text-ink-muted">Demandes en attente</p>
             </Card>
-            <Card className="border-primary/20 bg-primary/[0.06] p-4 shadow-card">
+            <Card variant="glass" className="border-primary/20 bg-primary/[0.06] p-4 shadow-card">
               <p className="font-display text-2xl font-bold text-primary">
                 {openTx.length}
               </p>
@@ -106,7 +106,7 @@ export default function OperateurDashboardPage() {
           <ul className="space-y-2">
             {sortedPending.map((r) => (
               <li key={r.id}>
-                <Card className="flex flex-col gap-3 p-4 shadow-card sm:flex-row sm:items-center sm:justify-between">
+                <Card variant="glass" className="flex flex-col gap-3 p-4 shadow-card sm:flex-row sm:items-center sm:justify-between">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="font-medium text-ink">{r.client.name}</p>
@@ -138,7 +138,7 @@ export default function OperateurDashboardPage() {
             ))}
           </ul>
         ) : (
-          <Card className="border-dashed p-6 text-center text-sm text-ink-muted">
+          <Card variant="glass" className="border-dashed p-6 text-center text-sm text-ink-muted">
             Aucune demande en attente.
           </Card>
         )}

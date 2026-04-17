@@ -84,6 +84,7 @@ export default function AdminDashboardPage() {
           },
         ].map((item) => (
           <Card
+            variant="glass"
             key={item.label}
             className={cn(
               'border-line/90 p-5 transition-shadow hover:shadow-card-lg',
@@ -98,7 +99,7 @@ export default function AdminDashboardPage() {
         ))}
       </div>
 
-      <Card className="border-line/90 p-6 shadow-card-lg">
+      <Card variant="glass" className="border-line/90 p-6 shadow-card-lg">
         <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
           <div>
             <h2 className="font-display text-xl font-semibold text-ink">

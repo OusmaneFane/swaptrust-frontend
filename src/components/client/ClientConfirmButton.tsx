@@ -16,7 +16,7 @@ export function ClientConfirmButton({ transactionId, onWhatsappNotify }: Props) 
 
   return (
     <div className="space-y-3">
-      <p className="text-center text-sm text-ink-muted">
+      <p className="text-center text-sm text-text-muted">
         Vérifiez votre compte avant de confirmer la réception.
       </p>
       {!showConfirm ? (
@@ -28,15 +28,15 @@ export function ClientConfirmButton({ transactionId, onWhatsappNotify }: Props) 
           J’ai bien reçu mes fonds
         </button>
       ) : (
-        <div className="glass-card space-y-3 border border-danger/30 p-4">
-          <p className="text-center font-semibold text-ink">Êtes-vous sûr ?</p>
-          <p className="text-center text-sm text-ink-muted">
+        <div className="space-y-3 rounded-card border border-danger/30 bg-red-50/50 p-4 shadow-card">
+          <p className="text-center font-semibold text-text-dark">Êtes-vous sûr ?</p>
+          <p className="text-center text-sm text-text-muted">
             Cette action est irréversible. La transaction sera clôturée.
           </p>
           <div className="flex gap-3">
             <button
               type="button"
-              className="glass-card flex-1 py-3 text-ink-muted"
+              className="flex-1 rounded-input border border-primary/15 bg-white py-3 text-text-muted shadow-sm transition hover:bg-slate-50"
               onClick={() => setShowConfirm(false)}
             >
               Annuler

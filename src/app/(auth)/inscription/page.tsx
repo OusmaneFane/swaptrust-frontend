@@ -111,27 +111,37 @@ export default function InscriptionPage() {
   return (
     <Card className="p-8">
       <div className="mb-6 text-center">
-        <h2 className="text-xl font-display font-semibold text-white">Créer votre compte</h2>
-        <p className="mt-1 text-sm text-text-secondary">Rejoignez DoniSend gratuitement</p>
+        <h1 className="font-display text-2xl font-bold text-text-dark">
+          Créer votre compte
+        </h1>
+        <p className="mt-1 text-sm text-text-secondary">
+          Rejoignez DoniSend gratuitement
+        </p>
       </div>
       <h1 className="font-display text-2xl font-bold">Inscription</h1>
-      <p className="mt-2 text-sm text-ink-muted">
-        Déjà inscrit ?{' '}
-        <Link href="/connexion" className="text-primary hover:underline">
-          Connexion
-        </Link>
-      </p>
+
       <div className="mt-6">
         <StepIndicator step={step} total={4} labels={steps} />
       </div>
       <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-5">
         {step === 1 ? (
           <>
-            <Input label="Nom complet" error={errors.name?.message} {...register('name')} />
-            <Input label="Email" type="email" error={errors.email?.message} {...register('email')} />
+            <Input
+              label="Nom complet"
+              error={errors.name?.message}
+              {...register("name")}
+            />
+            <Input
+              label="Email"
+              type="email"
+              error={errors.email?.message}
+              {...register("email")}
+            />
             <div>
-              <label className="mb-2 block text-sm text-ink-secondary">Pays de résidence</label>
-              <select className="input-field" {...register('countryResidence')}>
+              <label className="mb-2 block text-sm text-ink-secondary">
+                Pays de résidence
+              </label>
+              <select className="input-field" {...register("countryResidence")}>
                 <option value="MALI">Mali</option>
                 <option value="RUSSIA">Russie</option>
                 <option value="OTHER">Autre</option>
@@ -151,43 +161,56 @@ export default function InscriptionPage() {
             label="Mot de passe"
             type="password"
             error={errors.password?.message}
-            {...register('password')}
+            {...register("password")}
           />
         ) : null}
         {step === 4 ? (
           <div className="space-y-3 text-sm text-ink-secondary">
             <p>
-              <span className="text-ink-faint">Nom :</span> {watch('name')}
+              <span className="text-ink-faint">Nom :</span> {watch("name")}
             </p>
             <p>
-              <span className="text-ink-faint">Email :</span> {watch('email')}
+              <span className="text-ink-faint">Email :</span> {watch("email")}
             </p>
             <p>
-              <span className="text-ink-faint">Pays :</span> {watch('countryResidence')}
+              <span className="text-ink-faint">Pays :</span>{" "}
+              {watch("countryResidence")}
             </p>
             <p>
-              <span className="text-ink-faint">WhatsApp Mali :</span>{' '}
-              {watch('phoneMali')
-                ? `+223 ${watch('phoneMali').replace(/(\d{2})(?=\d)/g, '$1 ').trim()}`
-                : '—'}
+              <span className="text-ink-faint">WhatsApp Mali :</span>{" "}
+              {watch("phoneMali")
+                ? `+223 ${watch("phoneMali")
+                    .replace(/(\d{2})(?=\d)/g, "$1 ")
+                    .trim()}`
+                : "—"}
             </p>
             <p>
-              <span className="text-ink-faint">WhatsApp Russie :</span>{' '}
-              {watch('phoneRussia')
-                ? `+7 ${watch('phoneRussia').replace(/(\d{3})(?=\d)/g, '$1 ').trim()}`
-                : '—'}
+              <span className="text-ink-faint">WhatsApp Russie :</span>{" "}
+              {watch("phoneRussia")
+                ? `+7 ${watch("phoneRussia")
+                    .replace(/(\d{3})(?=\d)/g, "$1 ")
+                    .trim()}`
+                : "—"}
             </p>
           </div>
         ) : null}
 
         <div className="flex gap-3 pt-2">
           {step > 1 ? (
-            <Button type="button" variant="outline" onClick={() => setStep((s) => s - 1)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setStep((s) => s - 1)}
+            >
               Retour
             </Button>
           ) : null}
           {step < 4 ? (
-            <Button type="button" className="flex-1" onClick={() => void nextStep()}>
+            <Button
+              type="button"
+              className="flex-1"
+              onClick={() => void nextStep()}
+            >
               Continuer
             </Button>
           ) : (
@@ -196,6 +219,12 @@ export default function InscriptionPage() {
             </Button>
           )}
         </div>
+        <p className="mt-2 text-sm text-ink-muted">
+          Déjà inscrit ?{" "}
+          <Link href="/connexion" className="text-accent hover:underline">
+            Connexion
+          </Link>
+        </p>
       </form>
     </Card>
   );

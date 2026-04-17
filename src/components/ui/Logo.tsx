@@ -1,3 +1,5 @@
+import { cn } from '@/lib/utils';
+
 interface LogoProps {
   variant?: 'dark' | 'light' | 'icon-only';
   size?: 'sm' | 'md' | 'lg';
@@ -23,10 +25,18 @@ export function Logo({ variant = 'dark', size = 'md', className = '' }: LogoProp
 
   const iconSize = s.icon;
   const textStartX = iconSize + 10;
-  // Largeur volontairement plus généreuse pour éviter toute coupe
-  // avec les polices modernes (Sora/Inter) + la tagline.
-  const totalWidth = iconOnly ? iconSize : iconSize + s.text * 6.6;
-  const totalHeight = s.tagline && !iconOnly ? iconSize + 22 : iconSize;
+  // Largeur : le mot « DoniSend » + tagline (lettres espacées) dépassent vite le viewBox si trop étroit.
+  const wordmarkWidth = s.text * 7.4;
+  const taglineMinInnerWidth = 292;
+  const totalWidth = iconOnly
+    ? iconSize
+    : Math.ceil(
+        Math.max(iconSize + wordmarkWidth, textStartX + taglineMinInnerWidth + 12),
+      );
+  // Hauteur : baseline du texte + ascenders (éviter y < hauteur des capitales) + tagline.
+  const wordBaselineY = iconSize * 0.5 + s.text * 0.36;
+  const totalHeight =
+    iconOnly ? iconSize : s.tagline && !iconOnly ? Math.ceil(wordBaselineY + 34) : iconSize + 4;
 
   if (iconOnly) {
     return (
@@ -35,7 +45,7 @@ export function Logo({ variant = 'dark', size = 'md', className = '' }: LogoProp
         height={iconSize}
         viewBox="0 0 44 44"
         xmlns="http://www.w3.org/2000/svg"
-        className={className}
+        className={cn('shrink-0', className)}
       >
         <circle cx="22" cy="22" r="21" fill={bgColor} />
         <circle cx="22" cy="22" r="21" fill="none" stroke={arrowColor} strokeWidth="1.5" opacity="0.6" />
@@ -60,7 +70,8 @@ export function Logo({ variant = 'dark', size = 'md', className = '' }: LogoProp
       height={totalHeight}
       viewBox={`0 0 ${totalWidth} ${totalHeight}`}
       xmlns="http://www.w3.org/2000/svg"
-      className={className}
+      preserveAspectRatio="xMidYMid meet"
+      className={cn('block h-auto max-w-full', className)}
     >
       <circle cx={iconSize / 2} cy={iconSize / 2} r={iconSize / 2 - 1} fill={bgColor} />
       <circle cx={iconSize / 2} cy={iconSize / 2} r={iconSize / 2 - 1} fill="none" stroke={arrowColor} strokeWidth="1.2" opacity="0.5" />
@@ -103,11 +114,10 @@ export function Logo({ variant = 'dark', size = 'md', className = '' }: LogoProp
       />
       <text
         x={textStartX}
-        y={iconSize * 0.63}
+        y={wordBaselineY}
         fontFamily="'Sora', system-ui, sans-serif"
         fontSize={s.text}
         letterSpacing="-0.5"
-        // en gras 
         fontWeight="700"
       >
         <tspan fontWeight="700" fill={textMain}>
@@ -120,21 +130,21 @@ export function Logo({ variant = 'dark', size = 'md', className = '' }: LogoProp
       {s.tagline && (
         <>
           <line
-            x1={iconSize + 10}
-            y1={iconSize * 0.75}
-            x2={totalWidth - 4}
-            y2={iconSize * 0.75}
+            x1={textStartX}
+            y1={wordBaselineY + 10}
+            x2={totalWidth - 6}
+            y2={wordBaselineY + 10}
             stroke={arrowColor}
             strokeWidth="0.8"
             opacity="0.25"
           />
           <text
-            x={iconSize + 10}
-            y={iconSize + 16}
+            x={textStartX}
+            y={wordBaselineY + 24}
             fontFamily="'Inter', system-ui, sans-serif"
             fontSize="10"
             fill={tagColor}
-            letterSpacing="2"
+            letterSpacing="1.5"
             fontWeight="700"
           >
             ECHANGE SECURISE CFA ↔ RUB

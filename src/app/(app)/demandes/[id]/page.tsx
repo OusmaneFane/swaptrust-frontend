@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
-import { requestsApi } from '@/services/api';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { Skeleton } from '@/components/ui/Skeleton';
-import { RequestExpiryCountdown } from '@/components/client/RequestExpiryCountdown';
-import { formatCFA, formatRUB } from '@/lib/utils';
-import { PAYMENT_METHOD_LABELS } from '@/constants/payment-methods';
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { requestsApi } from "@/services/api";
+import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { RequestExpiryCountdown } from "@/components/client/RequestExpiryCountdown";
+import { formatCFA, formatRUB } from "@/lib/utils";
+import { PAYMENT_METHOD_LABELS } from "@/constants/payment-methods";
 
 export default function DemandeDetailPage() {
   const params = useParams();
@@ -19,7 +19,7 @@ export default function DemandeDetailPage() {
   const id = Number(params.id);
 
   const { data: r, isLoading } = useQuery({
-    queryKey: ['requests', id],
+    queryKey: ["requests", id],
     queryFn: () => requestsApi.getById(id),
     enabled: Number.isFinite(id),
   });
@@ -27,15 +27,15 @@ export default function DemandeDetailPage() {
   const cancelMut = useMutation({
     mutationFn: () => requestsApi.cancel(id),
     onSuccess: () => {
-      toast.success('Demande annulée');
-      void qc.invalidateQueries({ queryKey: ['requests'] });
-      router.push('/mes-demandes');
+      toast.success("Demande annulée");
+      void qc.invalidateQueries({ queryKey: ["requests"] });
+      router.push("/mes-demandes");
     },
-    onError: () => toast.error('Annulation impossible'),
+    onError: () => toast.error("Annulation impossible"),
   });
 
   if (!Number.isFinite(id)) {
-    return <p className="text-sm text-ink-muted">Demande invalide.</p>;
+    return <p className="text-sm text-text-muted">Demande invalide.</p>;
   }
 
   if (isLoading || !r) {
@@ -47,8 +47,8 @@ export default function DemandeDetailPage() {
     );
   }
 
-  const needRub = r.type === 'NEED_RUB';
-  const canCancel = r.status === 'PENDING';
+  const needRub = r.type === "NEED_RUB";
+  const canCancel = r.status === "PENDING";
 
   return (
     <div className="mx-auto max-w-lg space-y-6">
@@ -58,37 +58,42 @@ export default function DemandeDetailPage() {
       >
         ← Mes demandes
       </Link>
-      <h1 className="font-display text-xl font-bold text-ink">Demande #{r.id}</h1>
+      <h1 className="font-display text-xl font-bold text-text-dark">
+        Demande #{r.id}
+      </h1>
 
       <Card className="space-y-3 p-5 text-sm">
         <div className="flex justify-between">
-          <span className="text-ink-muted">Statut</span>
-          <span className="font-medium text-ink">{r.status}</span>
+          <span className="text-text-muted">Statut</span>
+          <span className="font-medium text-text-dark">
+            {r.status}</span>
         </div>
         <div className="flex justify-between">
-          <span className="text-ink-muted">Vous recevez</span>
-          <span className="font-semibold">
+          <span className="text-text-muted">Vous recevez</span>
+          <span className="font-semibold text-text-dark">
             {needRub ? formatRUB(r.amountWanted) : formatCFA(r.amountWanted)}
           </span>
         </div>
         <div className="flex justify-between">
-          <span className="text-ink-muted">Vous envoyez</span>
+          <span className="text-text-muted">Vous envoyez</span>
           <span className="font-semibold text-accent">
             {needRub ? formatCFA(r.amountToSend) : formatRUB(r.amountToSend)}
           </span>
         </div>
         <div className="flex justify-between">
-          <span className="text-ink-muted">Via</span>
-          <span>{PAYMENT_METHOD_LABELS[r.paymentMethod]}</span>
+          <span className="text-text-muted">Via</span>
+          <span className="font-medium text-text-dark">
+            {PAYMENT_METHOD_LABELS[r.paymentMethod]}
+          </span>
         </div>
         <div className="flex justify-between">
-          <span className="text-ink-muted">Réception</span>
-          <span>{r.phoneToSend}</span>
+          <span className="text-text-muted">Réception</span>
+          <span className="font-medium text-text-dark">{r.phoneToSend}</span>
         </div>
-        {r.note ? <p className="text-ink-secondary">« {r.note} »</p> : null}
+        {r.note ? <p className="text-slate-600">« {r.note} »</p> : null}
       </Card>
 
-      {r.status === 'PENDING' ? (
+      {r.status === "PENDING" ? (
         <Card className="border-primary/20 bg-primary/[0.04] p-5">
           <RequestExpiryCountdown expiresAt={r.expiresAt} />
         </Card>

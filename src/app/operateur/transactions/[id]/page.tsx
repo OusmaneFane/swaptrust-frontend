@@ -143,7 +143,7 @@ export default function OperateurTransactionDetailPage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <Card className="space-y-3 border-line/90 p-4">
+        <Card variant="glass" className="space-y-3 border-line/90 p-4">
           <p className="text-xs font-semibold uppercase text-ink-muted">
             Client
           </p>
@@ -160,7 +160,7 @@ export default function OperateurTransactionDetailPage() {
             </p>
           ) : null}
         </Card>
-        <Card className="space-y-3 border-line/90 p-4">
+        <Card variant="glass" className="space-y-3 border-line/90 p-4">
           <p className="text-xs font-semibold uppercase text-ink-muted">Vous</p>
           <p className="font-semibold text-ink">{tx.operator.name}</p>
           <p className="text-sm text-ink-secondary">
@@ -175,7 +175,7 @@ export default function OperateurTransactionDetailPage() {
         </Card>
       </div>
 
-      <Card className="border-dashed border-line p-4">
+      <Card variant="glass" className="border-dashed border-line p-4">
         <p className="text-sm font-medium text-ink">Statut</p>
         <p className="text-sm text-ink-secondary">
           {tx.status} — {meta.description}
@@ -197,7 +197,7 @@ export default function OperateurTransactionDetailPage() {
       ) : null}
 
       {tx.status === "CLIENT_SENT" ? (
-        <Card className="space-y-4 border-primary/25 bg-primary/[0.04] p-5">
+        <Card variant="glass" className="space-y-4 border-primary/25 bg-primary/[0.04] p-5">
           <h2 className="font-semibold text-ink">Action requise</h2>
           <p className="text-sm text-ink-secondary">
             Vérifiez le reçu client avant de préparer l’envoi.
@@ -214,7 +214,7 @@ export default function OperateurTransactionDetailPage() {
       ) : null}
 
       {tx.status === "OPERATOR_VERIFIED" ? (
-        <Card className="space-y-4 border-primary/25 bg-primary/[0.04] p-5">
+        <Card variant="glass" className="space-y-4 border-primary/25 bg-primary/[0.04] p-5">
           <h2 className="font-semibold text-ink">Envoi au client</h2>
           <p className="text-sm text-ink-secondary">
             Envoyez les fonds puis joignez la capture de votre preuve d’envoi.

@@ -45,13 +45,13 @@ export function KycGate({ children }: { children: React.ReactNode }) {
 
   if (status === 'loading') {
     return (
-      <div className="flex min-h-screen flex-col bg-app">
-        <header className="flex justify-end border-b border-line px-4 py-3">
+      <div className="flex min-h-screen flex-col bg-gradient-to-b from-white to-primary/[0.04] text-text-dark">
+        <header className="flex justify-end border-b border-primary/10 bg-white/90 px-4 py-3 backdrop-blur">
           <LogoutButton label="always" />
         </header>
         <div className="flex flex-1 flex-col items-center justify-center gap-3 px-4">
           <Spinner className="h-8 w-8" />
-          <p className="text-sm text-ink-muted">Chargement…</p>
+          <p className="text-sm text-text-muted">Chargement…</p>
         </div>
       </div>
     );
@@ -63,13 +63,13 @@ export function KycGate({ children }: { children: React.ReactNode }) {
 
   if (isPending) {
     return (
-      <div className="flex min-h-screen flex-col bg-app">
-        <header className="flex justify-end border-b border-line px-4 py-3">
+      <div className="flex min-h-screen flex-col bg-gradient-to-b from-white to-primary/[0.04] text-text-dark">
+        <header className="flex justify-end border-b border-primary/10 bg-white/90 px-4 py-3 backdrop-blur">
           <LogoutButton label="always" />
         </header>
         <div className="flex flex-1 flex-col items-center justify-center gap-3 px-4">
           <Spinner className="h-8 w-8" />
-          <p className="text-sm text-ink-muted">Vérification du compte…</p>
+          <p className="text-sm text-text-muted">Vérification du compte…</p>
         </div>
       </div>
     );
@@ -77,8 +77,8 @@ export function KycGate({ children }: { children: React.ReactNode }) {
 
   if (isError || !user) {
     return (
-      <div className="flex min-h-screen flex-col bg-app">
-        <header className="flex justify-end border-b border-line px-4 py-3">
+      <div className="flex min-h-screen flex-col bg-gradient-to-b from-white to-primary/[0.04] text-text-dark">
+        <header className="flex justify-end border-b border-primary/10 bg-white/90 px-4 py-3 backdrop-blur">
           <LogoutButton label="always" />
         </header>
         <div className="mx-auto max-w-md flex-1 px-4 py-16 text-center">
@@ -92,13 +92,13 @@ export function KycGate({ children }: { children: React.ReactNode }) {
 
   if (user.kycStatus !== 'VERIFIED') {
     return (
-      <div className="flex min-h-screen flex-col bg-app">
-        <header className="flex justify-end border-b border-line px-4 py-3">
+      <div className="flex min-h-screen flex-col bg-gradient-to-b from-white to-primary/[0.04] text-text-dark">
+        <header className="flex justify-end border-b border-primary/10 bg-white/90 px-4 py-3 backdrop-blur">
           <LogoutButton label="always" />
         </header>
         <div className="flex flex-1 flex-col items-center justify-center gap-3 px-4">
           <Spinner className="h-8 w-8" />
-          <p className="text-sm text-ink-muted">Redirection…</p>
+          <p className="text-sm text-text-muted">Redirection…</p>
         </div>
       </div>
     );

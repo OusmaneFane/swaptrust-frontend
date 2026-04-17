@@ -202,7 +202,7 @@ export default function AdminPlatformAccountsPage() {
       {isLoading ? <Skeleton className="h-52 w-full rounded-card" /> : null}
 
       {isError ? (
-        <Card className="border-warning/30 bg-warning/10 p-4 text-sm text-ink-secondary">
+        <Card variant="glass" className="border-warning/30 bg-warning/10 p-4 text-sm text-ink-secondary">
           <p className="font-medium text-ink">Chargement de la liste impossible</p>
           <p className="mt-1">
             {getApiErrorMessage(error) ?? 'Erreur réseau ou route absente.'}{' '}
@@ -218,7 +218,7 @@ export default function AdminPlatformAccountsPage() {
       ) : null}
 
       {!isLoading && !isError && data?.length === 0 ? (
-        <Card className="flex flex-col items-center gap-4 p-8 text-center">
+        <Card variant="glass" className="flex flex-col items-center gap-4 p-8 text-center">
           <p className="text-sm text-ink-muted">Aucun compte enregistré.</p>
           <Button type="button" className="gap-2" onClick={() => openCreate()}>
             <Plus className="h-4 w-4" aria-hidden />
@@ -228,7 +228,7 @@ export default function AdminPlatformAccountsPage() {
       ) : null}
 
       {!isLoading && !isError && data && data.length > 0 ? (
-        <Card className="overflow-x-auto p-0">
+        <Card variant="glass" className="overflow-x-auto p-0">
           <table className="w-full min-w-[720px] text-left text-sm">
             <thead className="border-b border-line bg-muted/30 text-xs uppercase tracking-wide text-ink-muted">
               <tr>
@@ -343,12 +343,14 @@ export default function AdminPlatformAccountsPage() {
           )}
 
           <Input
+            variant="dark"
             label="Numéro ou IBAN"
             placeholder="+22370000000 ou ML00…"
             value={form.accountNumber}
             onChange={(e) => setForm((f) => ({ ...f, accountNumber: e.target.value }))}
           />
           <Input
+            variant="dark"
             label="Nom affiché (client)"
             placeholder="DoniSend — Orange Money"
             value={form.accountName}
@@ -386,7 +388,7 @@ function RevenueSummaryCard({
   const { data, isLoading, isError, error, refetch } = query;
 
   return (
-    <Card className="border-primary/15 p-5">
+    <Card variant="glass" className="border-primary/15 p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="font-display text-lg font-semibold text-ink">

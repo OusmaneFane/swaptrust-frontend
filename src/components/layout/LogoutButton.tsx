@@ -35,7 +35,7 @@ export function LogoutButton({
       className={cn(
         'inline-flex items-center gap-2 rounded-input px-2 py-2 text-sm font-medium transition-colors sm:px-3',
         variant === 'light' &&
-          'text-ink-secondary hover:bg-surface-hover hover:text-danger',
+          'text-text-muted hover:bg-primary/[0.06] hover:text-danger',
         variant === 'dark' &&
           'text-slate-400 hover:bg-slate-800 hover:text-amber-200',
         className,

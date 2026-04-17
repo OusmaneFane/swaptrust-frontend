@@ -17,7 +17,7 @@ export function TopBar({ className }: { className?: string }) {
   return (
     <header
       className={cn(
-        'flex items-center justify-between gap-4 border-b border-line bg-card/90 px-4 py-3 shadow-sm backdrop-blur-md lg:px-8',
+        'flex items-center justify-between gap-4 border-b border-primary/10 bg-white/90 px-4 py-3 shadow-sm backdrop-blur-md lg:px-8',
         className,
       )}
     >
@@ -26,7 +26,7 @@ export function TopBar({ className }: { className?: string }) {
         className="inline-flex items-center"
         aria-label="DoniSend"
       >
-        <Logo variant="dark" size="md" />
+        <Logo variant="light" size="md" />
       </Link>
       <div className="flex items-center gap-3">
         {user?.role === 'ADMIN' ? (
@@ -47,24 +47,24 @@ export function TopBar({ className }: { className?: string }) {
         ) : null}
         <Link
           href="/notifications"
-          className="relative rounded-full p-2 text-ink-secondary transition-colors hover:bg-surface-hover hover:text-primary"
+          className="relative rounded-full p-2 text-text-muted transition-colors hover:bg-primary/[0.06] hover:text-primary"
           aria-label="Notifications"
         >
           <Bell className="h-5 w-5" />
           {unread > 0 ? (
-            <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-danger ring-2 ring-card" />
+            <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-danger ring-2 ring-white" />
           ) : null}
         </Link>
         <Link
           href="/profil"
-          className="flex items-center gap-2 rounded-pill border border-transparent py-1 pl-1 pr-3 transition-colors hover:border-line hover:bg-surface"
+          className="flex items-center gap-2 rounded-pill border border-transparent py-1 pl-1 pr-3 transition-colors hover:border-primary/15 hover:bg-primary/[0.04]"
         >
           <Avatar
             src={null}
             name={user?.name ?? user?.email ?? '?'}
             size="sm"
           />
-          <span className="hidden max-w-[120px] truncate text-sm font-medium text-ink-secondary md:inline">
+          <span className="hidden max-w-[120px] truncate text-sm font-medium text-text-muted md:inline">
             {user?.name ?? user?.email}
           </span>
         </Link>

@@ -35,7 +35,7 @@ export function NoWhatsappBanner({ user }: { user: User }) {
       </svg>
       <div className="min-w-0 flex-1 pr-8">
         <p className="text-sm font-semibold text-warning">Numéro WhatsApp manquant</p>
-        <p className="mt-0.5 text-xs text-ink-secondary">
+        <p className="mt-0.5 text-xs text-slate-600">
           Ajoutez un numéro pour recevoir les notifications de vos échanges en temps réel.
         </p>
       </div>
@@ -55,7 +55,7 @@ export function NoWhatsappBanner({ user }: { user: User }) {
           }
           setDismissed(true);
         }}
-        className="absolute right-2 top-2 rounded-input p-1 text-ink-muted hover:bg-surface-hover hover:text-ink"
+        className="absolute right-2 top-2 rounded-input p-1 text-text-muted hover:bg-primary/[0.06] hover:text-text-dark"
         aria-label="Fermer l’alerte"
       >
         <span aria-hidden className="text-lg leading-none">

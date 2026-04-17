@@ -14,7 +14,7 @@ export default function TransactionChatPage({
         <Link href={`/transactions/${id}`} className="text-sm text-primary">
           ← Retour
         </Link>
-        <h1 className="font-display text-lg font-semibold">Chat</h1>
+        <h1 className="font-display text-lg font-semibold text-text-dark">Chat</h1>
         <span />
       </div>
       <Card className="min-h-[60vh] flex-1 overflow-hidden p-2">

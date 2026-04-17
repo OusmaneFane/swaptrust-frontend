@@ -72,7 +72,7 @@ export default function AdminLitigesPage() {
       <h1 className="font-display text-3xl font-bold tracking-tight text-ink">
         Litiges
       </h1>
-      <Card className="overflow-hidden border-line/90 p-0 shadow-card-lg">
+      <Card variant="glass" className="overflow-hidden border-line/90 p-0 shadow-card-lg">
         {isLoading ? (
           <Skeleton className="m-4 h-40 rounded-card" />
         ) : (

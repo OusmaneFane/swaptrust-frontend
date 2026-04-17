@@ -152,7 +152,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
         <main className="flex-1 overflow-auto bg-gradient-to-b from-transparent via-app to-primary/[0.03] px-4 py-6 lg:px-10 lg:py-10">
           <div className="mx-auto max-w-6xl">
             {children}
-            <AppFooter className="mt-10 hidden lg:block" />
+            <AppFooter variant="dark" className="mt-10 hidden lg:block" />
           </div>
         </main>
       </div>

@@ -31,10 +31,10 @@ export function RequestExpiryCountdown({ expiresAt }: { expiresAt: string }) {
 
   return (
     <div className="space-y-1">
-      <p className="font-mono text-sm font-semibold text-ink">
+      <p className="font-mono text-sm font-semibold text-text-dark">
         Expire dans {formatMmSs(left)}
       </p>
-      <p className="text-xs text-ink-muted">
+      <p className="text-xs text-text-muted">
         Nos opérateurs sont joignables en journée ; vous serez notifié dès qu’une prise en
         charge est faite.
       </p>

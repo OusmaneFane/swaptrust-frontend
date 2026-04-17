@@ -83,7 +83,7 @@ export function PhoneInputSection({ register, errors, watch }: PhoneInputProps) 
             type="tel"
             inputMode="tel"
             autoComplete="tel-national"
-            placeholder="916 123 45 67"
+            placeholder="9161234567"
             className="input-field min-w-0 flex-1"
           />
         </div>

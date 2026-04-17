@@ -150,7 +150,7 @@ export default function OperateurLayout({
           <main className="flex-1 overflow-auto">
             <div className="mx-auto max-w-6xl p-4 lg:p-6">
               {children}
-              <AppFooter className="mt-10 hidden lg:block" />
+              <AppFooter variant="dark" className="mt-10 hidden lg:block" />
             </div>
           </main>
         </div>

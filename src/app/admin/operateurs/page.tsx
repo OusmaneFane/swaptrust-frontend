@@ -49,7 +49,7 @@ export default function AdminOperateursPage() {
         </p>
       </div>
 
-      <Card className="overflow-hidden border-line/90 p-0 shadow-card-lg">
+      <Card variant="glass" className="overflow-hidden border-line/90 p-0 shadow-card-lg">
         {isLoading ? (
           <Skeleton className="m-4 h-40 rounded-card" />
         ) : (

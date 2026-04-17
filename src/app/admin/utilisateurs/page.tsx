@@ -104,7 +104,7 @@ export default function AdminUsersPage() {
           <option value="NOT_SUBMITTED">Non soumis</option>
         </select>
       </div>
-      <Card className="overflow-hidden border-line/90 p-0 shadow-card-lg">
+      <Card variant="glass" className="overflow-hidden border-line/90 p-0 shadow-card-lg">
         {isLoading ? (
           <Skeleton className="m-4 h-40 rounded-card" />
         ) : (

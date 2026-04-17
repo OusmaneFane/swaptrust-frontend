@@ -33,7 +33,7 @@ export function ChatWindow({ transactionId }: { transactionId: number }) {
           />
         ))}
         {isTyping ? (
-          <p className="text-xs text-ink-muted">L’autre partie est en train d’écrire…</p>
+          <p className="text-xs text-text-muted">L’autre partie est en train d’écrire…</p>
         ) : null}
       </div>
       <ChatInput onSend={sendMessage} disabled={!token} />

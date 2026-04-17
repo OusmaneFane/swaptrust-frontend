@@ -59,7 +59,7 @@ export default function AdminDemandesPage() {
         </p>
       </div>
 
-      <Card className="border-primary/15 p-4 text-sm text-ink-secondary">
+      <Card variant="glass" className="border-primary/15 p-4 text-sm text-ink-secondary">
         <p>
           Après prise en charge, vous êtes redirigé vers la{' '}
           <strong className="text-ink">fiche transaction opérateur</strong> pour suivre l’échange
@@ -90,7 +90,7 @@ export default function AdminDemandesPage() {
           <ul className="space-y-2">
             {sorted.map((r) => (
               <li key={r.id}>
-                <Card className="flex flex-col gap-3 p-4 shadow-card sm:flex-row sm:items-center sm:justify-between">
+                <Card variant="glass" className="flex flex-col gap-3 p-4 shadow-card sm:flex-row sm:items-center sm:justify-between">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="font-medium text-ink">{r.client.name}</p>
@@ -119,7 +119,7 @@ export default function AdminDemandesPage() {
             ))}
           </ul>
         ) : (
-          <Card className="border-dashed p-8 text-center text-sm text-ink-muted">
+          <Card variant="glass" className="border-dashed p-8 text-center text-sm text-ink-muted">
             Aucune demande en attente.
           </Card>
         )}

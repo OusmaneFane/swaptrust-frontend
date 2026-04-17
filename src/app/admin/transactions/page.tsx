@@ -60,7 +60,7 @@ export default function AdminTransactionsPage() {
           <option value="CANCELLED">Annulé</option>
         </select>
       </div>
-      <Card className="overflow-hidden border-line/90 p-0 shadow-card-lg">
+      <Card variant="glass" className="overflow-hidden border-line/90 p-0 shadow-card-lg">
         {isLoading ? (
           <Skeleton className="m-4 h-48 rounded-card" />
         ) : (

@@ -3,11 +3,15 @@ import type { Transaction } from '@/types/transaction';
 import { formatCFA, formatRUB } from '@/lib/utils';
 
 export function isCfaPaymentRail(method: PaymentMethod | undefined): boolean {
-  return method === 'ORANGE_MONEY' || method === 'WAVE';
+  return (
+    method === 'ORANGE_MONEY' ||
+    method === 'MOOV_MONEY' ||
+    method === 'WAVE'
+  );
 }
 
 export function isRubPaymentRail(method: PaymentMethod | undefined): boolean {
-  return method === 'SBP';
+  return method === 'SBP' || method === 'BTB' || method === 'T-BANK';
 }
 
 /** Formate un montant mineur dans la devise d’envoi probable (méthode de paiement). */

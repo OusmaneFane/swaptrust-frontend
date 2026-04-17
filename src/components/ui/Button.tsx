@@ -22,11 +22,11 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     const variants = {
       primary: 'btn-primary disabled:opacity-50 disabled:pointer-events-none',
       ghost:
-        'rounded-pill px-6 py-3 font-semibold text-ink-secondary transition-all hover:bg-surface-hover active:scale-95',
+        'rounded-pill px-6 py-3 font-semibold text-text-muted transition-all hover:bg-primary/[0.06] hover:text-primary active:scale-95',
       danger:
         'rounded-pill bg-danger px-6 py-3 font-semibold text-white shadow-sm hover:opacity-90 active:scale-95',
       outline:
-        'rounded-pill border border-line bg-card px-6 py-3 font-semibold text-ink shadow-sm transition-all hover:border-primary/40 hover:bg-surface active:scale-95',
+        'rounded-pill border border-primary/20 bg-white px-6 py-3 font-semibold text-text-dark shadow-sm transition-all hover:border-primary/35 hover:bg-primary/[0.04] active:scale-95',
     };
     return (
       <button

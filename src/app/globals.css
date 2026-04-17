@@ -63,6 +63,13 @@
            transition-all duration-200;
   }
 
+  .input-field-surface {
+    @apply w-full rounded-xl border border-primary/15 bg-white px-4 py-3 font-body text-text-dark
+           placeholder-slate-400
+           focus:border-accent/50 focus:outline-none focus:ring-1 focus:ring-accent/20
+           transition-all duration-200;
+  }
+
   .badge-success { @apply bg-accent/15 text-accent text-xs px-3 py-1 rounded-full font-semibold; }
   .badge-warning { @apply bg-warning/15 text-warning text-xs px-3 py-1 rounded-full font-semibold; }
   .badge-danger { @apply bg-danger/15 text-danger text-xs px-3 py-1 rounded-full font-semibold; }

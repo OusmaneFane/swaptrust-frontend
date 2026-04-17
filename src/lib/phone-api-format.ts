@@ -1,3 +1,5 @@
+import type { RequestType } from '@/types/request';
+
 /**
  * Contrat API : indicatif pays + numéro national, **chiffres uniquement**, **sans** `+`
  * (ex. `22382791234`, `79968414684`).
@@ -49,4 +51,25 @@ export function flexiblePhoneToApi(raw: string): string | null {
   if (/^\d{8}$/.test(d)) return `223${d}`;
   if (/^\d{10}$/.test(d)) return `7${d}`;
   return null;
+}
+
+export type PhoneSendDial = '223' | '7';
+
+/**
+ * Indicatif (`223` ou `7`) + numéro national (chiffres uniquement), **sans** `+`.
+ * Ex. `223` + `70123456` → `22370123456`.
+ */
+export function combineDialAndNational(
+  dial: PhoneSendDial,
+  nationalRaw: string,
+): string | null {
+  const nat = nationalRaw.replace(/\D/g, '');
+  if (dial === '223' && /^\d{8}$/.test(nat)) return `223${nat}`;
+  if (dial === '7' && /^\d{10}$/.test(nat)) return `7${nat}`;
+  return null;
+}
+
+/** Francs CFA → numéro malien ; roubles (₽) → numéro russe. */
+export function phoneDialForRequestType(type: RequestType): PhoneSendDial {
+  return type === 'NEED_CFA' ? '223' : '7';
 }

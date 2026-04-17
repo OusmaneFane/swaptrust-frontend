@@ -39,14 +39,14 @@ function NotificationBadge({
         >
           <path d={WHATSAPP_ICON_PATH} />
         </svg>
-        <span className="text-xs text-ink-faint">Notifié par WhatsApp</span>
+        <span className="text-xs text-slate-500">Notifié par WhatsApp</span>
       </div>
     );
   }
 
   return (
     <div className="mt-1 flex items-center gap-1">
-      <span className="text-xs text-ink-faint/80">Notification WhatsApp en attente</span>
+      <span className="text-xs text-slate-500">Notification WhatsApp en attente</span>
     </div>
   );
 }
@@ -67,15 +67,15 @@ export function TransactionTimeline({ status }: { status: TransactionStatus }) {
   if (status === 'DISPUTED' || status === 'CANCELLED') {
     const s = TRANSACTION_STEPS[status];
     return (
-      <div className="glass-card border-danger/40 bg-danger/5 p-4 text-danger">
+      <div className="rounded-card border border-danger/35 bg-red-50/70 p-4 text-danger shadow-card">
         <p className="font-semibold">{s.label}</p>
-        <p className="text-sm text-ink-secondary">{s.description}</p>
+        <p className="text-sm text-slate-700">{s.description}</p>
       </div>
     );
   }
 
   return (
-    <ol className="relative space-y-0">
+    <ol className="relative space-y-0 rounded-card border border-primary/10 bg-white p-5 shadow-card">
       {CLIENT_TRANSACTION_FLOW.map((meta, i) => {
         const done = isStepDone(status, i);
         const current = isStepCurrent(status, i);
@@ -88,7 +88,7 @@ export function TransactionTimeline({ status }: { status: TransactionStatus }) {
                   done && 'border-success bg-success/15 text-success',
                   current &&
                     'border-primary bg-primary/10 text-primary shadow-md shadow-primary/15',
-                  !done && !current && 'border-line text-ink-faint',
+                  !done && !current && 'border-primary/15 text-slate-400',
                 )}
                 animate={current ? { scale: [1, 1.05, 1] } : {}}
                 transition={{ repeat: current ? Infinity : 0, duration: 2 }}
@@ -99,7 +99,7 @@ export function TransactionTimeline({ status }: { status: TransactionStatus }) {
                 <div
                   className={cn(
                     'my-1 min-h-[24px] w-0.5 flex-1',
-                    done ? 'bg-success/40' : 'bg-muted',
+                    done ? 'bg-success/40' : 'bg-slate-200',
                   )}
                 />
               ) : null}
@@ -108,12 +108,12 @@ export function TransactionTimeline({ status }: { status: TransactionStatus }) {
               <p
                 className={cn(
                   'font-semibold',
-                  current ? 'text-ink' : 'text-ink-secondary',
+                  current ? 'text-text-dark' : 'text-slate-600',
                 )}
               >
                 {meta.label}
               </p>
-              <p className="text-sm text-ink-muted">{meta.description}</p>
+              <p className="text-sm text-text-muted">{meta.description}</p>
               <NotificationBadge stepIndex={i} status={status} />
             </div>
           </li>

@@ -10,9 +10,12 @@ export type OrderStatus =
   | 'DISPUTED';
 export type PaymentMethod =
   | 'ORANGE_MONEY'
+  | 'MOOV_MONEY'
   | 'WAVE'
   | 'BANK_TRANSFER'
   | 'SBP'
+  | 'BTB'
+  | 'T-BANK'
   | 'OTHER';
 
 export interface Order {

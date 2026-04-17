@@ -49,7 +49,7 @@ export function CommissionBreakdown({
       ? "text-success"
       : trend === "down"
         ? "text-danger"
-        : "text-ink-muted";
+        : "text-text-muted";
 
   const rateLine = `1 000 F CFA = ${rubDisplayFor1000Cfa(googleRatePerCfa)} ₽`;
 
@@ -60,22 +60,22 @@ export function CommissionBreakdown({
   return (
     <div
       className={cn(
-        "glass-card flex flex-col gap-3 border-primary/15 bg-gradient-to-br from-card to-primary/[0.03] p-4",
+        "flex flex-col gap-3 rounded-card border border-primary/10 bg-gradient-to-br from-white to-primary/[0.04] p-4 shadow-card",
         compact && "gap-2 p-3",
         className,
       )}
     >
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line pb-3 ">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-primary/10 pb-3 ">
         <div className="flex items-center gap-2">
           <span
             className="h-2 w-2 shrink-0 rounded-full bg-success shadow-sm shadow-success/40"
             aria-hidden
           />
-          <span className="text-sm font-medium text-ink-secondary">
+          <span className="text-sm font-medium text-slate-600">
             Taux Google (référence)
           </span>
         </div>
-        <span className="font-display text-sm font-bold tabular-nums text-ink md:text-base">
+        <span className="font-display text-sm font-bold tabular-nums text-text-dark md:text-base">
           {rateLine}
         </span>
         {!compact ? (
@@ -89,7 +89,7 @@ export function CommissionBreakdown({
                 ? "Hausse"
                 : "Baisse"}
             {percentChange24h !== 0 ? (
-              <span className="text-ink-muted">
+              <span className="text-text-muted">
                 {" "}
                 · {percentChange24h > 0 ? "+" : ""}
                 {percentChange24h.toFixed(2)}% (24 h)
@@ -98,7 +98,7 @@ export function CommissionBreakdown({
           </div>
         ) : null}
         {fetchedAt && !compact ? (
-          <p className="w-full text-[11px] text-ink-faint">
+          <p className="w-full text-[11px] text-slate-500">
             Mis à jour {new Date(fetchedAt).toLocaleString("fr-FR")}
           </p>
         ) : null}
@@ -106,18 +106,18 @@ export function CommissionBreakdown({
 
       <div className={cn("space-y-2 text-sm", compact && "text-xs")}>
         <div className="flex justify-between gap-3">
-          <span className="text-ink-muted">Montant échangé</span>
-          <span className="text-right font-medium text-ink">
+          <span className="text-text-muted">Montant échangé</span>
+          <span className="text-right font-medium text-text-dark">
             {formatSend(netSendMinor)}
           </span>
         </div>
-        <p className="-mt-1 text-right text-[11px] text-ink-faint">
+        <p className="-mt-1 text-right text-[11px] text-slate-500">
           hors commission
         </p>
         <div className="flex justify-between gap-3">
-          <span className="text-ink-muted">
+          <span className="text-text-muted">
             Commission DoniSend ({commissionPercent}%)
-            <span className="ml-1 text-[10px] text-ink-faint">
+            <span className="ml-1 text-[10px] text-slate-500">
               service sécurisé
             </span>
           </span>
@@ -126,33 +126,33 @@ export function CommissionBreakdown({
           </span>
         </div>
         {commissionSecondaryLabel ? (
-          <p className="-mt-1 text-right text-[11px] text-ink-muted">
+          <p className="-mt-1 text-right text-[11px] text-text-muted">
             {commissionSecondaryLabel}
           </p>
         ) : null}
       </div>
 
-      <div className="flex justify-between gap-3 border-t border-line pt-3">
-        <span className="font-semibold text-ink">Total à envoyer</span>
-        <span className="font-display text-lg font-bold tabular-nums text-ink">
+      <div className="flex justify-between gap-3 border-t border-primary/10 pt-3">
+        <span className="font-semibold text-text-dark">Total à envoyer</span>
+        <span className="font-display text-lg font-bold tabular-nums text-text-dark">
           {formatSend(totalSendMinor)}
         </span>
       </div>
 
       <div className="rounded-input border border-primary/20 bg-primary/[0.06] px-3 py-2.5">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <span className="text-sm text-ink-muted">Vous recevrez</span>
+          <span className="text-sm text-text-muted">Vous recevrez</span>
           <span className="font-display text-base font-bold text-primary md:text-lg">
             {formatRecv(receiveMinor)}
           </span>
         </div>
-        <p className="mt-1 text-[11px] leading-relaxed text-ink-faint">
+        <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
           {netFootnote}
         </p>
       </div>
 
       {!compact ? (
-        <p className="text-center text-[10px] leading-snug text-ink-faint">
+        <p className="text-center text-[10px] leading-snug text-slate-500">
           Taux indicatif vérifiable (ex. Google Finance). La commission est
           affichée à part — rien n’est « caché » dans le taux.
         </p>

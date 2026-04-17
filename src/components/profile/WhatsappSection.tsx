@@ -96,7 +96,7 @@ export function WhatsappSection({ user }: { user: User }) {
   }
 
   return (
-    <div className="glass-card space-y-4 rounded-card border border-line p-5">
+    <div className="space-y-4 rounded-card border border-primary/10 bg-white p-5 shadow-card">
       <div className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-500/15">
@@ -110,8 +110,8 @@ export function WhatsappSection({ user }: { user: User }) {
             </svg>
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-ink">Notifications WhatsApp</p>
-            <p className="truncate text-xs text-ink-muted">{subtitleWhatsapp(user)}</p>
+            <p className="text-sm font-semibold text-text-dark">Notifications WhatsApp</p>
+            <p className="truncate text-xs text-text-muted">{subtitleWhatsapp(user)}</p>
           </div>
         </div>
         {!editing ? (
@@ -129,14 +129,14 @@ export function WhatsappSection({ user }: { user: User }) {
         <div className="space-y-2">
           {user.phoneMali ? (
             <div className="flex items-center justify-between text-sm">
-              <span className="text-ink-muted">Mali</span>
-              <span className="font-mono text-ink">{user.phoneMali}</span>
+              <span className="text-text-muted">Mali</span>
+              <span className="font-mono text-text-dark">{user.phoneMali}</span>
             </div>
           ) : null}
           {user.phoneRussia ? (
             <div className="flex items-center justify-between text-sm">
-              <span className="text-ink-muted">Russie</span>
-              <span className="font-mono text-ink">{user.phoneRussia}</span>
+              <span className="text-text-muted">Russie</span>
+              <span className="font-mono text-text-dark">{user.phoneRussia}</span>
             </div>
           ) : null}
           {!user.phoneMali && !user.phoneRussia ? (
@@ -154,14 +154,14 @@ export function WhatsappSection({ user }: { user: User }) {
             placeholder="22370123456 ou 79961234567 (+ optionnel)"
             value={newPhone}
             onChange={(e) => setNewPhone(e.target.value)}
-            className="input-field w-full"
+            className="input-field-surface w-full"
             autoComplete="tel"
           />
           <div className="flex gap-2">
             <button
               type="button"
               onClick={() => resetEditing()}
-              className="glass-card flex-1 rounded-input py-2 text-sm text-ink-muted"
+              className="flex-1 rounded-input border border-primary/15 bg-slate-50 py-2 text-sm text-text-muted transition hover:bg-primary/[0.04]"
             >
               Annuler
             </button>
@@ -179,8 +179,8 @@ export function WhatsappSection({ user }: { user: User }) {
 
       {editing && step === 'otp' ? (
         <div className="space-y-3">
-          <p className="text-sm text-ink-secondary">
-            Code envoyé sur <span className="text-ink">{newPhone.trim()}</span> par WhatsApp
+          <p className="text-sm text-slate-600">
+            Code envoyé sur <span className="font-medium text-text-dark">{newPhone.trim()}</span> par WhatsApp
           </p>
           <input
             type="text"
@@ -189,7 +189,7 @@ export function WhatsappSection({ user }: { user: User }) {
             value={otp}
             onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
             maxLength={6}
-            className="input-field w-full text-center text-xl tracking-widest"
+            className="input-field-surface w-full text-center text-xl tracking-widest"
             autoComplete="one-time-code"
           />
           <button

@@ -37,7 +37,7 @@ export default function AdminKycPage() {
         </p>
       </div>
 
-      <Card className="border-line/90 p-6 shadow-card-lg">
+      <Card variant="glass" className="border-line/90 p-6 shadow-card-lg">
         <h2 className="mb-6 font-display text-xl font-semibold text-ink">
           Dossiers à traiter
           <span className="ml-2 inline-flex h-7 min-w-7 items-center justify-center rounded-pill bg-primary/12 px-2 text-sm font-bold text-primary">

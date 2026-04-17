@@ -6,10 +6,12 @@ import { cn } from '@/lib/utils';
 export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label: string;
   error?: string;
+  /** `surface` : fond clair (client, auth). `dark` : champs sur panneaux sombres (admin). */
+  variant?: 'surface' | 'dark';
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ className, label, error, id, ...props }, ref) => {
+  ({ className, label, error, id, variant = 'surface', ...props }, ref) => {
     const uid = useId();
     const inputId = id ?? uid;
     return (
@@ -19,7 +21,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           id={inputId}
           placeholder=" "
           className={cn(
-            'input-field peer pt-5 pb-2',
+            'peer pt-5 pb-2',
+            variant === 'surface' ? 'input-field-surface' : 'input-field',
             error && 'border-danger focus:border-danger focus:ring-danger/15',
             className,
           )}
@@ -28,8 +31,11 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         <label
           htmlFor={inputId}
           className={cn(
-            'pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm text-ink-faint transition-all',
-            'peer-focus:top-3 peer-focus:translate-y-0 peer-focus:text-xs peer-focus:text-primary',
+            'pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm transition-all',
+            variant === 'surface'
+              ? 'text-text-muted peer-focus:text-primary'
+              : 'text-ink-faint peer-focus:text-primary',
+            'peer-focus:top-3 peer-focus:translate-y-0 peer-focus:text-xs',
             'peer-[:not(:placeholder-shown)]:top-3 peer-[:not(:placeholder-shown)]:translate-y-0 peer-[:not(:placeholder-shown)]:text-xs',
           )}
         >

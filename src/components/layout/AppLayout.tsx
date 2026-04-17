@@ -29,13 +29,13 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const hideBottomNav = pathname.includes('/chat');
   return (
     <KycGate>
-    <div className="flex min-h-screen flex-col bg-app">
+    <div className="flex min-h-screen flex-col bg-gradient-to-b from-white via-slate-50/50 to-primary/[0.04] text-text-dark">
       <div className="hidden lg:block">
         <TopBar />
       </div>
       <div className="flex flex-1">
-        <aside className="hidden w-56 shrink-0 flex-col border-r border-line bg-card px-3 py-6 shadow-card lg:flex">
-          <span className="mb-6 px-3 font-display text-sm font-semibold uppercase tracking-wide text-ink-faint">
+        <aside className="hidden w-56 shrink-0 flex-col border-r border-primary/10 bg-white/90 px-3 py-6 shadow-sm backdrop-blur-md lg:flex">
+          <span className="mb-6 px-3 font-display text-sm font-semibold uppercase tracking-wide text-text-muted">
             Menu
           </span>
           <nav className="flex flex-col gap-1">
@@ -50,7 +50,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                     'flex items-center gap-3 rounded-input px-3 py-2.5 text-sm font-medium transition-colors',
                     active
                       ? 'bg-primary/10 text-primary shadow-sm'
-                      : 'text-ink-secondary hover:bg-surface-hover hover:text-ink',
+                      : 'text-text-muted hover:bg-primary/[0.06] hover:text-primary',
                   )}
                 >
                   <Icon className="h-4 w-4 shrink-0" />
@@ -59,7 +59,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               );
             })}
           </nav>
-          <div className="mt-auto border-t border-line pt-4">
+          <div className="mt-auto border-t border-primary/10 pt-4">
             <LogoutButton
               className="w-full justify-center"
               label="always"

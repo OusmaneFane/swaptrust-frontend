@@ -100,20 +100,20 @@ export default function ModifierProfilPage() {
 
   return (
     <Card className="mx-auto max-w-lg space-y-6 p-6">
-      <h1 className="font-display text-xl font-bold">Modifier le profil</h1>
+      <h1 className="font-display text-xl font-bold text-text-dark">Modifier le profil</h1>
       {isLoading ? (
-        <p className="text-sm text-ink-muted">Chargement…</p>
+        <p className="text-sm text-text-muted">Chargement…</p>
       ) : (
         <>
           {me ? <WhatsappSection user={me} /> : null}
           <div>
-            <label className="mb-2 block text-sm text-ink-secondary">Avatar</label>
+            <label className="mb-2 block text-sm text-slate-600">Avatar</label>
             {preview || me?.avatar ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={preview ?? me?.avatar ?? ''}
                 alt=""
-                className="mb-2 h-24 w-24 rounded-full object-cover ring-2 ring-line"
+                className="mb-2 h-24 w-24 rounded-full object-cover ring-2 ring-primary/15"
               />
             ) : null}
             <input
@@ -133,8 +133,8 @@ export default function ModifierProfilPage() {
             <Input label="Téléphone Mali" {...register('phoneMali')} />
             <Input label="Téléphone Russie" {...register('phoneRussia')} />
             <div>
-              <label className="mb-2 block text-sm text-ink-secondary">Pays</label>
-              <select className="input-field" {...register('countryResidence')}>
+              <label className="mb-2 block text-sm text-slate-600">Pays</label>
+              <select className="input-field-surface" {...register('countryResidence')}>
                 <option value="">—</option>
                 <option value="MALI">Mali</option>
                 <option value="RUSSIA">Russie</option>
