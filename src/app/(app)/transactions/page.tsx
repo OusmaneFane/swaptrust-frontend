@@ -1,63 +1,63 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { useQuery } from '@tanstack/react-query';
-import { ChevronRight, History, Inbox } from 'lucide-react';
-import { fetchTransactions } from '@/services/transactionService';
-import { Skeleton } from '@/components/ui/Skeleton';
-import { formatCFA, formatRUB, fromNow, cn } from '@/lib/utils';
-import { Badge } from '@/components/ui/Badge';
-import type { TransactionStatus } from '@/types';
-import type { TransactionFilters } from '@/types/api-dtos';
-import { TRANSACTION_STEPS } from '@/types/transaction';
+import { useState } from "react";
+import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
+import { ChevronRight, History, Inbox } from "lucide-react";
+import { fetchTransactions } from "@/services/transactionService";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { formatCFA, formatRUB, fromNow, cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/Badge";
+import type { TransactionStatus } from "@/types";
+import type { TransactionFilters } from "@/types/api-dtos";
+import { TRANSACTION_STEPS } from "@/types/transaction";
 
 const PERIOD_PRESETS: { value: string; label: string }[] = [
-  { value: '', label: 'Toutes périodes' },
-  { value: '7d', label: '7 jours' },
-  { value: '30d', label: '30 jours' },
-  { value: '90d', label: '90 jours' },
+  { value: "", label: "Toutes périodes" },
+  { value: "7d", label: "7 jours" },
+  { value: "30d", label: "30 jours" },
+  { value: "90d", label: "90 jours" },
 ];
 
 const STATUS_OPTIONS: TransactionStatus[] = [
-  'INITIATED',
-  'CLIENT_SENT',
-  'OPERATOR_VERIFIED',
-  'OPERATOR_SENT',
-  'COMPLETED',
-  'DISPUTED',
-  'CANCELLED',
+  "INITIATED",
+  "CLIENT_SENT",
+  "OPERATOR_VERIFIED",
+  "OPERATOR_SENT",
+  "COMPLETED",
+  "DISPUTED",
+  "CANCELLED",
 ];
 
 function statusBadgeTone(
   s: TransactionStatus,
-): 'default' | 'success' | 'warning' | 'danger' | 'muted' {
+): "default" | "success" | "warning" | "danger" | "muted" {
   switch (s) {
-    case 'COMPLETED':
-      return 'success';
-    case 'CANCELLED':
-    case 'DISPUTED':
-      return 'danger';
-    case 'CLIENT_SENT':
-    case 'INITIATED':
-      return 'warning';
+    case "COMPLETED":
+      return "success";
+    case "CANCELLED":
+    case "DISPUTED":
+      return "danger";
+    case "CLIENT_SENT":
+    case "INITIATED":
+      return "warning";
     default:
-      return 'default';
+      return "default";
   }
 }
 
 const selectClass =
-  'min-h-0 min-w-0 flex-1 basis-[5.5rem] rounded-lg border border-slate-200/90 bg-white px-2 py-1.5 text-[11px] font-medium text-text-dark shadow-sm ring-1 ring-slate-900/[0.03] transition focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/15 sm:basis-0 sm:px-2.5 sm:text-xs';
+  "min-h-0 min-w-0 flex-1 basis-[5.5rem] rounded-lg border border-slate-200/90 bg-white px-2 py-1.5 text-[11px] font-medium text-text-dark shadow-sm ring-1 ring-slate-900/[0.03] transition focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/15 sm:basis-0 sm:px-2.5 sm:text-xs";
 
 export default function TransactionsListPage() {
-  const [status, setStatus] = useState<TransactionStatus | ''>('');
+  const [status, setStatus] = useState<TransactionStatus | "">("");
   const [direction, setDirection] = useState<
-    NonNullable<TransactionFilters['direction']> | ''
-  >('');
-  const [period, setPeriod] = useState('');
+    NonNullable<TransactionFilters["direction"]> | ""
+  >("");
+  const [period, setPeriod] = useState("");
 
   const { data, isLoading, isFetching } = useQuery({
-    queryKey: ['transactions', 'list', status, direction, period],
+    queryKey: ["transactions", "list", status, direction, period],
     queryFn: () =>
       fetchTransactions({
         ...(status ? { status } : {}),
@@ -87,7 +87,7 @@ export default function TransactionsListPage() {
             {!isLoading && items.length > 0 ? (
               <span className="rounded-full border border-primary/12 bg-primary/[0.07] px-2.5 py-0.5 text-xs font-semibold tabular-nums text-primary">
                 {items.length}
-                {items.length > 1 ? ' échanges' : ' échange'}
+                {items.length > 1 ? " échanges" : " échange"}
               </span>
             ) : null}
           </div>
@@ -99,8 +99,8 @@ export default function TransactionsListPage() {
               onChange={(e) =>
                 setDirection(
                   e.target.value as
-                    | NonNullable<TransactionFilters['direction']>
-                    | '',
+                    | NonNullable<TransactionFilters["direction"]>
+                    | "",
                 )
               }
             >
@@ -110,9 +110,11 @@ export default function TransactionsListPage() {
             </select>
             <select
               aria-label="Statut de la transaction"
-              className={cn(selectClass, 'min-w-[6.5rem] sm:min-w-[7.5rem]')}
+              className={cn(selectClass, "min-w-[6.5rem] sm:min-w-[7.5rem]")}
               value={status}
-              onChange={(e) => setStatus(e.target.value as TransactionStatus | '')}
+              onChange={(e) =>
+                setStatus(e.target.value as TransactionStatus | "")
+              }
             >
               <option value="">Statut · tous</option>
               {STATUS_OPTIONS.map((s) => (
@@ -123,13 +125,13 @@ export default function TransactionsListPage() {
             </select>
             <select
               aria-label="Période"
-              className={cn(selectClass, 'basis-[6rem] sm:basis-0')}
+              className={cn(selectClass, "basis-[6rem] sm:basis-0")}
               value={period}
               onChange={(e) => setPeriod(e.target.value)}
             >
               {PERIOD_PRESETS.map(({ value, label }) => (
-                <option key={value || 'all'} value={value}>
-                  {value === '' ? 'Période · toutes' : label}
+                <option key={value || "all"} value={value}>
+                  {value === "" ? "Période · toutes" : label}
                 </option>
               ))}
             </select>
@@ -150,8 +152,8 @@ export default function TransactionsListPage() {
         ) : (
           <ul
             className={cn(
-              'space-y-2.5 transition-opacity',
-              isFetching ? 'opacity-60' : 'opacity-100',
+              "space-y-2.5 transition-opacity",
+              isFetching ? "opacity-60" : "opacity-100",
             )}
           >
             {items.map((t) => (
@@ -159,8 +161,8 @@ export default function TransactionsListPage() {
                 <Link
                   href={`/transactions/${t.id}`}
                   className={cn(
-                    'group flex items-center justify-between gap-3 rounded-xl border border-slate-200/80 bg-white/90 p-3 shadow-sm ring-1 ring-slate-900/[0.04] transition',
-                    'hover:-translate-y-px hover:border-primary/20 hover:bg-white hover:shadow-md hover:shadow-primary/[0.05]',
+                    "group flex items-center justify-between gap-3 rounded-xl border border-slate-200/80 bg-white/90 p-3 shadow-sm ring-1 ring-slate-900/[0.04] transition",
+                    "hover:-translate-y-px hover:border-primary/20 hover:bg-white hover:shadow-md hover:shadow-primary/[0.05]",
                   )}
                 >
                   <div className="min-w-0 flex-1">
@@ -168,17 +170,26 @@ export default function TransactionsListPage() {
                       <span className="font-mono text-[11px] font-semibold text-text-muted">
                         #{t.id}
                       </span>
-                      <Badge tone={statusBadgeTone(t.status)} className="text-[10px]">
+                      <Badge
+                        tone={statusBadgeTone(t.status)}
+                        className="text-[10px]"
+                      >
                         {TRANSACTION_STEPS[t.status].label}
                       </Badge>
                     </div>
                     <p className="mt-1 truncate font-display text-sm font-bold tabular-nums text-text-dark sm:text-base">
-                      <span className="text-emerald-800/90">{formatCFA(t.amountCfa)}</span>
-                      <span className="mx-1.5 font-normal text-slate-400">↔</span>
-                      <span className="text-sky-900/90">{formatRUB(t.amountRub)}</span>
+                      <span className="text-emerald-800/90">
+                        {formatCFA(t.amountCfa)}
+                      </span>
+                      <span className="mx-1.5 font-normal text-slate-400">
+                        ↔
+                      </span>
+                      <span className="text-sky-900/90">
+                        {formatRUB(t.amountRub)}
+                      </span>
                     </p>
                     <p className="text-[11px] text-slate-500">
-                      {t.takenAt ? fromNow(t.takenAt) : '—'}
+                      {t.takenAt ? fromNow(t.takenAt) : "—"}
                     </p>
                   </div>
                   <ChevronRight
@@ -196,9 +207,12 @@ export default function TransactionsListPage() {
             <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-primary/15 to-violet-500/10 text-primary">
               <Inbox className="h-5 w-5" strokeWidth={1.75} aria-hidden />
             </div>
-            <p className="text-sm font-bold text-text-dark">Aucune transaction</p>
+            <p className="text-sm font-bold text-text-dark">
+              Aucune transaction
+            </p>
             <p className="mx-auto mt-1 max-w-sm text-xs leading-relaxed text-text-muted sm:text-sm">
-              Ajustez les filtres ou lancez un échange depuis le tableau de bord.
+              Ajustez les filtres ou lancez un échange depuis le tableau de
+              bord.
             </p>
           </div>
         ) : null}

@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
-import { useQuery } from '@tanstack/react-query';
+import { useState } from "react";
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { useQuery } from "@tanstack/react-query";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -13,48 +13,48 @@ import {
   MessageCircle,
   Receipt,
   Star,
-} from 'lucide-react';
-import { TransactionTimeline } from '@/components/exchange/TransactionTimeline';
-import { ClientSendButton } from '@/components/client/ClientSendButton';
-import { ClientConfirmButton } from '@/components/client/ClientConfirmButton';
-import { ProofViewer } from '@/components/shared/ProofViewer';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { BottomSheet } from '@/components/ui/BottomSheet';
-import { Skeleton } from '@/components/ui/Skeleton';
-import { Input } from '@/components/ui/Input';
-import { Badge } from '@/components/ui/Badge';
-import { useTransaction } from '@/hooks/useTransaction';
-import { resolveClientSendDestination } from '@/lib/resolve-client-send-destination';
-import { rubDisplayFor1000Cfa } from '@/lib/rate-xof-rub';
-import { formatAccountForDisplay } from '@/lib/donisend-receive';
+} from "lucide-react";
+import { TransactionTimeline } from "@/components/exchange/TransactionTimeline";
+import { ClientSendButton } from "@/components/client/ClientSendButton";
+import { ClientConfirmButton } from "@/components/client/ClientConfirmButton";
+import { ProofViewer } from "@/components/shared/ProofViewer";
+import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { BottomSheet } from "@/components/ui/BottomSheet";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { Input } from "@/components/ui/Input";
+import { Badge } from "@/components/ui/Badge";
+import { useTransaction } from "@/hooks/useTransaction";
+import { resolveClientSendDestination } from "@/lib/resolve-client-send-destination";
+import { rubDisplayFor1000Cfa } from "@/lib/rate-xof-rub";
+import { formatAccountForDisplay } from "@/lib/donisend-receive";
 import {
   formatGrossSendForClient,
   formatMinorForSendRail,
-} from '@/lib/transaction-display';
-import { cn, formatCFA, formatRUB } from '@/lib/utils';
-import { sameUserId } from '@/lib/same-user';
-import { authApi, transactionsApi, reviewsApi } from '@/services/api';
-import { toast } from 'sonner';
-import { showWhatsappToast } from '@/components/ui/WhatsappToast';
-import { userWhatsappNotifyPhone } from '@/lib/user-phones';
-import type { TransactionStatus } from '@/types';
-import { TRANSACTION_STEPS } from '@/types/transaction';
+} from "@/lib/transaction-display";
+import { cn, formatCFA, formatRUB } from "@/lib/utils";
+import { sameUserId } from "@/lib/same-user";
+import { authApi, transactionsApi, reviewsApi } from "@/services/api";
+import { toast } from "sonner";
+import { showWhatsappToast } from "@/components/ui/WhatsappToast";
+import { userWhatsappNotifyPhone } from "@/lib/user-phones";
+import type { TransactionStatus } from "@/types";
+import { TRANSACTION_STEPS } from "@/types/transaction";
 
 function statusBadgeTone(
   s: TransactionStatus,
-): 'default' | 'success' | 'warning' | 'danger' | 'muted' {
+): "default" | "success" | "warning" | "danger" | "muted" {
   switch (s) {
-    case 'COMPLETED':
-      return 'success';
-    case 'CANCELLED':
-    case 'DISPUTED':
-      return 'danger';
-    case 'CLIENT_SENT':
-    case 'INITIATED':
-      return 'warning';
+    case "COMPLETED":
+      return "success";
+    case "CANCELLED":
+    case "DISPUTED":
+      return "danger";
+    case "CLIENT_SENT":
+    case "INITIATED":
+      return "warning";
     default:
-      return 'default';
+      return "default";
   }
 }
 
@@ -63,13 +63,13 @@ function CopyableAccountValue({ raw }: { raw: string }) {
   const display = formatAccountForDisplay(raw);
   async function copy() {
     try {
-      const compact = raw.replace(/\s/g, '');
+      const compact = raw.replace(/\s/g, "");
       await navigator.clipboard.writeText(compact);
       setCopied(true);
-      toast.success('Copié dans le presse-papiers');
+      toast.success("Copié dans le presse-papiers");
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      toast.error('Copie impossible');
+      toast.error("Copie impossible");
     }
   }
   return (
@@ -81,8 +81,8 @@ function CopyableAccountValue({ raw }: { raw: string }) {
         type="button"
         onClick={() => void copy()}
         className={cn(
-          'rounded-xl border border-slate-200/90 bg-white p-2 text-primary shadow-sm ring-1 ring-slate-900/[0.04] transition',
-          'hover:border-primary/25 hover:bg-primary/[0.04]',
+          "rounded-xl border border-slate-200/90 bg-white p-2 text-primary shadow-sm ring-1 ring-slate-900/[0.04] transition",
+          "hover:border-primary/25 hover:bg-primary/[0.04]",
         )}
         aria-label="Copier le numéro ou l’IBAN"
       >
@@ -94,17 +94,17 @@ function CopyableAccountValue({ raw }: { raw: string }) {
 
 function operatorShortName(name: string): string {
   const parts = name.trim().split(/\s+/);
-  if (parts.length === 0) return '?';
-  if (parts.length === 1) return parts[0]!.slice(0, 1) + '.';
+  if (parts.length === 0) return "?";
+  if (parts.length === 1) return parts[0]!.slice(0, 1) + ".";
   return `${parts[0]!.charAt(0)}. ${parts[parts.length - 1]}`;
 }
 
-const shell = 'relative mx-auto min-w-0 max-w-lg pb-10 pt-0 xl:max-w-2xl';
+const shell = "relative mx-auto min-w-0 max-w-lg pb-10 pt-0 xl:max-w-2xl";
 const halo =
-  'pointer-events-none absolute inset-x-0 top-0 mx-auto h-[min(14rem,32vh)] max-w-xl rounded-[40%] bg-gradient-to-b from-primary/[0.14] via-violet-500/[0.05] to-transparent blur-3xl';
+  "pointer-events-none absolute inset-x-0 top-0 mx-auto h-[min(14rem,32vh)] max-w-xl rounded-[40%] bg-gradient-to-b from-primary/[0.14] via-violet-500/[0.05] to-transparent blur-3xl";
 
 const surfaceCard =
-  'rounded-2xl border border-slate-200/80 bg-white/90 shadow-sm ring-1 ring-slate-900/[0.04] backdrop-blur-sm';
+  "rounded-2xl border border-slate-200/80 bg-white/90 shadow-sm ring-1 ring-slate-900/[0.04] backdrop-blur-sm";
 
 export default function TransactionDetailPage() {
   const params = useParams();
@@ -112,16 +112,16 @@ export default function TransactionDetailPage() {
   const id = Number(params.id);
   const { data: session } = useSession();
   const { data: me } = useQuery({
-    queryKey: ['auth', 'me'],
+    queryKey: ["auth", "me"],
     queryFn: () => authApi.me(),
   });
   const notifyPhone = userWhatsappNotifyPhone(me);
   const { data: tx, isLoading } = useTransaction(id);
   const [disputeOpen, setDisputeOpen] = useState(false);
-  const [disputeReason, setDisputeReason] = useState('');
+  const [disputeReason, setDisputeReason] = useState("");
   const [reviewOpen, setReviewOpen] = useState(false);
   const [rating, setRating] = useState(5);
-  const [reviewComment, setReviewComment] = useState('');
+  const [reviewComment, setReviewComment] = useState("");
 
   const sessionId = session?.user?.id;
   const isClient =
@@ -130,13 +130,13 @@ export default function TransactionDetailPage() {
   async function submitDispute() {
     try {
       await transactionsApi.dispute(id, {
-        reason: disputeReason || 'Problème signalé',
+        reason: disputeReason || "Problème signalé",
       });
-      toast.success('Litige ouvert');
+      toast.success("Litige ouvert");
       setDisputeOpen(false);
       router.refresh();
     } catch {
-      toast.error('Impossible d’ouvrir le litige');
+      toast.error("Impossible d’ouvrir le litige");
     }
   }
 
@@ -146,15 +146,15 @@ export default function TransactionDetailPage() {
         rating,
         comment: reviewComment || undefined,
       });
-      toast.success('Merci pour votre avis');
+      toast.success("Merci pour votre avis");
       setReviewOpen(false);
     } catch {
-      toast.error('Envoi de l’avis impossible');
+      toast.error("Envoi de l’avis impossible");
     }
   }
 
   const showDispute =
-    tx && tx.status !== 'COMPLETED' && tx.status !== 'CANCELLED';
+    tx && tx.status !== "COMPLETED" && tx.status !== "CANCELLED";
 
   if (isLoading || !tx) {
     return (
@@ -173,12 +173,7 @@ export default function TransactionDetailPage() {
     return (
       <div className={shell}>
         <div className={halo} aria-hidden />
-        <div
-          className={cn(
-            surfaceCard,
-            'relative space-y-4 p-8 text-center',
-          )}
-        >
+        <div className={cn(surfaceCard, "relative space-y-4 p-8 text-center")}>
           <p className="text-sm font-medium text-text-dark">
             Accès réservé au client de la transaction.
           </p>
@@ -213,7 +208,7 @@ export default function TransactionDetailPage() {
         <div
           className={cn(
             surfaceCard,
-            'flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between',
+            "flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between",
           )}
         >
           <div className="min-w-0 space-y-1.5">
@@ -227,7 +222,7 @@ export default function TransactionDetailPage() {
             </div>
             <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-text-muted sm:text-sm">
               <span>
-                Opérateur :{' '}
+                Opérateur :{" "}
                 <span className="font-medium text-text-dark">
                   {operatorShortName(tx.operator.name)}
                 </span>
@@ -243,15 +238,15 @@ export default function TransactionDetailPage() {
                 />
                 {tx.operator.ratingAvg != null
                   ? tx.operator.ratingAvg.toFixed(1)
-                  : '—'}
+                  : "—"}
               </span>
             </p>
           </div>
           <Link
             href={`/transactions/${id}/chat`}
             className={cn(
-              'inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-primary/15 bg-white px-4 py-2.5 text-sm font-semibold text-primary shadow-sm ring-1 ring-slate-900/[0.04] transition',
-              'hover:border-primary/30 hover:bg-primary/[0.04]',
+              "inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-primary/15 bg-white px-4 py-2.5 text-sm font-semibold text-primary shadow-sm ring-1 ring-slate-900/[0.04] transition",
+              "hover:border-primary/30 hover:bg-primary/[0.04]",
             )}
           >
             <MessageCircle className="h-4 w-4" strokeWidth={2} />
@@ -260,10 +255,7 @@ export default function TransactionDetailPage() {
         </div>
 
         <Card
-          className={cn(
-            surfaceCard,
-            'space-y-2.5 p-4 text-sm shadow-none',
-          )}
+          className={cn(surfaceCard, "space-y-2.5 p-4 text-sm shadow-none")}
         >
           {tx.grossAmount != null && tx.netAmount != null ? (
             <>
@@ -320,15 +312,15 @@ export default function TransactionDetailPage() {
           </div>
         </Card>
 
-        <div className={cn(surfaceCard, 'p-4')}>
+        <div className={cn(surfaceCard, "p-4")}>
           <TransactionTimeline status={tx.status} />
         </div>
 
-        {tx.status === 'INITIATED' && donisendDestination ? (
+        {tx.status === "INITIATED" && donisendDestination ? (
           <Card
             className={cn(
               surfaceCard,
-              'space-y-3 border-primary/15 bg-gradient-to-br from-white via-primary/[0.03] to-white p-4 shadow-none sm:p-5',
+              "space-y-3 border-primary/15 bg-gradient-to-br from-white via-primary/[0.03] to-white p-4 shadow-none sm:p-5",
             )}
           >
             <p className="text-sm font-semibold text-text-dark">
@@ -355,7 +347,7 @@ export default function TransactionDetailPage() {
                 aria-hidden
               />
               <p>
-                N’envoyez <strong className="text-text-dark">pas</strong>{' '}
+                N’envoyez <strong className="text-text-dark">pas</strong>{" "}
                 directement à l’opérateur : les fonds passent toujours par
                 DoniSend, qui reverse le net à l’opérateur après commission.
               </p>
@@ -363,11 +355,11 @@ export default function TransactionDetailPage() {
           </Card>
         ) : null}
 
-        {tx.status === 'INITIATED' && !donisendDestination ? (
+        {tx.status === "INITIATED" && !donisendDestination ? (
           <div
             className={cn(
               surfaceCard,
-              'flex gap-3 border-amber-200/70 bg-amber-50/50 p-4 text-sm text-amber-950/90',
+              "flex gap-3 border-amber-200/70 bg-amber-50/50 p-4 text-sm text-amber-950/90",
             )}
           >
             <AlertTriangle
@@ -380,10 +372,10 @@ export default function TransactionDetailPage() {
               </p>
               <p className="mt-1 text-xs leading-relaxed">
                 Le compte de réception officiel n’est pas encore renvoyé par
-                l’API ou configuré (variables{' '}
+                l’API ou configuré (variables{" "}
                 <code className="rounded-md border border-slate-200 bg-white px-1.5 py-0.5 font-mono text-[11px] text-text-dark">
                   NEXT_PUBLIC_*
-                </code>{' '}
+                </code>{" "}
                 de réception). Contactez le support en indiquant la transaction
                 #{tx.id}.
               </p>
@@ -391,7 +383,7 @@ export default function TransactionDetailPage() {
           </div>
         ) : null}
 
-        {tx.status === 'INITIATED' ? (
+        {tx.status === "INITIATED" ? (
           <ClientSendButton
             transactionId={id}
             onWhatsappNotify={() => {
@@ -400,11 +392,11 @@ export default function TransactionDetailPage() {
           />
         ) : null}
 
-        {tx.status === 'CLIENT_SENT' || tx.status === 'OPERATOR_VERIFIED' ? (
+        {tx.status === "CLIENT_SENT" || tx.status === "OPERATOR_VERIFIED" ? (
           <p
             className={cn(
               surfaceCard,
-              'py-3 text-center text-sm font-medium text-text-muted',
+              "py-3 text-center text-sm font-medium text-text-muted",
             )}
           >
             L’opérateur vérifie votre reçu…
@@ -412,8 +404,8 @@ export default function TransactionDetailPage() {
         ) : null}
 
         {tx.operatorProofUrl &&
-        (tx.status === 'OPERATOR_SENT' || tx.status === 'COMPLETED') ? (
-          <div className={cn(surfaceCard, 'p-4')}>
+        (tx.status === "OPERATOR_SENT" || tx.status === "COMPLETED") ? (
+          <div className={cn(surfaceCard, "p-4")}>
             <div className="mb-3 flex items-center gap-2">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
                 <Receipt className="h-4 w-4" strokeWidth={2} />
@@ -426,7 +418,7 @@ export default function TransactionDetailPage() {
           </div>
         ) : null}
 
-        {tx.status === 'OPERATOR_SENT' ? (
+        {tx.status === "OPERATOR_SENT" ? (
           <ClientConfirmButton
             transactionId={id}
             onWhatsappNotify={() => {
@@ -436,7 +428,7 @@ export default function TransactionDetailPage() {
         ) : null}
 
         <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
-          {tx.status === 'COMPLETED' ? (
+          {tx.status === "COMPLETED" ? (
             <Button
               type="button"
               variant="outline"

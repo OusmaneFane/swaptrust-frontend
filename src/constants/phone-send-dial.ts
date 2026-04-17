@@ -1,4 +1,4 @@
-import type { PhoneSendDial } from '@/lib/phone-api-format';
+import type { PhoneSendDial } from "@/lib/phone-api-format";
 
 export const PHONE_SEND_DIAL_OPTIONS: readonly {
   dial: PhoneSendDial;
@@ -10,18 +10,18 @@ export const PHONE_SEND_DIAL_OPTIONS: readonly {
   placeholder: string;
 }[] = [
   {
-    dial: '223',
-    iso2: 'ml',
-    label: 'Mali',
-    dialDisplay: '223',
-    placeholder: '70123456',
+    dial: "223",
+    iso2: "ml",
+    label: "Mali",
+    dialDisplay: "223",
+    placeholder: "70123456",
   },
   {
-    dial: '7',
-    iso2: 'ru',
-    label: 'Russie',
-    dialDisplay: '7',
-    placeholder: '9161234567',
+    dial: "7",
+    iso2: "ru",
+    label: "Russie",
+    dialDisplay: "7",
+    placeholder: "9161234567",
   },
 ];
 
