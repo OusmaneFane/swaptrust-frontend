@@ -39,6 +39,8 @@ export interface ExchangeRate {
   /** Informatif (marge) — ne pas fusionner dans le taux affiché comme taux « client ». */
   rateWithSpread?: number;
   rubPerXofWithSpread?: number;
+  /** Commission actuelle (en %), si fournie par l’API. */
+  commissionPercent?: number;
   /** Ex. `cache`, `live` */
   source?: string;
 }
@@ -57,6 +59,10 @@ export interface RatesCalculateResult {
 
 export interface AdminCommissionSetting {
   percent: number;
+}
+
+export interface PublicSettings {
+  commissionPercent: number;
 }
 
 /** GET/POST /admin/platform-accounts — compte de réception DoniSend côté client. */

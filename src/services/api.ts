@@ -30,6 +30,7 @@ import type {
   UpdatePlatformAccountDto,
   UpdateUserDto,
   AdminCommissionSetting,
+  PublicSettings,
 } from "@/types/api-dtos";
 import type { AppNotification } from "@/types/api-dtos";
 import { getApiBaseUrl } from "@/lib/api-base";
@@ -187,6 +188,9 @@ function mapCurrentToExchangeRate(
   const rateWithSpread = parseDecimalLike(raw.rateWithSpread);
   const rubWs = parseDecimalLike(raw.rubPerXofWithSpread);
   const pct = parseDecimalLike(raw.percentChange24h ?? raw.percentChange);
+  const commissionPercent = parseDecimalLike(
+    raw.commissionPercent ?? raw.commission_percent,
+  );
   const source = typeof raw.source === "string" ? raw.source : undefined;
 
   if (Number.isFinite(rateNew) && rateNew > 0) {
@@ -206,6 +210,10 @@ function mapCurrentToExchangeRate(
           : undefined,
       rubPerXofWithSpread:
         Number.isFinite(rubWs) && rubWs > 0 ? rubWs : undefined,
+      commissionPercent:
+        Number.isFinite(commissionPercent) && commissionPercent >= 0
+          ? commissionPercent
+          : undefined,
       source,
     };
   }
@@ -515,6 +523,12 @@ export const ratesApi = {
     }),
 };
 
+// ─── SETTINGS (PUBLIC) ───────────────────────────────────────────────────────
+
+export const settingsApi = {
+  public: () => getUnwrapped<PublicSettings>("/settings/public"),
+};
+
 // ─── OPÉRATEUR ───────────────────────────────────────────────────────────────
 
 export const operatorApi = {
@@ -551,7 +565,9 @@ export const operatorApi = {
     ),
 
   verifyClientProof: (id: number) =>
-    api.post(`/operator/transactions/${id}/verify-client-proof`),
+    api.post(`/operator/transactions/${id}/confirm-platform-transfer
+
+`),
 
   operatorSend: (id: number, proofFile: File) => {
     const form = new FormData();
