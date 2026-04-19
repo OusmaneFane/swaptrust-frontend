@@ -1,50 +1,149 @@
+name: Deploy — Production
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+# ─────────────────────────────
+# 1. QUALITY CHECK
+# ─────────────────────────────
+  quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npx tsc --noEmit
+
+
+# ─────────────────────────────
+# 2. BUILD & PUSH IMAGE
+# ─────────────────────────────
+  build:
+    name: Build & Push Image
+    runs-on: ubuntu-latest
+    needs: quality
+    environment: main
+
+    outputs:
+      image: ${{ steps.meta.outputs.image }}
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Metadata
+        id: meta
+        run: |
+          REPO=$(echo "${GITHUB_REPOSITORY}" | tr '[:upper:]' '[:lower:]')
+          echo "image=ghcr.io/${REPO}:latest" >> $GITHUB_OUTPUT
+          echo "repo=${REPO}" >> $GITHUB_OUTPUT
+
+      - name: Build & Push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/${{ steps.meta.outputs.repo }}:latest
+            ghcr.io/${{ steps.meta.outputs.repo }}:prod-${{ github.sha }}
+          build-args: |
+            NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
+            NEXT_PUBLIC_SOCKET_URL=${{ secrets.NEXT_PUBLIC_SOCKET_URL }}
+            NEXT_PUBLIC_APP_ENV=production
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+
+# ─────────────────────────────
+# 3. DEPLOY + ROLLBACK SAFE
+# ─────────────────────────────
   deploy:
     name: Deploy Production
     runs-on: ubuntu-latest
     needs: build
-    environment: main   # 🔥 IMPORTANT (active GitHub Environment)
+    environment: production
 
     steps:
-      - name: Validate secrets
-        run: |
-          test -n "${{ secrets.VPS_HOST }}" || (echo "VPS_HOST missing" && exit 1)
-          test -n "${{ secrets.VPS_USER }}" || (echo "VPS_USER missing" && exit 1)
-          test -n "${{ secrets.VPS_SSH_KEY }}" || (echo "VPS_SSH_KEY missing" && exit 1)
-
-      - name: Deploy via SSH
+      - name: Deploy via SSH (with rollback)
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          port: ${{ secrets.VPS_PORT }}
+          port: ${{ secrets.VPS_PORT || '22' }}
           script_stop: true
+
           script: |
             set -euo pipefail
 
-            CONTAINER=donisend-frontend-prod
+            CONTAINER="app-prod"
             IMAGE="ghcr.io/$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]'):latest"
+            PREVIOUS_IMAGE=$(docker inspect "$CONTAINER" --format='{{.Config.Image}}' 2>/dev/null || echo "")
 
-            echo "🚀 Deploy frontend production"
-
-            echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" --password-stdin
-
-            docker network inspect donisend-net >/dev/null 2>&1 || docker network create donisend-net
-
+            echo "🚀 Pull new image"
+            docker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" -p "${{ secrets.GHCR_TOKEN }}"
             docker pull "$IMAGE"
 
+            echo "🔁 Stop old container"
             docker stop "$CONTAINER" || true
             docker rm "$CONTAINER" || true
 
+            echo "🚀 Start new container"
             docker run -d \
               --name "$CONTAINER" \
               --restart unless-stopped \
-              --network donisend-net \
               -p 3000:3000 \
               -e NODE_ENV=production \
               -e NEXT_PUBLIC_API_URL="${{ secrets.NEXT_PUBLIC_API_URL }}" \
               -e NEXT_PUBLIC_SOCKET_URL="${{ secrets.NEXT_PUBLIC_SOCKET_URL }}" \
               "$IMAGE"
 
-            echo "✔ Frontend running"
-            docker ps | grep "$CONTAINER"
+            echo "⏳ Healthcheck..."
+            sleep 5
+
+            if ! curl -fs http://127.0.0.1:3000 >/dev/null; then
+              echo "❌ New deployment failed → rollback"
+
+              docker stop "$CONTAINER" || true
+              docker rm "$CONTAINER" || true
+
+              if [ -n "$PREVIOUS_IMAGE" ]; then
+                docker run -d \
+                  --name "$CONTAINER" \
+                  --restart unless-stopped \
+                  -p 3000:3000 \
+                  "$PREVIOUS_IMAGE"
+              fi
+
+              exit 1
+            fi
+
+            echo "✅ Deployment successful"
+            docker image prune -f
