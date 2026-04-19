@@ -65,7 +65,7 @@ export function RateDisplay({
         </div>
         <div className="flex items-end justify-between gap-2">
           <span className="font-display text-xl font-bold tabular-nums tracking-tight text-accent">
-            {rate.toFixed(4)}
+            {rate.toFixed(2)}
           </span>
           <time
             className="shrink-0 text-[9px] leading-none text-text-muted"
@@ -83,7 +83,7 @@ export function RateDisplay({
         </span>
         <div className="flex flex-wrap items-end gap-2 sm:gap-3">
           <span className="font-display text-3xl font-bold tracking-tight text-accent md:text-4xl">
-            {rate.toFixed(4)}
+            {rate.toFixed(2)}
           </span>
           <span
             className={cn(
@@ -97,11 +97,11 @@ export function RateDisplay({
         </div>
         <p className="text-xs text-text-muted">
           <span className="font-medium text-text-dark">1 XOF</span> ≈{' '}
-          <span className="text-accent">{rate.toFixed(4)} RUB</span>
+          <span className="text-accent">{rate.toFixed(2)} RUB</span>
           <span className="mx-1.5 text-text-dark">·</span>
           <span className="font-medium text-text-dark">1 RUB</span> ≈{' '}
           <span className="text-accent">
-            {(inverseRate ?? 0).toFixed(4)} XOF
+            {(inverseRate ?? 0).toFixed(2)} XOF
           </span>
         </p>
         {percentChange !== 0 ? (
@@ -114,7 +114,7 @@ export function RateDisplay({
           <p className="hidden text-xs text-text-muted lg:block">
             Marge indicative (non utilisée comme taux client) :{' '}
             <span className="font-mono text-text-dark">
-              {rateWithSpread.toFixed(4)} ₽/F
+              {rateWithSpread.toFixed(2)} ₽/F
             </span>
             {rubPerXofWithSpread != null && rubPerXofWithSpread > 0 ? (
               <>

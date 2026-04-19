@@ -27,10 +27,7 @@ import { NoWhatsappBanner } from "@/components/dashboard/NoWhatsappBanner";
 import { authApi, requestsApi, transactionsApi } from "@/services/api";
 import { userWhatsappNotifyPhone } from "@/lib/user-phones";
 import { cn, formatCFA, formatRUB, fromNow } from "@/lib/utils";
-import {
-  CLIENT_TRANSACTION_FLOW,
-  clientTimelineStepIndex,
-} from "@/types/transaction";
+import { CLIENT_TRANSACTION_FLOW, clientTimelineStepIndex } from "@/types/transaction";
 
 const quickActions = [
   {
@@ -113,32 +110,6 @@ const item = {
   show: { opacity: 1, y: 0 },
 };
 
-function kycBadgeTone(s: string): "muted" | "warning" | "success" | "danger" {
-  switch (s) {
-    case "VERIFIED":
-      return "success";
-    case "PENDING":
-      return "warning";
-    case "REJECTED":
-      return "danger";
-    default:
-      return "muted";
-  }
-}
-
-function kycLabel(s: string): string {
-  switch (s) {
-    case "VERIFIED":
-      return "Vérifié";
-    case "PENDING":
-      return "KYC en cours";
-    case "REJECTED":
-      return "KYC rejeté";
-    default:
-      return "Non vérifié";
-  }
-}
-
 function SectionTitle({
   title,
   accent = "from-primary to-accent",
@@ -175,7 +146,6 @@ export default function TableauDeBordPage() {
     queryFn: () => transactionsApi.list({ limit: 5 }),
   });
 
-  const kyc = me?.kycStatus ?? "NOT_SUBMITTED";
   const firstName = (me?.name ?? session?.user?.name)?.split(" ")[0] ?? "toi";
   const myCount = myRequests.length;
   const displayRequests = myRequests.slice(0, 4);
@@ -237,22 +207,13 @@ export default function TableauDeBordPage() {
                     👋
                   </span>
                 </h1>
-                <div className="mt-2 flex flex-wrap items-center gap-2">
-                  <Badge
-                    tone={kycBadgeTone(kyc)}
-                    className={cn(
-                      "text-[10px]",
-                      kyc === "PENDING" ? "animate-pulse" : undefined,
-                    )}
-                  >
-                    {kycLabel(kyc)}
-                  </Badge>
-                  {!mineLoading && myCount > 0 ? (
+                {!mineLoading && myCount > 0 ? (
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
                     <span className="rounded-full border border-primary/10 bg-primary/[0.06] px-2 py-0.5 text-[10px] font-semibold tabular-nums text-primary">
                       {myCount} demande{myCount > 1 ? "s" : ""}
                     </span>
-                  ) : null}
-                </div>
+                  </div>
+                ) : null}
               </div>
             </div>
             <Link

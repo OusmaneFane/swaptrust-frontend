@@ -1,19 +1,12 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import type { UserRole } from '@/types/user';
 import { useQuery } from '@tanstack/react-query';
 import { authApi } from '@/services/api';
-import { Spinner } from '@/components/ui/Spinner';
-import { LogoutButton } from '@/components/layout/LogoutButton';
 
-/**
- * Espace client : accès réservé aux comptes KYC validés (hors admin).
- */
 export function KycGate({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
   const { data: session, status, update } = useSession();
   const role = (session?.user?.role ?? 'CLIENT') as UserRole;
   const staff = role === 'ADMIN' || role === 'OPERATOR';
@@ -34,75 +27,10 @@ export function KycGate({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (status !== 'authenticated' || staff) return;
     if (isPending || !user) return;
-    if (user.kycStatus === 'VERIFIED') {
-      if (session?.user?.kycStatus !== 'VERIFIED') {
-        void update({ kycStatus: 'VERIFIED' });
-      }
-      return;
+    if (session?.user?.kycStatus !== 'VERIFIED') {
+      void update({ kycStatus: 'VERIFIED' });
     }
-    router.replace('/kyc');
-  }, [status, staff, isPending, user, session?.user?.kycStatus, update, router]);
-
-  if (status === 'loading') {
-    return (
-      <div className="flex min-h-screen flex-col bg-gradient-to-b from-white to-primary/[0.04] text-text-dark">
-        <header className="flex justify-end border-b border-primary/10 bg-white/90 px-4 py-3 backdrop-blur">
-          <LogoutButton label="always" />
-        </header>
-        <div className="flex flex-1 flex-col items-center justify-center gap-3 px-4">
-          <Spinner className="h-8 w-8" />
-          <p className="text-sm text-text-muted">Chargement…</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (staff) return <>{children}</>;
-
-  if (status !== 'authenticated') return <>{children}</>;
-
-  if (isPending) {
-    return (
-      <div className="flex min-h-screen flex-col bg-gradient-to-b from-white to-primary/[0.04] text-text-dark">
-        <header className="flex justify-end border-b border-primary/10 bg-white/90 px-4 py-3 backdrop-blur">
-          <LogoutButton label="always" />
-        </header>
-        <div className="flex flex-1 flex-col items-center justify-center gap-3 px-4">
-          <Spinner className="h-8 w-8" />
-          <p className="text-sm text-text-muted">Vérification du compte…</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (isError || !user) {
-    return (
-      <div className="flex min-h-screen flex-col bg-gradient-to-b from-white to-primary/[0.04] text-text-dark">
-        <header className="flex justify-end border-b border-primary/10 bg-white/90 px-4 py-3 backdrop-blur">
-          <LogoutButton label="always" />
-        </header>
-        <div className="mx-auto max-w-md flex-1 px-4 py-16 text-center">
-          <p className="text-sm text-danger">
-            Impossible de vérifier votre profil. Réessayez plus tard.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  if (user.kycStatus !== 'VERIFIED') {
-    return (
-      <div className="flex min-h-screen flex-col bg-gradient-to-b from-white to-primary/[0.04] text-text-dark">
-        <header className="flex justify-end border-b border-primary/10 bg-white/90 px-4 py-3 backdrop-blur">
-          <LogoutButton label="always" />
-        </header>
-        <div className="flex flex-1 flex-col items-center justify-center gap-3 px-4">
-          <Spinner className="h-8 w-8" />
-          <p className="text-sm text-text-muted">Redirection…</p>
-        </div>
-      </div>
-    );
-  }
+  }, [status, staff, isPending, user, session?.user?.kycStatus, update]);
 
   return <>{children}</>;
 }

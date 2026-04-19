@@ -16,6 +16,7 @@ import {
   UserCog,
   Landmark,
   Inbox,
+  Percent,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { LogoutButton } from '@/components/layout/LogoutButton';
@@ -25,6 +26,7 @@ import { AppFooter } from '@/components/layout/AppFooter';
 const links = [
   { href: '/admin', label: 'Vue d’ensemble', Icon: LayoutDashboard },
   { href: '/admin/demandes', label: 'Demandes à traiter', Icon: Inbox },
+  { href: '/admin/commission', label: 'Commission', Icon: Percent },
   { href: '/operateur', label: 'Espace opérateur', Icon: ArrowRightLeft },
   { href: '/admin/kyc', label: 'Vérifications KYC', Icon: BadgeCheck },
   { href: '/admin/utilisateurs', label: 'Utilisateurs', Icon: Users },

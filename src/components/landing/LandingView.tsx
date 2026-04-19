@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import {
   Shield,
   Zap,
@@ -18,11 +18,11 @@ import {
   Sparkles,
   CheckCircle2,
   TrendingUp,
-} from 'lucide-react';
-import { RateDisplay } from '@/components/exchange/RateDisplay';
-import type { ExchangeRate } from '@/types/api-dtos';
-import { Button } from '@/components/ui/Button';
-import { Logo } from '@/components/ui/Logo';
+} from "lucide-react";
+import { RateDisplay } from "@/components/exchange/RateDisplay";
+import type { ExchangeRate } from "@/types/api-dtos";
+import { Button } from "@/components/ui/Button";
+import { Logo } from "@/components/ui/Logo";
 
 const container = {
   hidden: { opacity: 0 },
@@ -38,17 +38,17 @@ const item = {
 };
 
 const WHATSAPP_ICON_PATH =
-  'M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z';
+  "M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z";
 
 export function LandingView({ initialRate }: { initialRate: ExchangeRate }) {
   const [mobileMenu, setMobileMenu] = useState(false);
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') setMobileMenu(false);
+      if (e.key === "Escape") setMobileMenu(false);
     }
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
   return (
@@ -62,10 +62,10 @@ export function LandingView({ initialRate }: { initialRate: ExchangeRate }) {
             <Logo variant="light" size="md" className="ml-2" />
             <nav className="hidden items-center gap-1 rounded-pill border border-primary/10 bg-white px-2 py-1 lg:flex">
               {[
-                { href: '#fonctionnalites', label: 'Fonctionnalités' },
-                { href: '#cas-usage', label: "Cas d'usage" },
-                { href: '#comment-ca-marche', label: 'Comment ça marche' },
-                { href: '#tarifs', label: 'Tarifs' },
+                { href: "#fonctionnalites", label: "Fonctionnalités" },
+                { href: "#cas-usage", label: "Cas d'usage" },
+                { href: "#comment-ca-marche", label: "Comment ça marche" },
+                { href: "#tarifs", label: "Tarifs" },
               ].map((l) => (
                 <a
                   key={l.href}
@@ -98,7 +98,11 @@ export function LandingView({ initialRate }: { initialRate: ExchangeRate }) {
               aria-expanded={mobileMenu}
               onClick={() => setMobileMenu((v) => !v)}
             >
-              {mobileMenu ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              {mobileMenu ? (
+                <X className="h-5 w-5" />
+              ) : (
+                <Menu className="h-5 w-5" />
+              )}
             </button>
           </div>
         </div>
@@ -108,10 +112,10 @@ export function LandingView({ initialRate }: { initialRate: ExchangeRate }) {
             <div className="mx-auto max-w-10xl space-y-2 px-4 py-4 lg:px-12">
               <div className="grid gap-2">
                 {[
-                  { href: '#fonctionnalites', label: 'Fonctionnalités' },
-                  { href: '#cas-usage', label: "Cas d'usage" },
-                  { href: '#comment-ca-marche', label: 'Comment ça marche' },
-                  { href: '#tarifs', label: 'Tarifs' },
+                  { href: "#fonctionnalites", label: "Fonctionnalités" },
+                  { href: "#cas-usage", label: "Cas d'usage" },
+                  { href: "#comment-ca-marche", label: "Comment ça marche" },
+                  { href: "#tarifs", label: "Tarifs" },
                 ].map((l) => (
                   <a
                     key={l.href}
@@ -165,7 +169,8 @@ export function LandingView({ initialRate }: { initialRate: ExchangeRate }) {
               <span className="text-accent">CFA ↔ Roubles</span>
             </motion.h1>
             <p className="mt-6 max-w-xl text-base text-text-muted">
-              Taux Google en temps réel, commission 2% affichée, zéro arnaque possible.
+              Taux Google en temps réel, commission 2% affichée, zéro arnaque
+              possible.
             </p>
             <p className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-accent">
               <MessageCircle className="h-4 w-4" />
@@ -178,7 +183,10 @@ export function LandingView({ initialRate }: { initialRate: ExchangeRate }) {
               className="mt-8 flex flex-wrap gap-4"
             >
               <Link href="/inscription">
-                <Button type="button" className="inline-flex items-center gap-2">
+                <Button
+                  type="button"
+                  className="inline-flex items-center gap-2"
+                >
                   Créer un compte
                   <ArrowRight className="h-4 w-4" />
                 </Button>
@@ -199,31 +207,31 @@ export function LandingView({ initialRate }: { initialRate: ExchangeRate }) {
             >
               {[
                 {
-                  n: '500+',
-                  l: 'échanges',
+                  n: "500+",
+                  l: "échanges",
                   Icon: Zap,
-                  card: 'bg-gradient-to-br from-accent/20 to-white border-accent/25',
-                  icon: 'text-accent',
-                  glow: 'from-accent/35 to-transparent',
-                  chip: 'bg-accent/15 text-accent ring-accent/25',
+                  card: "bg-gradient-to-br from-accent/20 to-white border-accent/25",
+                  icon: "text-accent",
+                  glow: "from-accent/35 to-transparent",
+                  chip: "bg-accent/15 text-accent ring-accent/25",
                 },
                 {
-                  n: '0',
-                  l: 'arnaque signalée',
+                  n: "0",
+                  l: "arnaque signalée",
                   Icon: Shield,
-                  card: 'bg-gradient-to-br from-info/15 to-white border-info/25',
-                  icon: 'text-info',
-                  glow: 'from-info/30 to-transparent',
-                  chip: 'bg-info/15 text-info ring-info/25',
+                  card: "bg-gradient-to-br from-info/15 to-white border-info/25",
+                  icon: "text-info",
+                  glow: "from-info/30 to-transparent",
+                  chip: "bg-info/15 text-info ring-info/25",
                 },
                 {
-                  n: '2%',
-                  l: 'commission',
+                  n: "2%",
+                  l: "commission",
                   Icon: Lock,
-                  card: 'bg-gradient-to-br from-primary/15 to-white border-primary/25',
-                  icon: 'text-primary',
-                  glow: 'from-primary/30 to-transparent',
-                  chip: 'bg-primary/12 text-primary ring-primary/25',
+                  card: "bg-gradient-to-br from-primary/15 to-white border-primary/25",
+                  icon: "text-primary",
+                  glow: "from-primary/30 to-transparent",
+                  chip: "bg-primary/12 text-primary ring-primary/25",
                 },
               ].map(({ n, l, Icon, card, icon, glow, chip }) => (
                 <motion.li
@@ -238,18 +246,18 @@ export function LandingView({ initialRate }: { initialRate: ExchangeRate }) {
                     <span
                       className={`inline-flex items-center gap-2 rounded-pill px-3 py-1 text-xs font-semibold ring-1 ${chip}`}
                     >
-                    <span
-                      className={`inline-flex h-6 w-6 items-center justify-center rounded-full ring-1 ${
-                        chip.includes('accent')
-                          ? 'bg-accent/15 ring-accent/25'
-                          : chip.includes('info')
-                            ? 'bg-info/15 ring-info/25'
-                            : 'bg-primary/12 ring-primary/25'
-                      }`}
-                      aria-hidden
-                    >
-                      <Icon className={`h-3.5 w-3.5 ${icon}`} />
-                    </span>
+                      <span
+                        className={`inline-flex h-6 w-6 items-center justify-center rounded-full ring-1 ${
+                          chip.includes("accent")
+                            ? "bg-accent/15 ring-accent/25"
+                            : chip.includes("info")
+                              ? "bg-info/15 ring-info/25"
+                              : "bg-primary/12 ring-primary/25"
+                        }`}
+                        aria-hidden
+                      >
+                        <Icon className={`h-3.5 w-3.5 ${icon}`} />
+                      </span>
                       Indicateur
                     </span>
                     <span className="text-[11px] font-semibold uppercase tracking-wide text-text-muted">
@@ -290,38 +298,47 @@ export function LandingView({ initialRate }: { initialRate: ExchangeRate }) {
               Fonctionnalités
             </h2>
             <p className="mt-3 text-sm text-text-muted">
-              Une expérience mobile fluide, avec un taux clair et une commission affichée séparément.
+              Une expérience mobile fluide, avec un taux clair et une commission
+              affichée séparément.
             </p>
           </div>
 
           <div className="mt-10 grid gap-6 md:grid-cols-3">
             {[
               {
-                title: 'Taux Google + commission séparée',
-                desc: 'Le taux brut est affiché tel quel. La commission est visible, calculée à part.',
+                title: "Taux Google + commission séparée",
+                desc: "Le taux brut est affiché tel quel. La commission est visible, calculée à part.",
                 Icon: BadgePercent,
-                card: 'from-accent/18 to-white border-accent/25',
-                icon: 'text-accent',
-                bulletIcon: 'text-accent',
-                bullets: ['Taux brut affiché', 'Commission transparente', 'Calcul immédiat'],
+                card: "from-accent/18 to-white border-accent/25",
+                icon: "text-accent",
+                bulletIcon: "text-accent",
+                bullets: [
+                  "Taux brut affiché",
+                  "Commission transparente",
+                  "Calcul immédiat",
+                ],
               },
               {
-                title: 'Chat & preuves',
-                desc: 'Envoyez vos reçus, discutez en direct et suivez chaque étape de l’échange.',
+                title: "Chat & preuves",
+                desc: "Envoyez vos reçus, discutez en direct et suivez chaque étape de l’échange.",
                 Icon: MessageCircle,
-                card: 'from-info/14 to-white border-info/25',
-                icon: 'text-info',
-                bulletIcon: 'text-info',
-                bullets: ['Chat intégré', 'Upload reçus', 'Timeline claire'],
+                card: "from-info/14 to-white border-info/25",
+                icon: "text-info",
+                bulletIcon: "text-info",
+                bullets: ["Chat intégré", "Upload reçus", "Timeline claire"],
               },
               {
-                title: 'Sécurité & traçabilité',
-                desc: 'Instructions claires, suivi chronologique et validation des preuves.',
+                title: "Sécurité & traçabilité",
+                desc: "Instructions claires, suivi chronologique et validation des preuves.",
                 Icon: ShieldCheck,
-                card: 'from-primary/14 to-white border-primary/25',
-                icon: 'text-primary',
-                bulletIcon: 'text-primary',
-                bullets: ['Étapes vérifiables', 'Preuves à chaque phase', 'Rassurant pour tous'],
+                card: "from-primary/14 to-white border-primary/25",
+                icon: "text-primary",
+                bulletIcon: "text-primary",
+                bullets: [
+                  "Étapes vérifiables",
+                  "Preuves à chaque phase",
+                  "Rassurant pour tous",
+                ],
               },
             ].map(({ title, desc, Icon, card, icon, bullets, bulletIcon }) => (
               <div
@@ -336,11 +353,11 @@ export function LandingView({ initialRate }: { initialRate: ExchangeRate }) {
                 <div className="relative z-10 flex items-start justify-between gap-4">
                   <div
                     className={`inline-flex h-11 w-11 items-center justify-center rounded-2xl shadow-sm ring-1 ${icon} ${
-                      icon.includes('accent')
-                        ? 'bg-accent/15 ring-accent/25'
-                        : icon.includes('info')
-                          ? 'bg-info/15 ring-info/25'
-                          : 'bg-primary/12 ring-primary/25'
+                      icon.includes("accent")
+                        ? "bg-accent/15 ring-accent/25"
+                        : icon.includes("info")
+                          ? "bg-info/15 ring-info/25"
+                          : "bg-primary/12 ring-primary/25"
                     }`}
                   >
                     <Icon className="h-5 w-5" />
@@ -353,12 +370,16 @@ export function LandingView({ initialRate }: { initialRate: ExchangeRate }) {
                 <h3 className="relative z-10 mt-4 font-display text-lg font-semibold text-text-dark">
                   {title}
                 </h3>
-                <p className="relative z-10 mt-2 text-sm text-text-muted">{desc}</p>
+                <p className="relative z-10 mt-2 text-sm text-text-muted">
+                  {desc}
+                </p>
 
                 <ul className="relative z-10 mt-4 space-y-2 text-sm text-text-muted">
                   {bullets.map((b) => (
                     <li key={b} className="flex items-start gap-2">
-                      <CheckCircle2 className={`mt-0.5 h-4 w-4 ${bulletIcon}`} />
+                      <CheckCircle2
+                        className={`mt-0.5 h-4 w-4 ${bulletIcon}`}
+                      />
                       <span>{b}</span>
                     </li>
                   ))}
@@ -378,7 +399,8 @@ export function LandingView({ initialRate }: { initialRate: ExchangeRate }) {
                     Notifications WhatsApp en temps réel
                   </p>
                   <p className="mt-0.5 text-sm text-text-muted">
-                    Reçois un message à chaque étape: prise en charge, reçu validé, fonds envoyés, clôture.
+                    Reçois un message à chaque étape: prise en charge, reçu
+                    validé, fonds envoyés, clôture.
                   </p>
                 </div>
               </div>
@@ -402,25 +424,25 @@ export function LandingView({ initialRate }: { initialRate: ExchangeRate }) {
           <div className="mt-10 grid gap-6 md:grid-cols-3">
             {[
               {
-                title: 'Étudiants & familles',
-                desc: 'Recevoir/envoyer rapidement, avec un suivi clair.',
+                title: "Étudiants & familles",
+                desc: "Recevoir/envoyer rapidement, avec un suivi clair.",
                 Icon: Wallet,
-                badge: 'Rapide',
-                badgeClass: 'bg-accent/15 text-accent',
+                badge: "Rapide",
+                badgeClass: "bg-accent/15 text-accent",
               },
               {
-                title: 'Achats & services',
-                desc: 'Payer côté CFA et recevoir côté RUB (ou inverse).',
+                title: "Achats & services",
+                desc: "Payer côté CFA et recevoir côté RUB (ou inverse).",
                 Icon: Lock,
-                badge: 'Sécurisé',
-                badgeClass: 'bg-primary/12 text-primary',
+                badge: "Sécurisé",
+                badgeClass: "bg-primary/12 text-primary",
               },
               {
-                title: 'Urgences',
-                desc: 'Prioriser une transaction et rester informé en temps réel.',
+                title: "Urgences",
+                desc: "Prioriser une transaction et rester informé en temps réel.",
                 Icon: Clock,
-                badge: 'Temps réel',
-                badgeClass: 'bg-info/12 text-info',
+                badge: "Temps réel",
+                badgeClass: "bg-info/12 text-info",
               },
             ].map(({ title, desc, Icon, badge, badgeClass }) => (
               <div
@@ -432,23 +454,27 @@ export function LandingView({ initialRate }: { initialRate: ExchangeRate }) {
                 <div className="relative z-10 flex items-start justify-between gap-4">
                   <div
                     className={`inline-flex h-11 w-11 items-center justify-center rounded-2xl ring-1 shadow-sm ${
-                      badgeClass.includes('accent')
-                        ? 'bg-accent/15 text-accent ring-accent/25'
-                        : badgeClass.includes('info')
-                          ? 'bg-info/15 text-info ring-info/25'
-                          : 'bg-primary/12 text-primary ring-primary/25'
+                      badgeClass.includes("accent")
+                        ? "bg-accent/15 text-accent ring-accent/25"
+                        : badgeClass.includes("info")
+                          ? "bg-info/15 text-info ring-info/25"
+                          : "bg-primary/12 text-primary ring-primary/25"
                     }`}
                   >
                     <Icon className="h-5 w-5" />
                   </div>
-                  <span className={`rounded-pill px-3 py-1 text-xs font-semibold ${badgeClass}`}>
+                  <span
+                    className={`rounded-pill px-3 py-1 text-xs font-semibold ${badgeClass}`}
+                  >
                     {badge}
                   </span>
                 </div>
                 <h3 className="relative z-10 mt-4 font-display text-lg font-semibold text-text-dark">
                   {title}
                 </h3>
-                <p className="relative z-10 mt-2 text-sm text-text-muted">{desc}</p>
+                <p className="relative z-10 mt-2 text-sm text-text-muted">
+                  {desc}
+                </p>
 
                 <div className="relative z-10 mt-4 flex items-center gap-2 text-xs font-semibold text-text-muted">
                   <span className="h-1.5 w-1.5 rounded-full bg-accent" />
@@ -465,38 +491,46 @@ export function LandingView({ initialRate }: { initialRate: ExchangeRate }) {
               Comment ça marche
             </h2>
             <p className="mt-3 text-sm text-text-muted">
-              À chaque étape, DoniSend peut vous envoyer une{' '}
-              <span className="font-semibold text-accent">notification WhatsApp</span> (si vous avez ajouté votre numéro).
+              À chaque étape, DoniSend peut vous envoyer une{" "}
+              <span className="font-semibold text-accent">
+                notification WhatsApp
+              </span>{" "}
+              (si vous avez ajouté votre numéro).
             </p>
           </div>
           <motion.ol
             variants={container}
             initial="hidden"
             whileInView="show"
-            viewport={{ once: true, margin: '-80px' }}
+            viewport={{ once: true, margin: "-80px" }}
             className="grid gap-6 md:grid-cols-3"
           >
             {[
               {
-                title: 'Publiez votre besoin',
-                desc: 'Montant en CFA ou roubles, moyen de paiement et taux affiché clairement.',
+                title: "Publiez votre besoin",
+                desc: "Montant en CFA ou roubles, moyen de paiement et taux affiché clairement.",
                 Icon: TrendingUp,
-                iconWrap: 'bg-gradient-to-br from-accent/18 to-white text-accent ring-accent/20',
-                whatsapp: 'WhatsApp: demande publiée + récapitulatif.',
+                iconWrap:
+                  "bg-gradient-to-br from-accent/18 to-white text-accent ring-accent/20",
+                whatsapp: "WhatsApp: demande publiée + récapitulatif.",
               },
               {
-                title: 'Un opérateur prend le relais',
-                desc: 'Prise en charge, numéro d’envoi et suivi jusqu’à la clôture.',
+                title: "Un opérateur prend le relais",
+                desc: "Prise en charge, numéro d’envoi et suivi jusqu’à la clôture.",
                 Icon: Lock,
-                iconWrap: 'bg-gradient-to-br from-primary/14 to-white text-primary ring-primary/20',
-                whatsapp: 'WhatsApp: opérateur assigné + instructions de paiement.',
+                iconWrap:
+                  "bg-gradient-to-br from-primary/14 to-white text-primary ring-primary/20",
+                whatsapp:
+                  "WhatsApp: opérateur assigné + instructions de paiement.",
               },
               {
-                title: 'Chat & preuves',
-                desc: 'Échangez en direct et joignez vos reçus à chaque étape.',
+                title: "Chat & preuves",
+                desc: "Échangez en direct et joignez vos reçus à chaque étape.",
                 Icon: Shield,
-                iconWrap: 'bg-gradient-to-br from-info/12 to-white text-info ring-info/20',
-                whatsapp: 'WhatsApp: reçu validé, fonds envoyés, échange clôturé.',
+                iconWrap:
+                  "bg-gradient-to-br from-info/12 to-white text-info ring-info/20",
+                whatsapp:
+                  "WhatsApp: reçu validé, fonds envoyés, échange clôturé.",
               },
             ].map(({ title, desc, Icon, iconWrap, whatsapp }, i) => (
               <motion.li
@@ -507,14 +541,18 @@ export function LandingView({ initialRate }: { initialRate: ExchangeRate }) {
                 <div className="pointer-events-none absolute -right-12 -top-12 h-44 w-44 rounded-full bg-primary/8 blur-2xl opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
 
                 <div className="relative z-10 flex items-start justify-between gap-4">
-                  <div className={`inline-flex h-11 w-11 items-center justify-center rounded-2xl ring-1 shadow-sm ${iconWrap}`}>
+                  <div
+                    className={`inline-flex h-11 w-11 items-center justify-center rounded-2xl ring-1 shadow-sm ${iconWrap}`}
+                  >
                     <Icon className="h-5 w-5" />
                   </div>
                   <span className="inline-flex items-center gap-2 rounded-pill bg-white/80 px-3 py-1 text-xs font-semibold text-text-muted ring-1 ring-primary/10">
                     Étape {i + 1}
                   </span>
                 </div>
-                <h3 className="font-display text-lg font-semibold text-text-dark">{title}</h3>
+                <h3 className="font-display text-lg font-semibold text-text-dark">
+                  {title}
+                </h3>
                 <p className="text-sm text-text-muted">{desc}</p>
 
                 <div className="mt-1 flex items-start gap-2 rounded-card border border-accent/15 bg-accent/5 p-3 text-xs text-text-muted">
@@ -527,7 +565,10 @@ export function LandingView({ initialRate }: { initialRate: ExchangeRate }) {
                     <path d={WHATSAPP_ICON_PATH} />
                   </svg>
                   <p>
-                    <span className="font-semibold text-text-dark">Notification</span> — {whatsapp}
+                    <span className="font-semibold text-text-dark">
+                      Notification
+                    </span>{" "}
+                    — {whatsapp}
                   </p>
                 </div>
               </motion.li>
@@ -561,14 +602,16 @@ export function LandingView({ initialRate }: { initialRate: ExchangeRate }) {
               </p>
               <p className="mt-2 font-display text-3xl font-bold text-text-dark">
                 2%
-                <span className="ml-2 text-sm font-semibold text-text-muted">par échange</span>
+                <span className="ml-2 text-sm font-semibold text-text-muted">
+                  par échange
+                </span>
               </p>
               <ul className="mt-5 space-y-2.5 text-sm text-text-muted">
                 {[
-                  'Commission affichée à part',
-                  'Chat & preuves',
-                  'Suivi étape par étape',
-                  'Notifications WhatsApp (si numéro ajouté)',
+                  "Commission affichée à part",
+                  "Chat & preuves",
+                  "Suivi étape par étape",
+                  "Notifications WhatsApp (si numéro ajouté)",
                 ].map((t) => (
                   <li key={t} className="flex items-start gap-2">
                     <CheckCircle2 className="mt-0.5 h-4 w-4 text-accent" />
@@ -598,13 +641,15 @@ export function LandingView({ initialRate }: { initialRate: ExchangeRate }) {
               </div>
               <p className="mt-2 font-display text-3xl font-bold text-text-dark">
                 2%
-                <span className="ml-2 text-sm font-semibold text-text-muted">+ prise en charge rapide</span>
+                <span className="ml-2 text-sm font-semibold text-text-muted">
+                  + prise en charge rapide
+                </span>
               </p>
               <ul className="mt-5 space-y-2.5 text-sm text-text-muted">
                 {[
-                  'Priorité opérateur',
-                  'Notifications WhatsApp en temps réel',
-                  'Support réactif',
+                  "Priorité opérateur",
+                  "Notifications WhatsApp en temps réel",
+                  "Support réactif",
                 ].map((t) => (
                   <li key={t} className="flex items-start gap-2">
                     <CheckCircle2 className="mt-0.5 h-4 w-4 text-accent" />
@@ -629,9 +674,15 @@ export function LandingView({ initialRate }: { initialRate: ExchangeRate }) {
                   Entreprises
                 </span>
               </div>
-              <p className="mt-2 font-display text-3xl font-bold text-text-dark">Sur devis</p>
+              <p className="mt-2 font-display text-3xl font-bold text-text-dark">
+                Sur devis
+              </p>
               <ul className="mt-5 space-y-2.5 text-sm text-text-muted">
-                {['Volumes & besoins spécifiques', 'Comptes dédiés', 'Reporting'].map((t) => (
+                {[
+                  "Volumes & besoins spécifiques",
+                  "Comptes dédiés",
+                  "Reporting",
+                ].map((t) => (
                   <li key={t} className="flex items-start gap-2">
                     <CheckCircle2 className="mt-0.5 h-4 w-4 text-accent" />
                     <span>{t}</span>
@@ -654,10 +705,16 @@ export function LandingView({ initialRate }: { initialRate: ExchangeRate }) {
               <div>
                 <Logo variant="light" size="md" />
                 <p className="mt-3 text-sm text-text-muted">
-                  Échange sécurisé CFA ↔ RUB avec taux Google brut, commission séparée et notifications WhatsApp à chaque étape.
+                  Échange sécurisé CFA ↔ RUB avec taux Google brut, commission
+                  séparée et notifications WhatsApp à chaque étape.
                 </p>
                 <div className="mt-4 flex items-center gap-2 text-xs font-semibold text-text-muted">
-                  <svg viewBox="0 0 24 24" className="h-4 w-4" fill="#25D366" aria-hidden>
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="h-4 w-4"
+                    fill="#25D366"
+                    aria-hidden
+                  >
                     <path d={WHATSAPP_ICON_PATH} />
                   </svg>
                   <span>Notifications WhatsApp en temps réel</span>
@@ -671,10 +728,13 @@ export function LandingView({ initialRate }: { initialRate: ExchangeRate }) {
                   </p>
                   <ul className="mt-3 space-y-2 text-sm">
                     {[
-                      { href: '#fonctionnalites', label: 'Fonctionnalités' },
-                      { href: '#cas-usage', label: "Cas d'usage" },
-                      { href: '#comment-ca-marche', label: 'Comment ça marche' },
-                      { href: '#tarifs', label: 'Tarifs' },
+                      { href: "#fonctionnalites", label: "Fonctionnalités" },
+                      { href: "#cas-usage", label: "Cas d'usage" },
+                      {
+                        href: "#comment-ca-marche",
+                        label: "Comment ça marche",
+                      },
+                      { href: "#tarifs", label: "Tarifs" },
                     ].map((l) => (
                       <li key={l.href}>
                         <a
@@ -694,12 +754,18 @@ export function LandingView({ initialRate }: { initialRate: ExchangeRate }) {
                   </p>
                   <ul className="mt-3 space-y-2 text-sm">
                     <li>
-                      <Link href="/connexion" className="font-semibold text-primary hover:underline">
+                      <Link
+                        href="/connexion"
+                        className="font-semibold text-primary hover:underline"
+                      >
                         Connexion
                       </Link>
                     </li>
                     <li>
-                      <Link href="/inscription" className="font-semibold text-primary hover:underline">
+                      <Link
+                        href="/inscription"
+                        className="font-semibold text-primary hover:underline"
+                      >
                         Inscription
                       </Link>
                     </li>
@@ -712,7 +778,8 @@ export function LandingView({ initialRate }: { initialRate: ExchangeRate }) {
                   Contact
                 </p>
                 <p className="mt-3 text-sm text-text-muted">
-                  Besoin d’aide ? Écrivez-nous sur WhatsApp après création de compte, ou via le support intégré.
+                  Besoin d’aide ? Écrivez-nous sur WhatsApp après création de
+                  compte, ou via le support intégré.
                 </p>
                 <Link href="/inscription" className="mt-5 inline-flex">
                   <Button type="button" className="py-2 text-sm">
@@ -723,8 +790,12 @@ export function LandingView({ initialRate }: { initialRate: ExchangeRate }) {
             </div>
 
             <div className="mt-10 flex flex-col gap-2 border-t border-primary/10 pt-6 text-xs text-text-muted sm:flex-row sm:items-center sm:justify-between">
-              <span>© {new Date().getFullYear()} DoniSend. Tous droits réservés.</span>
-              <span className="font-semibold">Taux Google brut · Commission séparée · WhatsApp à chaque étape</span>
+              <span>
+                © {new Date().getFullYear()} DoniSend. Tous droits réservés.
+              </span>
+              <span className="font-semibold">
+                Taux Google brut · Commission séparée · WhatsApp à chaque étape
+              </span>
             </div>
           </div>
         </footer>

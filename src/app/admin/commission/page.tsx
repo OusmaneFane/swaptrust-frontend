@@ -1,0 +1,174 @@
+'use client';
+
+import { useMemo } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { toast } from 'sonner';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Card } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Skeleton } from '@/components/ui/Skeleton';
+import { adminApi } from '@/services/api';
+import { getApiErrorMessage } from '@/lib/api-error-message';
+
+const schema = z.object({
+  percent: z
+    .number()
+    .min(0, 'Minimum 0%')
+    .max(100, 'Maximum 100%')
+    .finite('Valeur invalide'),
+});
+
+type FormValues = z.infer<typeof schema>;
+
+export default function AdminCommissionPage() {
+  const qc = useQueryClient();
+
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['admin', 'settings', 'commission'],
+    queryFn: () => adminApi.getCommissionSetting(),
+  });
+
+  const defaultValues = useMemo<FormValues>(
+    () => ({ percent: Number(data?.percent ?? 0) }),
+    [data?.percent],
+  );
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    values: defaultValues,
+    mode: 'onChange',
+  });
+
+  const save = useMutation({
+    mutationFn: async (percent: number) => adminApi.updateCommissionSetting(percent),
+    onSuccess: async (next) => {
+      await qc.setQueryData(['admin', 'settings', 'commission'], next);
+      toast.success(`Commission mise à jour : ${next.percent}%`);
+    },
+    onError: (err: unknown) => {
+      const apiMsg = getApiErrorMessage(err);
+      toast.error(apiMsg ?? 'Mise à jour impossible');
+    },
+  });
+
+  if (isLoading && !data) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-10 w-72" />
+        <Skeleton className="h-56 w-full max-w-2xl rounded-card" />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <Card variant="glass" className="max-w-2xl space-y-3 border-line/90 p-6">
+        <h1 className="font-display text-2xl font-bold text-ink">Commission</h1>
+        <p className="text-sm text-danger">
+          Impossible de charger la commission actuelle.
+        </p>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() =>
+            qc.invalidateQueries({ queryKey: ['admin', 'settings', 'commission'] })
+          }
+        >
+          Réessayer
+        </Button>
+      </Card>
+    );
+  }
+
+  const current = Number(data?.percent ?? 0);
+  const watched = form.watch('percent');
+  const dirty = watched !== current;
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="font-display text-3xl font-bold tracking-tight text-ink">
+          Commission
+        </h1>
+        <p className="mt-2 max-w-3xl text-sm leading-relaxed text-ink-secondary">
+          Cette valeur est appliquée aux demandes (montant envoyé = montant net + commission)
+          et peut être modifiée sans redéploiement via{' '}
+          <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] text-ink-secondary">
+            PUT /admin/settings/commission
+          </code>
+          .
+        </p>
+      </div>
+
+      <Card variant="glass" className="max-w-2xl space-y-5 border-line/90 p-6">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
+              Commission actuelle
+            </p>
+            <p className="mt-1 font-display text-3xl font-bold text-ink">
+              {current}%
+            </p>
+          </div>
+          <div className="rounded-card border border-primary/15 bg-primary/[0.04] px-4 py-3 text-sm">
+            <p className="font-semibold text-ink">Impact</p>
+            <p className="mt-1 text-ink-secondary">
+              Commission <span className="font-semibold text-ink">{watched}%</span> sur le montant net.
+            </p>
+          </div>
+        </div>
+
+        <form
+          onSubmit={form.handleSubmit((v) => save.mutate(v.percent))}
+          className="space-y-4"
+        >
+          <Input
+            label="Pourcentage"
+            type="number"
+            step="0.01"
+            min={0}
+            max={100}
+            error={form.formState.errors.percent?.message}
+            {...form.register('percent', { valueAsNumber: true })}
+          />
+
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-ink">
+              Ajuster rapidement
+            </label>
+            <input
+              type="range"
+              min={0}
+              max={20}
+              step={0.25}
+              value={Number.isFinite(watched) ? watched : 0}
+              onChange={(e) => form.setValue('percent', Number(e.target.value), { shouldValidate: true })}
+              className="w-full accent-primary"
+            />
+            <p className="text-xs text-ink-muted">
+              Plage rapide 0–20% (tu peux saisir jusqu’à 100% au champ).
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              disabled={!dirty || save.isPending}
+              onClick={() => form.reset({ percent: current })}
+            >
+              Annuler
+            </Button>
+            <Button type="submit" loading={save.isPending} disabled={!dirty}>
+              Enregistrer
+            </Button>
+          </div>
+        </form>
+      </Card>
+    </div>
+  );
+}
+

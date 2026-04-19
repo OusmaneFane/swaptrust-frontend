@@ -24,8 +24,32 @@ export const metadata: Metadata = {
   description:
     'Échangez vos francs CFA contre des roubles russes en toute sécurité. Taux Google en temps réel, commission 2% transparente.',
   keywords: ['échange CFA', 'roubles', 'maliens russie', 'transfert argent', 'donisend'],
+  metadataBase: new URL(
+    process.env.AUTH_URL ??
+      process.env.NEXTAUTH_URL ??
+      'http://localhost:3000',
+  ),
   icons: {
-    icon: '/favicon.svg',
+    icon: '/images/donisend-logo.png',
+    apple: '/images/donisend-logo.png',
+  },
+  openGraph: {
+    title: 'DoniSend — Échange sécurisé CFA ↔ Roubles',
+    description:
+      'Échangez vos francs CFA contre des roubles russes en toute sécurité. Taux Google en temps réel, commission 2% transparente.',
+    images: [
+      {
+        url: '/images/donisend-logo.png',
+        alt: 'DoniSend',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'DoniSend — Échange sécurisé CFA ↔ Roubles',
+    description:
+      'Échangez vos francs CFA contre des roubles russes en toute sécurité. Taux Google en temps réel, commission 2% transparente.',
+    images: ['/images/donisend-logo.png'],
   },
 };
 

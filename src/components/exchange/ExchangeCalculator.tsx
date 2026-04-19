@@ -15,7 +15,7 @@ export function ExchangeCalculator({
   amountCents,
   direction,
   rate,
-  commissionPct = 2,
+  commissionPct = 0,
 }: ExchangeCalculatorProps) {
   const { sent, commission, received } = useMemo(() => {
     const c = computeOrderAmounts({

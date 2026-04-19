@@ -55,6 +55,10 @@ export interface RatesCalculateResult {
   commissionRate?: number;
 }
 
+export interface AdminCommissionSetting {
+  percent: number;
+}
+
 /** GET/POST /admin/platform-accounts — compte de réception DoniSend côté client. */
 export interface PlatformAccount {
   id: number;

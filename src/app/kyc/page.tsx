@@ -218,11 +218,20 @@ export default function KycPage() {
         <div>
           <h1 className="font-display text-2xl font-bold">Vérification d’identité</h1>
           <p className="mt-1 text-sm text-ink-muted">
-            Obligatoire pour accéder au tableau de bord et aux échanges.
+            Optionnelle. Vous pouvez vérifier votre identité plus tard.
           </p>
         </div>
         <LogoutButton label="always" />
       </div>
+
+      <Button
+        type="button"
+        variant="outline"
+        className="w-full"
+        onClick={() => router.replace('/tableau-de-bord')}
+      >
+        Continuer sans vérifier
+      </Button>
 
       {st === 'REJECTED' && kyc.rejectionNote ? (
         <Card className="border-danger/40 bg-danger/5 p-4 text-sm text-ink">

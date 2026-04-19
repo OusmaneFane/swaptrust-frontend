@@ -24,24 +24,8 @@ const protectedPrefixes = [
   '/operateur',
 ];
 
-/** Pages réservées aux utilisateurs avec KYC approuvé (hors admin / opérateur). */
-const appClientPrefixes = [
-  '/tableau-de-bord',
-  '/mes-demandes',
-  '/demandes',
-  '/transactions',
-  '/profil',
-  '/notifications',
-] as const;
-
 function isProtectedPath(pathname: string): boolean {
   return protectedPrefixes.some(
-    (p) => pathname === p || pathname.startsWith(`${p}/`),
-  );
-}
-
-function isAppClientPath(pathname: string): boolean {
-  return appClientPrefixes.some(
     (p) => pathname === p || pathname.startsWith(`${p}/`),
   );
 }
@@ -82,10 +66,7 @@ export default auth((req) => {
     if (role === 'OPERATOR') {
       return Response.redirect(new URL('/operateur', req.nextUrl));
     }
-    if (kycOk) {
-      return Response.redirect(new URL('/tableau-de-bord', req.nextUrl));
-    }
-    return Response.redirect(new URL('/kyc', req.nextUrl));
+    return Response.redirect(new URL('/tableau-de-bord', req.nextUrl));
   }
 
   if (req.auth && role === 'CLIENT' && pathname.startsWith('/operateur')) {
@@ -106,10 +87,6 @@ export default auth((req) => {
     !staff
   ) {
     return Response.redirect(new URL('/tableau-de-bord', req.nextUrl));
-  }
-
-  if (req.auth && !staff && isAppClientPath(pathname) && !kycOk) {
-    return Response.redirect(new URL('/kyc', req.nextUrl));
   }
 
   if (req.auth && !staff && isKycPath(pathname) && kycOk) {

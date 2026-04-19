@@ -98,7 +98,7 @@ export default function InscriptionPage() {
         redirect: false,
       });
       if (signed?.ok) {
-        router.push('/inscription/success');
+        router.push('/tableau-de-bord');
         router.refresh();
       } else {
         router.push('/connexion');

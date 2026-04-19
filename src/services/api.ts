@@ -29,6 +29,7 @@ import type {
   TransactionFilters,
   UpdatePlatformAccountDto,
   UpdateUserDto,
+  AdminCommissionSetting,
 } from "@/types/api-dtos";
 import type { AppNotification } from "@/types/api-dtos";
 import { getApiBaseUrl } from "@/lib/api-base";
@@ -637,6 +638,14 @@ export const adminApi = {
 
   revenueSummary: () =>
     getUnwrapped<AdminRevenueSummary>("/admin/revenue/summary"),
+
+  getCommissionSetting: () =>
+    getUnwrapped<AdminCommissionSetting>("/admin/settings/commission"),
+
+  updateCommissionSetting: (percent: number) =>
+    putUnwrapped<AdminCommissionSetting>("/admin/settings/commission", {
+      percent,
+    }),
 };
 
 export default api;

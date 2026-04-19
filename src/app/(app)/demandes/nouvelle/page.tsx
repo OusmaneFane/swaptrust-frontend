@@ -148,13 +148,7 @@ export default function NouvelleDemandePage() {
     },
   });
 
-  const commissionPercent = getPublicCommissionPercent();
-
   async function onPublish() {
-    if (kycBlocksPublish) {
-      toast.error('KYC verification required — terminez la vérification d’identité.');
-      return;
-    }
     const valid = await form.trigger();
     if (!valid) return;
     const v = form.getValues();
@@ -194,6 +188,10 @@ export default function NouvelleDemandePage() {
     calc?.commissionAmount != null
       ? Math.round(parseDecimalLike(calc.commissionAmount))
       : null;
+  const commissionPercent =
+    calc?.commissionRate != null && Number.isFinite(Number(calc.commissionRate))
+      ? Number(calc.commissionRate)
+      : getPublicCommissionPercent();
   /** Commission en unités mineures de la devise d’envoi (CFA si NEED_RUB, RUB si NEED_CFA). */
   const estimatedCommissionSendMinor =
     sendMinor > 0
@@ -220,7 +218,6 @@ export default function NouvelleDemandePage() {
   const googleRatePerCfa =
     rateData?.rate != null && rateData.rate > 0 ? rateData.rate : (calc?.rate ?? 0);
 
-  const kycBlocksPublish = me != null && me.kycStatus !== 'VERIFIED';
   const cfaNetWarning =
     watchedType === 'NEED_RUB' &&
     resultMinor > 0 &&
@@ -234,23 +231,6 @@ export default function NouvelleDemandePage() {
       )}
     >
       <h1 className="font-display text-2xl font-bold text-text-dark">Nouvelle demande</h1>
-
-      {kycBlocksPublish ? (
-        <div className="rounded-card border border-warning/30 bg-warning/10 p-4 text-sm text-slate-700">
-          <p className="font-semibold text-warning">Vérification d’identité requise</p>
-          <p className="mt-1">
-            La publication est réservée aux comptes <strong className="text-text-dark">KYC vérifiés</strong>.
-            Sans cela, l’API répond <code className="rounded bg-slate-100 px-1 text-xs text-text-dark">403</code> avec le
-            message <code className="rounded bg-slate-100 px-1 text-xs text-text-dark">KYC verification required</code>.
-          </p>
-          <Link
-            href="/kyc"
-            className="mt-3 inline-block text-sm font-medium text-primary underline"
-          >
-            Terminer ma vérification →
-          </Link>
-        </div>
-      ) : null}
 
       {step === 1 ? (
         <Card className="space-y-5 p-5">
@@ -415,7 +395,6 @@ export default function NouvelleDemandePage() {
               type="button"
               className="w-full"
               loading={mutation.isPending}
-              disabled={kycBlocksPublish}
               onClick={() => void onPublish()}
             >
               Publier ma demande

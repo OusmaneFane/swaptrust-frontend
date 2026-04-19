@@ -73,14 +73,14 @@ export default function RegisterSuccessPage() {
             <span className="text-xs font-bold text-primary">1</span>
           </div>
           <div>
-            <p className="text-sm font-semibold text-ink">Vérifiez votre identité</p>
-            <p className="text-xs text-ink-muted">Nécessaire pour commencer à échanger</p>
+            <p className="text-sm font-semibold text-ink">Compte vérifié et actif</p>
+            <p className="text-xs text-ink-muted">Vous pouvez accéder au tableau de bord</p>
           </div>
         </div>
       </div>
 
-      <Link href="/kyc" className="btn-primary block w-full py-3 text-center">
-        Vérifier mon identité →
+      <Link href="/tableau-de-bord" className="btn-primary block w-full py-3 text-center">
+        Aller au tableau de bord →
       </Link>
     </Card>
   );
