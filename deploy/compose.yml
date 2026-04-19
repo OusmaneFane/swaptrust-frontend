@@ -1,0 +1,11 @@
+# À placer sur le serveur (ex. renommer en docker-compose.yml) dans DEPLOY_PATH.
+# Fichier .env à côté : AUTH_SECRET, PORT (optionnel, défaut 3000).
+
+services:
+  web:
+    image: ${FRONTEND_IMAGE}
+    env_file:
+      - .env
+    ports:
+      - "${PORT:-3000}:3000"
+    restart: unless-stopped

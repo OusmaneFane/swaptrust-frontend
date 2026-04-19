@@ -2,6 +2,7 @@
 const apiUrl = process.env.API_URL ?? 'http://localhost:3001/api/v1';
 
 const nextConfig = {
+  output: 'standalone',
   images: {
     remotePatterns: [
       {

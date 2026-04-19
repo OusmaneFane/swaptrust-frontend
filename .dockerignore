@@ -1,0 +1,14 @@
+node_modules
+.next
+.git
+.github
+*.md
+.env*
+!.env.example
+Dockerfile*
+docker-compose*.yml
+deploy
+coverage
+.vercel
+*.log
+.DS_Store
