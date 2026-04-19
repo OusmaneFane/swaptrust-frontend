@@ -76,13 +76,32 @@ jobs:
     environment: Production
 
     steps:
+      - name: Verify SSH and GHCR secrets
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+          GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
+        run: |
+          missing=()
+          [ -z "$VPS_HOST" ] && missing+=("VPS_HOST")
+          [ -z "$VPS_USER" ] && missing+=("VPS_USER")
+          [ -z "$VPS_SSH_KEY" ] && missing+=("VPS_SSH_KEY")
+          [ -z "$GHCR_TOKEN" ] && missing+=("GHCR_TOKEN")
+          [ -z "$GHCR_USERNAME" ] && missing+=("GHCR_USERNAME")
+          if ((${#missing[@]})); then
+            echo "::error::Missing or empty secrets: ${missing[*]}. Add them under Settings → Environments → Production (or repository secrets)."
+            exit 1
+          fi
+
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          port: ${{ secrets.VPS_PORT }}
+          port: ${{ secrets.VPS_PORT || '22' }}
           script: |
             echo "Deploying Production..."
 
