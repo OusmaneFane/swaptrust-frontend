@@ -4,11 +4,9 @@ node_modules
 .github
 *.md
 .env*
-!.env.example
-Dockerfile*
-docker-compose*.yml
-deploy
+!.env.local.example
 coverage
-.vercel
-*.log
-.DS_Store
+Dockerfile*
+docker-compose*
+.eslintrc*
+.prettierrc*

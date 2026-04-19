@@ -11,6 +11,9 @@ const nextConfig = {
         port: '3001',
         pathname: '/**',
       },
+      { protocol: 'https', hostname: 'api.donisend.com', pathname: '/**' },
+      { protocol: 'https', hostname: 'staging-api.donisend.com', pathname: '/**' },
+      { protocol: 'https', hostname: 'dev-api.donisend.com', pathname: '/**' },
     ],
   },
   async rewrites() {
