@@ -26,7 +26,7 @@ jobs:
     name: Build & Push
     runs-on: ubuntu-latest
     needs: quality
-    environment: Production
+    environment: main
     permissions:
       contents: read
       packages: write
@@ -73,7 +73,7 @@ jobs:
     name: Deploy to Production
     runs-on: ubuntu-latest
     needs: build
-    environment: Production
+    environment: main
 
     steps:
       - name: Verify SSH and GHCR secrets
@@ -91,7 +91,7 @@ jobs:
           [ -z "$GHCR_TOKEN" ] && missing+=("GHCR_TOKEN")
           [ -z "$GHCR_USERNAME" ] && missing+=("GHCR_USERNAME")
           if ((${#missing[@]})); then
-            echo "::error::Missing or empty secrets: ${missing[*]}. Add them under Settings → Environments → Production (or repository secrets)."
+            echo "::error::Missing or empty secrets: ${missing[*]}. Add them under Settings → Environments → main (or repository secrets)."
             exit 1
           fi
 
