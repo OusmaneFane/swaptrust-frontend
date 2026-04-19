@@ -3,6 +3,8 @@ import { io, type Socket } from "socket.io-client";
 let socket: Socket | null = null;
 
 function socketBaseUrl(): string {
+  const direct = process.env.NEXT_PUBLIC_SOCKET_URL?.trim();
+  if (direct) return direct.replace(/\/+$/, "");
   const api = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001/api/v1";
   return api.replace(/\/api\/v1\/?$/, "");
 }

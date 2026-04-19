@@ -1,5 +1,7 @@
 # À placer sur le serveur (ex. renommer en docker-compose.yml) dans DEPLOY_PATH.
-# Fichier .env à côté : AUTH_SECRET, PORT (optionnel, défaut 3000).
+# Fichier .env à côté (runtime, aligné sur .env local) :
+#   AUTH_SECRET ou NEXTAUTH_SECRET, NEXTAUTH_URL (URL publique du front),
+#   PORT (optionnel, défaut 3000).
 
 services:
   web:
