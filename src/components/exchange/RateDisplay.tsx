@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { TrendingDown, TrendingUp, Minus } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { cn } from '@/lib/utils';
-import type { ExchangeRate } from '@/types/api-dtos';
+import { TrendingDown, TrendingUp, Minus } from "lucide-react";
+import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
+import type { ExchangeRate } from "@/types/api-dtos";
 
 export function RateDisplay({
   rate,
@@ -16,28 +16,28 @@ export function RateDisplay({
   className,
 }: ExchangeRate & { className?: string }) {
   const Icon =
-    trend === 'up' ? TrendingUp : trend === 'down' ? TrendingDown : Minus;
+    trend === "up" ? TrendingUp : trend === "down" ? TrendingDown : Minus;
   const color =
-    trend === 'up'
-      ? 'text-success'
-      : trend === 'down'
-        ? 'text-danger'
-        : 'text-text-muted';
-  const updatedShort = new Date(fetchedAt).toLocaleString('fr-FR', {
-    dateStyle: 'short',
-    timeStyle: 'short',
+    trend === "up"
+      ? "text-success"
+      : trend === "down"
+        ? "text-danger"
+        : "text-text-muted";
+  const updatedShort = new Date(fetchedAt).toLocaleString("fr-FR", {
+    dateStyle: "short",
+    timeStyle: "short",
   });
-  const updatedLong = new Date(fetchedAt).toLocaleString('fr-FR');
+  const updatedLong = new Date(fetchedAt).toLocaleString("fr-FR");
   const trendLabel =
-    trend === 'stable' ? 'Stable' : trend === 'up' ? 'Hausse' : 'Baisse';
+    trend === "stable" ? "Stable" : trend === "up" ? "Hausse" : "Baisse";
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       className={cn(
-        'rounded-card border border-primary/15 bg-gradient-to-br from-white via-primary/[0.04] to-accent-soft/20 p-2 shadow-md sm:p-5 sm:shadow-card-lg',
-        'max-sm:shadow-sm',
+        "rounded-card border border-primary/15 bg-gradient-to-br from-white via-primary/[0.04] to-accent-soft/20 p-2 shadow-md sm:p-5 sm:shadow-card-lg",
+        "max-sm:shadow-sm",
         className,
       )}
     >
@@ -49,7 +49,7 @@ export function RateDisplay({
           </span>
           <span
             className={cn(
-              'flex shrink-0 items-center gap-0.5 text-[10px] font-medium leading-none',
+              "flex shrink-0 items-center gap-0.5 text-[10px] font-medium leading-none",
               color,
             )}
           >
@@ -57,7 +57,7 @@ export function RateDisplay({
             {trendLabel}
             {percentChange !== 0 ? (
               <span className="ml-0.5 tabular-nums text-text-muted">
-                · {percentChange > 0 ? '↑' : '↓'}
+                · {percentChange > 0 ? "↑" : "↓"}
                 {Math.abs(percentChange).toFixed(1)}%
               </span>
             ) : null}
@@ -87,7 +87,7 @@ export function RateDisplay({
           </span>
           <span
             className={cn(
-              'flex items-center gap-1 text-sm font-medium text-text-dark',
+              "flex items-center gap-1 text-sm font-medium text-text-dark",
               color,
             )}
           >
@@ -96,30 +96,30 @@ export function RateDisplay({
           </span>
         </div>
         <p className="text-xs text-text-muted">
-          <span className="font-medium text-text-dark">1 XOF</span> ≈{' '}
+          <span className="font-medium text-text-dark">1 XOF</span> ≈{" "}
           <span className="text-accent">{rate.toFixed(2)} RUB</span>
           <span className="mx-1.5 text-text-dark">·</span>
-          <span className="font-medium text-text-dark">1 RUB</span> ≈{' '}
+          <span className="font-medium text-text-dark">1 RUB</span> ≈{" "}
           <span className="text-accent">
             {(inverseRate ?? 0).toFixed(2)} XOF
           </span>
         </p>
         {percentChange !== 0 ? (
           <p className="text-xs text-text-muted">
-            {percentChange > 0 ? '↑' : '↓'} {Math.abs(percentChange).toFixed(2)}%
-            (24 h)
+            {percentChange > 0 ? "↑" : "↓"} {Math.abs(percentChange).toFixed(2)}
+            % (24 h)
           </p>
         ) : null}
         {rateWithSpread != null && rateWithSpread > 0 ? (
           <p className="hidden text-xs text-text-muted lg:block">
-            Marge indicative (non utilisée comme taux client) :{' '}
+            Marge indicative (non utilisée comme taux client) :{" "}
             <span className="font-mono text-text-dark">
               {rateWithSpread.toFixed(2)} ₽/F
             </span>
             {rubPerXofWithSpread != null && rubPerXofWithSpread > 0 ? (
               <>
-                {' '}
-                ·{' '}
+                {" "}
+                ·{" "}
                 <span className="font-mono text-text-dark">
                   {rubPerXofWithSpread.toFixed(2)} F/₽
                 </span>
@@ -128,7 +128,7 @@ export function RateDisplay({
           </p>
         ) : null}
         <p className="text-xs text-text-muted">
-          Les demandes utilisent ce taux + commission séparée. Mis à jour{' '}
+          Les demandes utilisent ce taux + commission séparée. Mis à jour{" "}
           {updatedLong}
         </p>
       </div>
