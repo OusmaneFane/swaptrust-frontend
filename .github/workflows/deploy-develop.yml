@@ -109,20 +109,26 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT || '22' }}
+          script_stop: true
           script: |
+            set -euo pipefail
+            CONTAINER_NAME=donisend-frontend-dev
+
             echo "Deploying Development..."
 
             echo ${{ secrets.GHCR_TOKEN }} | \
               docker login ghcr.io -u ${{ secrets.GHCR_USERNAME }} --password-stdin
 
+            docker network inspect donisend-net >/dev/null 2>&1 || docker network create donisend-net
+
             IMAGE="ghcr.io/$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')"
             docker pull "${IMAGE}:develop"
 
-            docker stop donisend-frontend-dev 2>/dev/null || true
-            docker rm donisend-frontend-dev 2>/dev/null || true
+            docker stop "${CONTAINER_NAME}" 2>/dev/null || true
+            docker rm "${CONTAINER_NAME}" 2>/dev/null || true
 
             docker run -d \
-              --name donisend-frontend-dev \
+              --name "${CONTAINER_NAME}" \
               --restart unless-stopped \
               --network donisend-net \
               -p 3010:3000 \
@@ -131,9 +137,17 @@ jobs:
               -e NEXT_PUBLIC_SOCKET_URL=${{ secrets.NEXT_PUBLIC_SOCKET_URL }} \
               "${IMAGE}:develop"
 
+            sleep 3
+            if ! docker inspect "${CONTAINER_NAME}" | grep -qE '"Running"[[:space:]]*:[[:space:]]*true'; then
+              echo "Container exited or failed to start."
+              docker inspect "${CONTAINER_NAME}" | head -c 4000 || true
+              docker logs --tail 120 "${CONTAINER_NAME}" 2>&1 || true
+              exit 1
+            fi
+
             docker image prune -f
 
-            echo "Development deployed on port 3010"
+            echo "Development deployed on port 3010 (container ${CONTAINER_NAME} running)"
 
       - name: Notify success
         run: echo "Deploy Development OK → https://dev.donisend.com"
