@@ -77,6 +77,7 @@ jobs:
             NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
             NEXT_PUBLIC_SOCKET_URL=${{ secrets.NEXT_PUBLIC_SOCKET_URL }}
             NEXT_PUBLIC_APP_ENV=production
+            API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -91,6 +92,19 @@ jobs:
     environment: production
 
     steps:
+      - name: Verify NextAuth deploy secrets
+        env:
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+          AUTH_URL: ${{ secrets.AUTH_URL }}
+        run: |
+          missing=()
+          [ -z "$AUTH_SECRET" ] && missing+=("AUTH_SECRET")
+          [ -z "$AUTH_URL" ] && missing+=("AUTH_URL")
+          if ((${#missing[@]})); then
+            echo "::error::Missing or empty secrets: ${missing[*]}. Add AUTH_SECRET (e.g. openssl rand -base64 32) and AUTH_URL (public site URL, e.g. https://donisend.com) under Settings → Environments → production."
+            exit 1
+          fi
+
       - name: Deploy via SSH (with rollback)
         uses: appleboy/ssh-action@v1.2.0
         with:
@@ -123,6 +137,11 @@ jobs:
               -e NODE_ENV=production \
               -e NEXT_PUBLIC_API_URL="${{ secrets.NEXT_PUBLIC_API_URL }}" \
               -e NEXT_PUBLIC_SOCKET_URL="${{ secrets.NEXT_PUBLIC_SOCKET_URL }}" \
+              -e API_URL="${{ secrets.NEXT_PUBLIC_API_URL }}" \
+              -e AUTH_SECRET="${{ secrets.AUTH_SECRET }}" \
+              -e AUTH_URL="${{ secrets.AUTH_URL }}" \
+              -e NEXTAUTH_SECRET="${{ secrets.AUTH_SECRET }}" \
+              -e NEXTAUTH_URL="${{ secrets.AUTH_URL }}" \
               "$IMAGE"
 
             echo "⏳ Healthcheck..."
@@ -139,6 +158,14 @@ jobs:
                   --name "$CONTAINER" \
                   --restart unless-stopped \
                   -p 3000:3000 \
+                  -e NODE_ENV=production \
+                  -e NEXT_PUBLIC_API_URL="${{ secrets.NEXT_PUBLIC_API_URL }}" \
+                  -e NEXT_PUBLIC_SOCKET_URL="${{ secrets.NEXT_PUBLIC_SOCKET_URL }}" \
+                  -e API_URL="${{ secrets.NEXT_PUBLIC_API_URL }}" \
+                  -e AUTH_SECRET="${{ secrets.AUTH_SECRET }}" \
+                  -e AUTH_URL="${{ secrets.AUTH_URL }}" \
+                  -e NEXTAUTH_SECRET="${{ secrets.AUTH_SECRET }}" \
+                  -e NEXTAUTH_URL="${{ secrets.AUTH_URL }}" \
                   "$PREVIOUS_IMAGE"
               fi
 

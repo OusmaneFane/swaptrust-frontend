@@ -90,6 +90,8 @@ jobs:
           VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
           GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
           GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+          AUTH_URL: ${{ secrets.AUTH_URL }}
         run: |
           missing=()
           [ -z "$VPS_HOST" ] && missing+=("VPS_HOST")
@@ -97,6 +99,8 @@ jobs:
           [ -z "$VPS_SSH_KEY" ] && missing+=("VPS_SSH_KEY")
           [ -z "$GHCR_TOKEN" ] && missing+=("GHCR_TOKEN")
           [ -z "$GHCR_USERNAME" ] && missing+=("GHCR_USERNAME")
+          [ -z "$AUTH_SECRET" ] && missing+=("AUTH_SECRET")
+          [ -z "$AUTH_URL" ] && missing+=("AUTH_URL")
           if ((${#missing[@]})); then
             echo "::error::Missing or empty secrets: ${missing[*]}. Add them under Settings → Environments → Development (or repository secrets)."
             exit 1
@@ -133,8 +137,13 @@ jobs:
               --network donisend-net \
               -p 3010:3000 \
               -e NODE_ENV=development \
-              -e NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }} \
-              -e NEXT_PUBLIC_SOCKET_URL=${{ secrets.NEXT_PUBLIC_SOCKET_URL }} \
+              -e NEXT_PUBLIC_API_URL="${{ secrets.NEXT_PUBLIC_API_URL }}" \
+              -e NEXT_PUBLIC_SOCKET_URL="${{ secrets.NEXT_PUBLIC_SOCKET_URL }}" \
+              -e API_URL="${{ secrets.NEXT_PUBLIC_API_URL }}" \
+              -e AUTH_SECRET="${{ secrets.AUTH_SECRET }}" \
+              -e AUTH_URL="${{ secrets.AUTH_URL }}" \
+              -e NEXTAUTH_SECRET="${{ secrets.AUTH_SECRET }}" \
+              -e NEXTAUTH_URL="${{ secrets.AUTH_URL }}" \
               "${IMAGE}:develop"
 
             sleep 3
