@@ -61,8 +61,40 @@ export interface AdminCommissionSetting {
   percent: number;
 }
 
-export interface PublicSettings {
+export interface AdminCommissionPromo {
+  id: number;
+  percent: number;
+  startsAt: string;
+  endsAt: string;
+  isActive: boolean;
+}
+
+export interface AdminCommissionConfig {
+  commissionBasePercent: number;
+  commissionPromoPercent: number | null;
+  commissionPromoEndsAt: string | null;
   commissionPercent: number;
+  isCommissionPromoActive: boolean;
+  promo?: AdminCommissionPromo | null;
+}
+
+export interface CreateAdminCommissionPromoDto {
+  percent: number;
+  endsAt: string;
+  startsAt?: string;
+}
+
+export interface PublicSettings {
+  /** Commission de base (en %) */
+  commissionBasePercent: number;
+  /** Commission promo (en %), si promo active/configurée */
+  commissionPromoPercent: number | null;
+  /** Fin de promo ISO date, sinon null */
+  commissionPromoEndsAt: string | null;
+  /** Commission effective à afficher/appliquer (promo si active, sinon base) */
+  commissionPercent: number;
+  /** Promo active maintenant (fenêtre de dates + isActive) */
+  isCommissionPromoActive: boolean;
 }
 
 /** GET/POST /admin/platform-accounts — compte de réception DoniSend côté client. */

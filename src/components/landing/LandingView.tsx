@@ -59,10 +59,41 @@ export function LandingView({ initialRate }: { initialRate: ExchangeRate }) {
       ? publicSettings.commissionPercent
       : null;
 
+  const baseCommissionPct =
+    publicSettings != null &&
+    Number.isFinite(publicSettings.commissionBasePercent) &&
+    publicSettings.commissionBasePercent >= 0
+      ? publicSettings.commissionBasePercent
+      : null;
+
+  const promoCommissionPct =
+    publicSettings != null &&
+    publicSettings.commissionPromoPercent != null &&
+    Number.isFinite(publicSettings.commissionPromoPercent) &&
+    publicSettings.commissionPromoPercent >= 0
+      ? publicSettings.commissionPromoPercent
+      : null;
+
+  const promoActive = publicSettings?.isCommissionPromoActive === true;
+  const promoEndsAt =
+    promoActive && typeof publicSettings?.commissionPromoEndsAt === "string"
+      ? publicSettings.commissionPromoEndsAt
+      : null;
+
   function pctLabel(n: number): string {
     if (!Number.isFinite(n)) return "—";
     const s = n.toFixed(2);
     return s.endsWith(".00") ? s.slice(0, -3) : s;
+  }
+
+  function dateLabelFr(iso: string): string {
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return "—";
+    return d.toLocaleDateString("fr-FR", {
+      year: "numeric",
+      month: "long",
+      day: "2-digit",
+    });
   }
 
   useEffect(() => {
@@ -190,11 +221,6 @@ export function LandingView({ initialRate }: { initialRate: ExchangeRate }) {
               <br />
               <span className="text-accent">CFA ↔ Roubles</span>
             </motion.h1>
-            <p className="mt-6 max-w-xl text-base text-text-muted">
-              Taux Google en temps réel, commission{" "}
-              {commissionPct == null ? "—" : `${pctLabel(commissionPct)}%`}{" "}
-              affichée, zéro arnaque possible.
-            </p>
             <p className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-accent">
               <MessageCircle className="h-4 w-4" />
               Notifications WhatsApp en temps réel (à chaque étape)
@@ -221,6 +247,83 @@ export function LandingView({ initialRate }: { initialRate: ExchangeRate }) {
                 J’ai déjà un compte
               </Link>
             </motion.div>
+
+            {/* Mobile-only: bloc compact juste après les CTA */}
+            <div className="mt-6 space-y-3 lg:hidden">
+              <div className="relative overflow-hidden rounded-card border border-primary/15 bg-white/75 p-4 shadow-card-lg backdrop-blur-md">
+                <div className="pointer-events-none absolute inset-0 opacity-90">
+                  <div className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-accent/25 blur-3xl" />
+                  <div className="absolute -left-20 -bottom-20 h-56 w-56 rounded-full bg-primary/20 blur-3xl" />
+                </div>
+
+                <div className="relative z-10 grid grid-cols-[1fr_auto] items-center gap-4">
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-text-muted">
+                      Commission
+                    </p>
+
+                    <div className="mt-1 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                      {promoActive ? (
+                        <>
+                          <span className="text-xs font-semibold text-text-muted line-through decoration-2">
+                            {baseCommissionPct == null
+                              ? "—"
+                              : `${pctLabel(baseCommissionPct)}%`}
+                          </span>
+                          <span className="font-display text-[28px] font-extrabold leading-none tracking-tight text-accent">
+                            {promoCommissionPct == null
+                              ? commissionPct == null
+                                ? "—"
+                                : `${pctLabel(commissionPct)}%`
+                              : `${pctLabel(promoCommissionPct)}%`}
+                          </span>
+                          {promoEndsAt ? (
+                            <span className="rounded-pill border border-accent/25 bg-accent/10 px-2.5 py-1 text-[11px] font-semibold text-accent">
+                              jusqu’au {dateLabelFr(promoEndsAt)}
+                            </span>
+                          ) : null}
+                        </>
+                      ) : (
+                        <span className="font-display text-[28px] font-extrabold leading-none tracking-tight text-accent">
+                          {commissionPct == null
+                            ? "—"
+                            : `${pctLabel(commissionPct)}%`}
+                        </span>
+                      )}
+                    </div>
+
+                    {promoActive ? (
+                      <p className="mt-2 text-[11px] font-semibold text-text-muted">
+                        Promo activée · prix réduit
+                      </p>
+                    ) : (
+                      <p className="mt-2 text-[11px] font-semibold text-text-muted">
+                        Affichée avant confirmation
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="shrink-0">
+                    <div className="[perspective:1000px]">
+                      <div className="relative h-14 w-14 rounded-2xl bg-gradient-to-br from-accent/35 via-white to-primary/25 shadow-card-lg ring-1 ring-primary/15 [transform:rotateX(22deg)_rotateY(-20deg)]">
+                        <div className="absolute inset-0 rounded-2xl bg-[radial-gradient(circle_at_30%_25%,rgba(255,255,255,0.95),transparent_58%)]" />
+                        <div className="absolute inset-[1px] rounded-2xl bg-white/20 backdrop-blur-[2px]" />
+                        <div className="absolute -right-3 -top-3 h-10 w-10 rounded-full bg-accent/25 blur-xl" />
+                        <div className="absolute -bottom-3 -left-3 h-10 w-10 rounded-full bg-primary/20 blur-xl" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <RateDisplay
+                rate={initialRate.rate}
+                inverseRate={initialRate.inverseRate}
+                trend={initialRate.trend}
+                percentChange={initialRate.percentChange}
+                fetchedAt={initialRate.fetchedAt}
+              />
+            </div>
 
             <motion.ul
               variants={container}
@@ -302,14 +405,73 @@ export function LandingView({ initialRate }: { initialRate: ExchangeRate }) {
             </motion.ul>
           </div>
 
-          <RateDisplay
-            rate={initialRate.rate}
-            inverseRate={initialRate.inverseRate}
-            trend={initialRate.trend}
-            percentChange={initialRate.percentChange}
-            fetchedAt={initialRate.fetchedAt}
-            className="lg:translate-y-4"
-          />
+          {/* Desktop-only: bloc commission + widget à droite */}
+          <div className="hidden space-y-4 lg:block lg:translate-y-4">
+            <div className="relative overflow-hidden rounded-card border border-primary/15 bg-white/70 p-4 shadow-card-lg backdrop-blur-md">
+              <div className="pointer-events-none absolute inset-0 opacity-90">
+                <div className="absolute -right-16 -top-16 h-56 w-56 rounded-full bg-accent/25 blur-3xl" />
+                <div className="absolute -left-20 -bottom-20 h-64 w-64 rounded-full bg-primary/20 blur-3xl" />
+              </div>
+
+              <div className="relative z-10 flex items-center justify-between gap-4">
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-text-muted">
+                    Commission DoniSend
+                  </p>
+
+                  {promoActive ? (
+                    <div className="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                      <span className="text-sm font-semibold text-text-muted line-through decoration-2">
+                        {baseCommissionPct == null
+                          ? "—"
+                          : `${pctLabel(baseCommissionPct)}%`}
+                      </span>
+                      <span className="font-display text-3xl font-extrabold tracking-tight text-accent">
+                        {promoCommissionPct == null
+                          ? commissionPct == null
+                            ? "—"
+                            : `${pctLabel(commissionPct)}%`
+                          : `${pctLabel(promoCommissionPct)}%`}
+                      </span>
+                      {promoEndsAt ? (
+                        <span className="rounded-pill border border-accent/25 bg-accent/10 px-3 py-1 text-xs font-semibold text-accent">
+                          jusqu’au {dateLabelFr(promoEndsAt)}
+                        </span>
+                      ) : null}
+                    </div>
+                  ) : (
+                    <div className="mt-2 flex items-baseline gap-2">
+                      <span className="font-display text-3xl font-extrabold tracking-tight text-accent">
+                        {commissionPct == null
+                          ? "—"
+                          : `${pctLabel(commissionPct)}%`}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* “3D” orb */}
+                <div className="hidden shrink-0 sm:block">
+                  <div className="[perspective:900px]">
+                    <div className="relative h-16 w-16 rotate-6 rounded-2xl bg-gradient-to-br from-accent/30 via-white to-primary/25 shadow-card-lg ring-1 ring-primary/15 [transform:rotateX(18deg)_rotateY(-18deg)]">
+                      <div className="absolute inset-0 rounded-2xl bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.9),transparent_55%)]" />
+                      <div className="absolute -right-3 -top-3 h-10 w-10 rounded-full bg-accent/25 blur-xl" />
+                      <div className="absolute -bottom-3 -left-3 h-10 w-10 rounded-full bg-primary/20 blur-xl" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <RateDisplay
+              rate={initialRate.rate}
+              inverseRate={initialRate.inverseRate}
+              trend={initialRate.trend}
+              percentChange={initialRate.percentChange}
+              fetchedAt={initialRate.fetchedAt}
+              className=""
+            />
+          </div>
         </div>
 
         <section id="fonctionnalites" className="mt-24 scroll-mt-28">

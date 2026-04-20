@@ -14,7 +14,6 @@ export function KycGate({ children }: { children: React.ReactNode }) {
   const {
     data: user,
     isPending,
-    isError,
   } = useQuery({
     queryKey: ["auth", "me", "kyc-gate"],
     queryFn: () => authApi.me(),

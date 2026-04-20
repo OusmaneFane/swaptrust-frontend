@@ -30,6 +30,9 @@ import type {
   UpdatePlatformAccountDto,
   UpdateUserDto,
   AdminCommissionSetting,
+  AdminCommissionConfig,
+  AdminCommissionPromo,
+  CreateAdminCommissionPromoDto,
   PublicSettings,
 } from "@/types/api-dtos";
 import type { AppNotification } from "@/types/api-dtos";
@@ -662,6 +665,15 @@ export const adminApi = {
     putUnwrapped<AdminCommissionSetting>("/admin/settings/commission", {
       percent,
     }),
+
+  getCommissionConfig: () =>
+    getUnwrapped<AdminCommissionConfig>("/admin/settings/commission/config"),
+
+  createCommissionPromo: (dto: CreateAdminCommissionPromoDto) =>
+    postUnwrapped<AdminCommissionPromo>("/admin/settings/commission/promo", dto),
+
+  deleteCommissionPromo: (id: number) =>
+    deleteUnwrapped<void>(`/admin/settings/commission/promo/${id}`),
 };
 
 export default api;

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -27,7 +26,6 @@ import { userWhatsappNotifyPhone } from "@/lib/user-phones";
 import { authApi, requestsApi, ratesApi } from "@/services/api";
 import { CommissionBreakdown } from "@/components/client/CommissionBreakdown";
 import { useExchangeRate } from "@/hooks/useExchangeRate";
-import { getPublicCommissionPercent } from "@/lib/commission-config";
 import { cn, formatCFA, formatRUB } from "@/lib/utils";
 import {
   ALL_FORM_PAYMENT_METHODS,
@@ -90,6 +88,16 @@ export default function NouvelleDemandePage() {
   const qc = useQueryClient();
   const [step, setStep] = useState<1 | 2>(1);
   const { data: rateData } = useExchangeRate();
+
+  const { data: publicSettings } = useQuery({
+    queryKey: ["settings", "public", "request-form"],
+    queryFn: async () => {
+      // Lazy import to avoid widening imports at module init
+      const { settingsApi } = await import("@/services/api");
+      return settingsApi.public();
+    },
+    staleTime: 60_000,
+  });
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -190,7 +198,7 @@ export default function NouvelleDemandePage() {
   const commissionPercent =
     calc?.commissionRate != null && Number.isFinite(Number(calc.commissionRate))
       ? Number(calc.commissionRate)
-      : getPublicCommissionPercent();
+      : publicSettings?.commissionPercent ?? 0;
   /** Commission en unités mineures de la devise d’envoi (CFA si NEED_RUB, RUB si NEED_CFA). */
   const estimatedCommissionSendMinor =
     sendMinor > 0 ? Math.round((sendMinor * commissionPercent) / 100) : 0;
