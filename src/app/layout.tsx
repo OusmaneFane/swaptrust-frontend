@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(
     process.env.AUTH_URL ??
       process.env.NEXTAUTH_URL ??
-      'http://localhost:3000',
+      'https://donisend.com',
   ),
   icons: {
     icon: '/favicon.svg',
