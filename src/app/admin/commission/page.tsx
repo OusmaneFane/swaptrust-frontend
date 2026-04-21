@@ -75,6 +75,11 @@ export default function AdminCommissionPage() {
     queryFn: () => adminApi.listCommissionPromos(true),
   });
 
+  const promosQuery = useQuery({
+    queryKey: ["admin", "settings", "commission", "promo", "all"],
+    queryFn: () => adminApi.listCommissionPromos(),
+  });
+
   const defaultValues = useMemo<FormValues>(
     () => ({ percent: Number(data?.percent ?? 0) }),
     [data?.percent],
@@ -147,6 +152,9 @@ export default function AdminCommissionPage() {
       await qc.invalidateQueries({
         queryKey: ["admin", "settings", "commission", "promo", "onlyActive"],
       });
+      await qc.invalidateQueries({
+        queryKey: ["admin", "settings", "commission", "promo", "all"],
+      });
       await qc.invalidateQueries({ queryKey: ["settings", "public"] });
     },
     onError: (err: unknown) => {
@@ -164,6 +172,9 @@ export default function AdminCommissionPage() {
       });
       await qc.invalidateQueries({
         queryKey: ["admin", "settings", "commission", "promo", "onlyActive"],
+      });
+      await qc.invalidateQueries({
+        queryKey: ["admin", "settings", "commission", "promo", "all"],
       });
       await qc.invalidateQueries({ queryKey: ["settings", "public"] });
     },
@@ -400,6 +411,85 @@ export default function AdminCommissionPage() {
             Aucune promo enregistrée.
           </p>
         )}
+
+        <div className="space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-sm font-semibold text-ink">Toutes les promos</p>
+            {promosQuery.isError ? (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => void promosQuery.refetch()}
+              >
+                Réessayer
+              </Button>
+            ) : null}
+          </div>
+
+          {promosQuery.isLoading ? (
+            <Skeleton className="h-24 w-full rounded-card" />
+          ) : null}
+
+          {promosQuery.isError ? (
+            <p className="text-sm text-danger">
+              {getApiErrorMessage(promosQuery.error) ??
+                "Impossible de charger les promos."}
+            </p>
+          ) : null}
+
+          {promosQuery.data && promosQuery.data.length > 0 ? (
+            <div className="divide-y divide-line/70 overflow-hidden rounded-card border border-line/90">
+              {promosQuery.data.map((p) => {
+                const inWindow = p.isCurrentlyInWindow === true;
+                return (
+                  <div
+                    key={p.id}
+                    className="flex flex-col gap-3 bg-white/60 p-4 sm:flex-row sm:items-center sm:justify-between"
+                  >
+                    <div className="min-w-0">
+                      <p className="font-semibold text-ink">
+                        #{p.id} — {p.percent}%
+                      </p>
+                      <p className="mt-1 text-xs text-ink-muted">
+                        Début: {formatFr(p.startsAt)} · Fin: {formatFr(p.endsAt)}
+                      </p>
+                      <p className="mt-1 text-xs text-ink-muted">
+                        Actif: {String(p.isActive)} · Dans fenêtre:{" "}
+                        {String(inWindow)}
+                      </p>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2">
+                      {inWindow ? (
+                        <span className="rounded-pill border border-success/25 bg-success/10 px-2.5 py-1 text-[11px] font-semibold text-success">
+                          En cours
+                        </span>
+                      ) : (
+                        <span className="rounded-pill border border-ink/10 bg-muted/40 px-2.5 py-1 text-[11px] font-semibold text-ink-secondary">
+                          Pas en cours
+                        </span>
+                      )}
+
+                      <Button
+                        type="button"
+                        variant="outline"
+                        loading={disablePromo.isPending}
+                        disabled={!p.isActive}
+                        onClick={() => disablePromo.mutate(p.id)}
+                      >
+                        Désactiver
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="text-sm text-ink-secondary">
+              Aucune promo enregistrée.
+            </p>
+          )}
+        </div>
 
         <form
           onSubmit={promoForm.handleSubmit((v) => createPromo.mutate(v))}

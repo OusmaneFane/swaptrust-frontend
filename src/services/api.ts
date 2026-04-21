@@ -809,7 +809,19 @@ export const adminApi = {
       ...(onlyActive ? { onlyActive: "true" } : {}),
     }).then((rows) =>
       Array.isArray(rows)
-        ? (rows.map(normalizeAdminCommissionPromo).filter(Boolean) as AdminCommissionPromo[])
+        ? (rows
+            .map(normalizeAdminCommissionPromo)
+            .filter(Boolean) as AdminCommissionPromo[]).sort((a, b) => {
+            const aw = a.isCurrentlyInWindow === true ? 1 : 0;
+            const bw = b.isCurrentlyInWindow === true ? 1 : 0;
+            if (aw !== bw) return bw - aw; // d'abord les promos applicables maintenant
+
+            const as = new Date(a.startsAt).getTime();
+            const bs = new Date(b.startsAt).getTime();
+            if (Number.isFinite(as) && Number.isFinite(bs) && as !== bs) return bs - as;
+
+            return b.id - a.id; // fallback: la plus récente
+          })
         : [],
     ),
 
