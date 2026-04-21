@@ -111,6 +111,7 @@ export default function AdminCommissionPage() {
       qc.invalidateQueries({
         queryKey: ["admin", "settings", "commission", "config"],
       });
+      qc.invalidateQueries({ queryKey: ["settings", "public"] });
     },
     onError: (err: unknown) => {
       const apiMsg = getApiErrorMessage(err);
@@ -138,6 +139,7 @@ export default function AdminCommissionPage() {
       await qc.invalidateQueries({
         queryKey: ["admin", "settings", "commission", "config"],
       });
+      await qc.invalidateQueries({ queryKey: ["settings", "public"] });
     },
     onError: (err: unknown) => {
       const apiMsg = getApiErrorMessage(err);
@@ -152,6 +154,7 @@ export default function AdminCommissionPage() {
       await qc.invalidateQueries({
         queryKey: ["admin", "settings", "commission", "config"],
       });
+      await qc.invalidateQueries({ queryKey: ["settings", "public"] });
     },
     onError: (err: unknown) => {
       const apiMsg = getApiErrorMessage(err);
