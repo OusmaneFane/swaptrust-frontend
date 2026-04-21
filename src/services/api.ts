@@ -126,6 +126,133 @@ function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === "object" && v !== null;
 }
 
+function normalizeAdminCommissionPromo(raw: unknown): AdminCommissionPromo | null {
+  if (!isRecord(raw)) return null;
+  const id = Number(raw.id ?? raw.promo_id);
+  const percent = parseDecimalLike(raw.percent ?? raw.promo_percent);
+  const startsAt = String(raw.startsAt ?? raw.starts_at ?? "");
+  const endsAt = String(raw.endsAt ?? raw.ends_at ?? "");
+  const isActiveRaw = raw.isActive ?? raw.is_active;
+  const isActive = isActiveRaw === true || isActiveRaw === "true";
+  const isCurrentlyInWindowRaw =
+    raw.isCurrentlyInWindow ?? raw.is_currently_in_window;
+  const isCurrentlyInWindow =
+    isCurrentlyInWindowRaw === true || isCurrentlyInWindowRaw === "true";
+
+  if (!Number.isFinite(id) || id <= 0) return null;
+  if (!Number.isFinite(percent) || percent < 0) return null;
+  if (!startsAt || !endsAt) return null;
+
+  return {
+    id,
+    percent,
+    startsAt,
+    endsAt,
+    isActive,
+    isCurrentlyInWindow: isCurrentlyInWindowRaw == null ? undefined : isCurrentlyInWindow,
+  };
+}
+
+function normalizeAdminCommissionConfig(raw: unknown): AdminCommissionConfig {
+  if (!isRecord(raw)) {
+    return {
+      commissionBasePercent: 0,
+      commissionPromoPercent: null,
+      commissionPromoEndsAt: null,
+      commissionPercent: 0,
+      isCommissionPromoActive: false,
+      promo: null,
+    };
+  }
+
+  const commissionBasePercent = parseDecimalLike(
+    raw.commissionBasePercent ?? raw.commission_base_percent,
+  );
+  const commissionPromoPercent = parseDecimalLike(
+    raw.commissionPromoPercent ?? raw.commission_promo_percent,
+  );
+  const commissionPercent = parseDecimalLike(
+    raw.commissionPercent ?? raw.commission_percent,
+  );
+  const commissionPromoEndsAtRaw =
+    raw.commissionPromoEndsAt ?? raw.commission_promo_ends_at;
+  const isPromoActiveRaw =
+    raw.isCommissionPromoActive ?? raw.is_commission_promo_active;
+
+  const promo = normalizeAdminCommissionPromo(raw.promo ?? raw.promo_commission);
+
+  return {
+    commissionBasePercent:
+      Number.isFinite(commissionBasePercent) && commissionBasePercent >= 0
+        ? commissionBasePercent
+        : 0,
+    commissionPromoPercent:
+      commissionPromoPercent == null
+        ? null
+        : Number.isFinite(commissionPromoPercent) && commissionPromoPercent >= 0
+          ? commissionPromoPercent
+          : null,
+    commissionPromoEndsAt:
+      typeof commissionPromoEndsAtRaw === "string" && commissionPromoEndsAtRaw
+        ? commissionPromoEndsAtRaw
+        : null,
+    commissionPercent:
+      Number.isFinite(commissionPercent) && commissionPercent >= 0
+        ? commissionPercent
+        : 0,
+    isCommissionPromoActive: isPromoActiveRaw === true || isPromoActiveRaw === "true",
+    promo,
+  };
+}
+
+function normalizePublicSettings(raw: unknown): PublicSettings {
+  if (!isRecord(raw)) {
+    return {
+      commissionBasePercent: 0,
+      commissionPromoPercent: null,
+      commissionPromoEndsAt: null,
+      commissionPercent: 0,
+      isCommissionPromoActive: false,
+    };
+  }
+
+  const commissionBasePercent = parseDecimalLike(
+    raw.commissionBasePercent ?? raw.commission_base_percent,
+  );
+  const commissionPromoPercent = parseDecimalLike(
+    raw.commissionPromoPercent ?? raw.commission_promo_percent,
+  );
+  const commissionPercent = parseDecimalLike(
+    raw.commissionPercent ?? raw.commission_percent,
+  );
+  const commissionPromoEndsAtRaw =
+    raw.commissionPromoEndsAt ?? raw.commission_promo_ends_at;
+  const isPromoActiveRaw =
+    raw.isCommissionPromoActive ?? raw.is_commission_promo_active;
+
+  return {
+    commissionBasePercent:
+      Number.isFinite(commissionBasePercent) && commissionBasePercent >= 0
+        ? commissionBasePercent
+        : 0,
+    commissionPromoPercent:
+      commissionPromoPercent == null
+        ? null
+        : Number.isFinite(commissionPromoPercent) && commissionPromoPercent >= 0
+          ? commissionPromoPercent
+          : null,
+    commissionPromoEndsAt:
+      typeof commissionPromoEndsAtRaw === "string" && commissionPromoEndsAtRaw
+        ? commissionPromoEndsAtRaw
+        : null,
+    commissionPercent:
+      Number.isFinite(commissionPercent) && commissionPercent >= 0
+        ? commissionPercent
+        : 0,
+    isCommissionPromoActive: isPromoActiveRaw === true || isPromoActiveRaw === "true",
+  };
+}
+
 function extractExchangeRequestList(raw: unknown): ExchangeRequest[] {
   const inner = unwrapApi<unknown>(raw);
   if (Array.isArray(inner)) return inner as ExchangeRequest[];
@@ -529,7 +656,10 @@ export const ratesApi = {
 // ─── SETTINGS (PUBLIC) ───────────────────────────────────────────────────────
 
 export const settingsApi = {
-  public: () => getUnwrapped<PublicSettings>("/settings/public"),
+  public: async () => {
+    const raw = await getUnwrapped<unknown>("/settings/public");
+    return normalizePublicSettings(raw);
+  },
 };
 
 // ─── OPÉRATEUR ───────────────────────────────────────────────────────────────
@@ -667,10 +797,21 @@ export const adminApi = {
     }),
 
   getCommissionConfig: () =>
-    getUnwrapped<AdminCommissionConfig>("/admin/settings/commission/config"),
+    getUnwrapped<unknown>("/admin/settings/commission/config").then(
+      normalizeAdminCommissionConfig,
+    ),
 
   createCommissionPromo: (dto: CreateAdminCommissionPromoDto) =>
     postUnwrapped<AdminCommissionPromo>("/admin/settings/commission/promo", dto),
+
+  listCommissionPromos: (onlyActive?: boolean) =>
+    getUnwrapped<unknown[]>("/admin/settings/commission/promo", {
+      ...(onlyActive ? { onlyActive: "true" } : {}),
+    }).then((rows) =>
+      Array.isArray(rows)
+        ? (rows.map(normalizeAdminCommissionPromo).filter(Boolean) as AdminCommissionPromo[])
+        : [],
+    ),
 
   deleteCommissionPromo: (id: number) =>
     deleteUnwrapped<void>(`/admin/settings/commission/promo/${id}`),

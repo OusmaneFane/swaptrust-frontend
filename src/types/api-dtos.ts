@@ -67,6 +67,8 @@ export interface AdminCommissionPromo {
   startsAt: string;
   endsAt: string;
   isActive: boolean;
+  /** True si "now" est entre startsAt/endsAt côté API */
+  isCurrentlyInWindow?: boolean;
 }
 
 export interface AdminCommissionConfig {

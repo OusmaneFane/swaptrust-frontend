@@ -70,6 +70,11 @@ export default function AdminCommissionPage() {
     queryFn: () => adminApi.getCommissionConfig(),
   });
 
+  const activePromosQuery = useQuery({
+    queryKey: ["admin", "settings", "commission", "promo", "onlyActive"],
+    queryFn: () => adminApi.listCommissionPromos(true),
+  });
+
   const defaultValues = useMemo<FormValues>(
     () => ({ percent: Number(data?.percent ?? 0) }),
     [data?.percent],
@@ -139,6 +144,9 @@ export default function AdminCommissionPage() {
       await qc.invalidateQueries({
         queryKey: ["admin", "settings", "commission", "config"],
       });
+      await qc.invalidateQueries({
+        queryKey: ["admin", "settings", "commission", "promo", "onlyActive"],
+      });
       await qc.invalidateQueries({ queryKey: ["settings", "public"] });
     },
     onError: (err: unknown) => {
@@ -153,6 +161,9 @@ export default function AdminCommissionPage() {
       toast.success("Promo désactivée.");
       await qc.invalidateQueries({
         queryKey: ["admin", "settings", "commission", "config"],
+      });
+      await qc.invalidateQueries({
+        queryKey: ["admin", "settings", "commission", "promo", "onlyActive"],
       });
       await qc.invalidateQueries({ queryKey: ["settings", "public"] });
     },
@@ -198,7 +209,7 @@ export default function AdminCommissionPage() {
   const dirty = watched !== current;
 
   const cfg = configQuery.data;
-  const promo = cfg?.promo ?? null;
+  const promo = activePromosQuery.data?.[0] ?? null;
   const promoActive = cfg?.isCommissionPromoActive === true;
 
   return (
