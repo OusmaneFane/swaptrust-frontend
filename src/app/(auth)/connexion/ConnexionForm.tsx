@@ -22,7 +22,7 @@ type FormValues = z.infer<typeof schema>;
 export function ConnexionForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") ?? "/tableau-de-bord";
+  const callbackUrl = searchParams?.get("callbackUrl") ?? "/tableau-de-bord";
 
   const {
     register,

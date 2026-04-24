@@ -127,7 +127,7 @@ export interface UpdatePlatformAccountDto {
 export interface AdminRevenueSummary {
   period: string;
   transactionCount: number;
-  /** Souvent en centimes CFA — afficher avec `formatCFA` si cohérent avec votre API. */
+  /** Montant en centimes CFA (API peut renvoyer string, normalisé côté frontend). */
   totalVolumeCfa: number;
   totalCommissionCfa: number;
   pendingTransfers: number;
@@ -136,12 +136,20 @@ export interface AdminRevenueSummary {
 
 /** Admin dashboard */
 export interface KpiDashboard {
-  todayTransactions: number;
-  totalVolumeCfa: number;
-  newUsersToday: number;
-  openDisputes: number;
-  completionRate: number;
-  totalUsers: number;
+  /** Nouveau shape (spec admin) */
+  users: number;
+  kycPending: number;
+  txActive: number;
+  disputesOpen: number;
+  requestsPending: number;
+
+  /** Champs legacy encore possibles selon l’API */
+  todayTransactions?: number;
+  totalVolumeCfa?: number;
+  newUsersToday?: number;
+  openDisputes?: number;
+  completionRate?: number;
+  totalUsers?: number;
 }
 
 /** Auth */

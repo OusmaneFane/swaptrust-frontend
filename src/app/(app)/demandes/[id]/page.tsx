@@ -16,7 +16,8 @@ export default function DemandeDetailPage() {
   const params = useParams();
   const router = useRouter();
   const qc = useQueryClient();
-  const id = Number(params.id);
+  const idParam = params?.id;
+  const id = Number(Array.isArray(idParam) ? idParam[0] : idParam);
 
   const { data: r, isLoading } = useQuery({
     queryKey: ["requests", id],

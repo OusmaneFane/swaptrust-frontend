@@ -26,7 +26,8 @@ const side = [
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const hideBottomNav = pathname.includes('/chat');
+  const path = pathname ?? '';
+  const hideBottomNav = path.includes('/chat');
   return (
     <KycGate>
     <div className="flex min-h-screen flex-col bg-gradient-to-b from-white via-slate-50/50 to-primary/[0.04] text-text-dark">
@@ -41,7 +42,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           <nav className="flex flex-col gap-1">
             {side.map(({ href, label, Icon }) => {
               const active =
-                pathname === href || pathname.startsWith(`${href}/`);
+                path === href || path.startsWith(`${href}/`);
               return (
                 <Link
                   key={href}

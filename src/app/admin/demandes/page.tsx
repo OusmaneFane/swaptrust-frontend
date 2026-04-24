@@ -30,40 +30,42 @@ export default function AdminDemandesPage() {
   return (
     <div className="space-y-8">
       <div>
-        <p className="text-xs text-ink-muted">
+        <p className="text-xs text-text-muted">
           <Link href="/admin" className="text-primary hover:underline">
             ← Tableau de bord
           </Link>
         </p>
-        <h1 className="mt-3 font-display text-3xl font-bold tracking-tight text-ink">
+        <h1 className="mt-3 font-display text-3xl font-bold tracking-tight text-text-dark">
           Demandes à traiter
         </h1>
-        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink-secondary">
+        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-text-secondary">
           Après « Prendre en charge », redirection vers{' '}
-          <code className="rounded bg-muted px-1 font-mono text-[11px]">
+          <code className="rounded bg-white px-1 font-mono text-[11px] text-text-muted shadow-sm ring-1 ring-slate-900/[0.06]">
             /operateur/transactions/:id
           </code>{' '}
-          — accessible aux comptes <strong className="text-ink">ADMIN</strong> (menu{' '}
-          <strong className="text-ink">Espace opérateur</strong> dans la barre latérale).
+          — accessible aux comptes <strong className="text-text-dark">ADMIN</strong>{' '}
+          (menu <strong className="text-text-dark">Espace opérateur</strong> dans la
+          barre latérale).
         </p>
-        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink-secondary">
+        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-text-secondary">
           Liste des demandes en attente d’opérateur (
-          <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-[11px]">
+          <code className="rounded bg-white px-1.5 py-0.5 font-mono text-[11px] text-text-muted shadow-sm ring-1 ring-slate-900/[0.06]">
             GET /admin/requests/pending
           </code>
           ). La prise en charge utilise la même route que l’espace opérateur (
-          <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-[11px]">
+          <code className="rounded bg-white px-1.5 py-0.5 font-mono text-[11px] text-text-muted shadow-sm ring-1 ring-slate-900/[0.06]">
             POST /operator/requests/:id/take
           </code>
           ) — le compte admin doit y être autorisé côté API, ou posséder aussi le rôle opérateur.
         </p>
       </div>
 
-      <Card variant="glass" className="border-primary/15 p-4 text-sm text-ink-secondary">
+      <Card className="border border-primary/10 bg-white/80 p-4 text-sm text-text-secondary shadow-sm ring-1 ring-slate-900/[0.04] backdrop-blur">
         <p>
           Après prise en charge, vous êtes redirigé vers la{' '}
-          <strong className="text-ink">fiche transaction opérateur</strong> pour suivre l’échange
-          (reçu client, envoi des fonds, etc.). Les clients paient sur les{' '}
+          <strong className="text-text-dark">fiche transaction opérateur</strong> pour
+          suivre l’échange (reçu client, envoi des fonds, etc.). Les clients paient
+          sur les{' '}
           <Link href="/admin/platform-accounts" className="font-medium text-primary underline">
             comptes DoniSend
           </Link>
@@ -73,7 +75,7 @@ export default function AdminDemandesPage() {
 
       <section>
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <h2 className="font-display text-lg font-semibold text-ink">
+          <h2 className="font-display text-lg font-semibold text-text-dark">
             En attente ({pending.length})
           </h2>
           <Link
@@ -90,20 +92,20 @@ export default function AdminDemandesPage() {
           <ul className="space-y-2">
             {sorted.map((r) => (
               <li key={r.id}>
-                <Card variant="glass" className="flex flex-col gap-3 p-4 shadow-card sm:flex-row sm:items-center sm:justify-between">
+                <Card className="flex flex-col gap-3 p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="font-medium text-ink">{r.client.name}</p>
-                      <span className="text-xs text-ink-faint">{fromNow(r.createdAt)}</span>
+                      <p className="font-medium text-text-dark">{r.client.name}</p>
+                      <span className="text-xs text-text-muted">{fromNow(r.createdAt)}</span>
                       <UrgencyBadge expiresAt={r.expiresAt} />
                     </div>
-                    <p className="mt-1 text-sm text-ink-secondary">
+                    <p className="mt-1 text-sm text-text-secondary">
                       {r.type === 'NEED_RUB'
                         ? `Besoin de ${formatRUB(r.amountWanted)} → enverra ${formatCFA(r.amountToSend)}`
                         : `Besoin de ${formatCFA(r.amountWanted)} → enverra ${formatRUB(r.amountToSend)}`}
                     </p>
                     {r.note ? (
-                      <p className="mt-1 text-xs italic text-ink-faint">« {r.note} »</p>
+                      <p className="mt-1 text-xs italic text-text-muted">« {r.note} »</p>
                     ) : null}
                   </div>
                   <Button
@@ -119,7 +121,7 @@ export default function AdminDemandesPage() {
             ))}
           </ul>
         ) : (
-          <Card variant="glass" className="border-dashed p-8 text-center text-sm text-ink-muted">
+          <Card className="border border-dashed border-primary/15 p-8 text-center text-sm text-text-muted shadow-sm">
             Aucune demande en attente.
           </Card>
         )}

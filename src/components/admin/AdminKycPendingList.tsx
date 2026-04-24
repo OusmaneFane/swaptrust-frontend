@@ -71,8 +71,10 @@ export function AdminKycPendingList({ pending, compact }: Props) {
 
   if (!pending.length) {
     return (
-      <div className="rounded-input border border-dashed border-line bg-surface/80 px-4 py-8 text-center">
-        <p className="text-sm text-ink-muted">Aucun dossier en attente de validation.</p>
+      <div className="rounded-input border border-dashed border-primary/15 bg-white px-4 py-8 text-center shadow-sm">
+        <p className="text-sm text-text-muted">
+          Aucun dossier en attente de validation.
+        </p>
       </div>
     );
   }
@@ -83,16 +85,18 @@ export function AdminKycPendingList({ pending, compact }: Props) {
         <li
           key={doc.id}
           className={cn(
-            'flex flex-col gap-3 rounded-card border border-line bg-surface/50 p-4 text-sm shadow-sm transition-shadow hover:shadow-card sm:flex-row sm:flex-wrap sm:items-center sm:justify-between',
+            'flex flex-col gap-3 rounded-card border border-primary/10 bg-white p-4 text-sm shadow-sm transition-shadow hover:shadow-md sm:flex-row sm:flex-wrap sm:items-center sm:justify-between',
           )}
         >
           <div className="min-w-0 flex-1">
-            <p className="font-display font-semibold text-ink">Dossier #{doc.id}</p>
-            <p className="mt-0.5 text-ink-secondary">
-              Utilisateur #{doc.userId} ·{' '}
-              <span className="font-medium text-ink">{doc.docType}</span>
+            <p className="font-display font-semibold text-text-dark">
+              Dossier #{doc.id}
             </p>
-            <p className="mt-1 text-xs text-ink-faint">
+            <p className="mt-0.5 text-text-secondary">
+              Utilisateur #{doc.userId} ·{' '}
+              <span className="font-medium text-text-dark">{doc.docType}</span>
+            </p>
+            <p className="mt-1 text-xs text-text-muted">
               Soumis le {new Date(doc.submittedAt).toLocaleString('fr-FR')}
             </p>
             {!compact &&

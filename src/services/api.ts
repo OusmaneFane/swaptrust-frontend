@@ -205,6 +205,101 @@ function normalizeAdminCommissionConfig(raw: unknown): AdminCommissionConfig {
   };
 }
 
+function normalizeKpiDashboard(raw: unknown): KpiDashboard {
+  if (!isRecord(raw)) {
+    return {
+      users: 0,
+      kycPending: 0,
+      txActive: 0,
+      disputesOpen: 0,
+      requestsPending: 0,
+    };
+  }
+
+  // Nouveau shape (spec)
+  const users = Number(raw.users);
+  const kycPending = Number(raw.kycPending);
+  const txActive = Number(raw.txActive);
+  const disputesOpen = Number(raw.disputesOpen);
+  const requestsPending = Number(raw.requestsPending);
+
+  // Legacy shape (ancien dashboard)
+  const totalUsers = Number(raw.totalUsers);
+  const openDisputes = Number(raw.openDisputes);
+
+  const safe = (n: number) => (Number.isFinite(n) && n >= 0 ? n : 0);
+
+  // Si l’API renvoie le nouveau format, on le privilégie.
+  const hasNew =
+    Number.isFinite(users) ||
+    Number.isFinite(kycPending) ||
+    Number.isFinite(txActive) ||
+    Number.isFinite(disputesOpen) ||
+    Number.isFinite(requestsPending);
+
+  if (hasNew) {
+    return {
+      users: safe(users),
+      kycPending: safe(kycPending),
+      txActive: safe(txActive),
+      disputesOpen: safe(disputesOpen),
+      requestsPending: safe(requestsPending),
+      // expose aussi quelques champs legacy si présents (utile pour compat UI)
+      totalUsers: safe(totalUsers),
+      openDisputes: safe(openDisputes),
+    };
+  }
+
+  return {
+    users: safe(totalUsers),
+    kycPending: 0,
+    txActive: 0,
+    disputesOpen: safe(openDisputes),
+    requestsPending: 0,
+    totalUsers: safe(totalUsers),
+    openDisputes: safe(openDisputes),
+    todayTransactions: safe(Number(raw.todayTransactions)),
+    totalVolumeCfa: safe(Number(raw.totalVolumeCfa)),
+    newUsersToday: safe(Number(raw.newUsersToday)),
+    completionRate: Number.isFinite(Number(raw.completionRate))
+      ? Number(raw.completionRate)
+      : 0,
+  };
+}
+
+function normalizeAdminRevenueSummary(raw: unknown): AdminRevenueSummary {
+  if (!isRecord(raw)) {
+    return {
+      period: "month",
+      transactionCount: 0,
+      totalVolumeCfa: 0,
+      totalCommissionCfa: 0,
+      pendingTransfers: 0,
+      pendingAmount: 0,
+    };
+  }
+
+  const period = typeof raw.period === "string" ? raw.period : "month";
+  const transactionCount = Number(raw.transactionCount ?? 0);
+  const pendingTransfers = Number(raw.pendingTransfers ?? 0);
+
+  // les montants peuvent arriver en string (BigInt sérialisé)
+  const totalVolumeCfa = parseDecimalLike(raw.totalVolumeCfa) ?? 0;
+  const totalCommissionCfa = parseDecimalLike(raw.totalCommissionCfa) ?? 0;
+  const pendingAmount = parseDecimalLike(raw.pendingAmount) ?? 0;
+
+  return {
+    period,
+    transactionCount: Number.isFinite(transactionCount) ? transactionCount : 0,
+    totalVolumeCfa: Number.isFinite(totalVolumeCfa) ? totalVolumeCfa : 0,
+    totalCommissionCfa: Number.isFinite(totalCommissionCfa)
+      ? totalCommissionCfa
+      : 0,
+    pendingTransfers: Number.isFinite(pendingTransfers) ? pendingTransfers : 0,
+    pendingAmount: Number.isFinite(pendingAmount) ? pendingAmount : 0,
+  };
+}
+
 function normalizePublicSettings(raw: unknown): PublicSettings {
   if (!isRecord(raw)) {
     return {
@@ -698,9 +793,7 @@ export const operatorApi = {
     ),
 
   verifyClientProof: (id: number) =>
-    api.post(`/operator/transactions/${id}/confirm-platform-transfer
-
-`),
+    api.post(`/operator/transactions/${id}/confirm-platform-transfer`),
 
   operatorSend: (id: number, proofFile: File) => {
     const form = new FormData();
@@ -720,7 +813,8 @@ export const operatorApi = {
 // ─── ADMIN ──────────────────────────────────────────────────────────────────
 
 export const adminApi = {
-  dashboard: () => getUnwrapped<KpiDashboard>("/admin/dashboard"),
+  dashboard: () =>
+    getUnwrapped<unknown>("/admin/dashboard").then(normalizeKpiDashboard),
 
   allUsers: (params?: Record<string, string>) =>
     getUnwrapped<User[]>("/admin/users", params as Record<string, unknown>),
@@ -785,8 +879,10 @@ export const adminApi = {
   deletePlatformAccount: (id: number) =>
     deleteUnwrapped(`/admin/platform-accounts/${id}`),
 
-  revenueSummary: () =>
-    getUnwrapped<AdminRevenueSummary>("/admin/revenue/summary"),
+  revenueSummary: (period?: "day" | "week" | "month" | "year") =>
+    getUnwrapped<unknown>("/admin/revenue/summary", period ? { period } : undefined).then(
+      normalizeAdminRevenueSummary,
+    ),
 
   getCommissionSetting: () =>
     getUnwrapped<AdminCommissionSetting>("/admin/settings/commission"),

@@ -9,10 +9,13 @@ import {
   AlertTriangle,
   ArrowLeft,
   Check,
+  Coins,
   Copy,
   MessageCircle,
   Receipt,
   Star,
+  TrendingUp,
+  UserRound,
 } from "lucide-react";
 import { TransactionTimeline } from "@/components/exchange/TransactionTimeline";
 import { ClientSendButton } from "@/components/client/ClientSendButton";
@@ -99,6 +102,69 @@ function operatorShortName(name: string): string {
   return `${parts[0]!.charAt(0)}. ${parts[parts.length - 1]}`;
 }
 
+function StatCard({
+  label,
+  value,
+  hint,
+  tone,
+  icon,
+}: {
+  label: string;
+  value: string;
+  hint?: string;
+  tone: "indigo" | "emerald" | "rose" | "amber";
+  icon: React.ReactNode;
+}) {
+  const toneWrap =
+    tone === "indigo"
+      ? "bg-gradient-to-br from-indigo-500/[0.16] via-white to-white"
+      : tone === "emerald"
+        ? "bg-gradient-to-br from-emerald-500/[0.16] via-white to-white"
+        : tone === "rose"
+          ? "bg-gradient-to-br from-rose-500/[0.14] via-white to-white"
+          : "bg-gradient-to-br from-amber-500/[0.16] via-white to-white";
+
+  const toneIcon =
+    tone === "indigo"
+      ? "bg-indigo-500/[0.12] text-indigo-700 ring-indigo-500/15"
+      : tone === "emerald"
+        ? "bg-emerald-500/[0.12] text-emerald-700 ring-emerald-500/15"
+        : tone === "rose"
+          ? "bg-rose-500/[0.12] text-rose-700 ring-rose-500/15"
+          : "bg-amber-500/[0.14] text-amber-800 ring-amber-500/15";
+
+  return (
+    <div
+      className={cn(
+        surfaceCard,
+        "group relative overflow-hidden p-4 shadow-none transition hover:shadow-lg",
+        toneWrap,
+      )}
+    >
+      <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-primary/[0.06] blur-2xl transition group-hover:bg-primary/[0.09]" />
+      <div className="relative flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-text-muted">
+            {label}
+          </p>
+          <p className="mt-1 truncate font-display text-lg font-bold text-text-dark sm:text-xl">
+            {value}
+          </p>
+          {hint ? <p className="mt-1 text-xs text-text-muted">{hint}</p> : null}
+        </div>
+        <span
+          className={cn(
+            "grid h-10 w-10 place-items-center rounded-2xl ring-1 shadow-sm",
+            toneIcon,
+          )}
+        >
+          {icon}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 const shell = "relative mx-auto min-w-0 max-w-lg pb-10 pt-0 xl:max-w-2xl";
 const halo =
   "pointer-events-none absolute inset-x-0 top-0 mx-auto h-[min(14rem,32vh)] max-w-xl rounded-[40%] bg-gradient-to-b from-primary/[0.14] via-violet-500/[0.05] to-transparent blur-3xl";
@@ -109,7 +175,8 @@ const surfaceCard =
 export default function TransactionDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const id = Number(params.id);
+  const idParam = params?.id;
+  const id = Number(Array.isArray(idParam) ? idParam[0] : idParam);
   const { data: session } = useSession();
   const { data: me } = useQuery({
     queryKey: ["auth", "me"],
@@ -192,129 +259,142 @@ export default function TransactionDetailPage() {
   const donisendDestination = resolveClientSendDestination(tx);
   const rateRef =
     tx.googleRate != null && tx.googleRate > 0 ? tx.googleRate : tx.rate;
+  const stepMeta = TRANSACTION_STEPS[tx.status];
 
   return (
     <div className={shell}>
       <div className={halo} aria-hidden />
       <div className="relative space-y-4">
-        <Link
-          href="/transactions"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary transition hover:underline"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" strokeWidth={2.5} />
-          Historique
-        </Link>
+        <Card className="relative overflow-hidden border border-primary/10 bg-gradient-to-br from-primary/[0.10] via-white to-white p-5 shadow-lg sm:p-6">
+          <div className="pointer-events-none absolute -left-20 -top-20 h-64 w-64 rounded-full bg-indigo-500/[0.18] blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-24 -right-24 h-72 w-72 rounded-full bg-emerald-500/[0.16] blur-3xl" />
 
-        <div
-          className={cn(
-            surfaceCard,
-            "flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between",
-          )}
-        >
-          <div className="min-w-0 space-y-1.5">
-            <div className="flex flex-wrap items-center gap-2">
-              <h1 className="font-display text-xl font-bold tracking-tight text-text-dark sm:text-2xl">
-                Transaction #{tx.id}
-              </h1>
-              <Badge tone={statusBadgeTone(tx.status)} className="text-[10px]">
-                {TRANSACTION_STEPS[tx.status].label}
-              </Badge>
-            </div>
-            <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-text-muted sm:text-sm">
-              <span>
-                Opérateur :{" "}
-                <span className="font-medium text-text-dark">
-                  {operatorShortName(tx.operator.name)}
-                </span>
-              </span>
-              <span className="hidden text-slate-300 sm:inline" aria-hidden>
-                ·
-              </span>
-              <span className="inline-flex items-center gap-1 font-medium text-amber-800/90">
-                <Star
-                  className="h-3.5 w-3.5 fill-amber-400 text-amber-500"
-                  strokeWidth={1.5}
-                  aria-hidden
-                />
-                {tx.operator.ratingAvg != null
-                  ? tx.operator.ratingAvg.toFixed(1)
-                  : "—"}
-              </span>
-            </p>
-          </div>
-          <Link
-            href={`/transactions/${id}/chat`}
-            className={cn(
-              "inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-primary/15 bg-white px-4 py-2.5 text-sm font-semibold text-primary shadow-sm ring-1 ring-slate-900/[0.04] transition",
-              "hover:border-primary/30 hover:bg-primary/[0.04]",
-            )}
-          >
-            <MessageCircle className="h-4 w-4" strokeWidth={2} />
-            Chat
-          </Link>
-        </div>
+          <div className="relative flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <Link
+                href="/transactions"
+                className="inline-flex items-center gap-2 text-sm font-semibold text-primary transition hover:underline"
+              >
+                <ArrowLeft className="h-4 w-4" strokeWidth={2.5} />
+                Historique
+              </Link>
 
-        <Card
-          className={cn(surfaceCard, "space-y-2.5 p-4 text-sm shadow-none")}
-        >
-          {tx.grossAmount != null && tx.netAmount != null ? (
-            <>
-              <div className="flex justify-between gap-3">
-                <span className="text-text-muted">Montant échangé (net)</span>
-                <span className="text-right font-semibold tabular-nums text-text-dark">
-                  {formatMinorForSendRail(tx, tx.netAmount)}
-                </span>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <h1 className="font-display text-2xl font-bold tracking-tight text-text-dark sm:text-3xl">
+                  Transaction <span className="text-primary">#{tx.id}</span>
+                </h1>
+                <Badge tone={statusBadgeTone(tx.status)} className="text-[10px] shadow-sm">
+                  {stepMeta.label}
+                </Badge>
               </div>
-              <div className="flex justify-between gap-3">
-                <span className="text-text-muted">Commission DoniSend</span>
-                <span className="text-right font-semibold tabular-nums text-accent">
-                  {formatMinorForSendRail(tx, tx.commissionAmount)}
-                </span>
-              </div>
-              <div className="flex justify-between gap-3 border-t border-slate-100 pt-2.5">
-                <span className="font-medium text-text-dark">
-                  Total à vous envoyer
-                </span>
-                <span className="text-right font-bold tabular-nums text-text-dark">
-                  {formatMinorForSendRail(tx, tx.grossAmount)}
-                </span>
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="flex justify-between gap-3">
-                <span className="text-text-muted">Montant CFA</span>
-                <span className="font-semibold tabular-nums text-text-dark">
-                  {formatCFA(tx.amountCfa)}
-                </span>
-              </div>
-              <div className="flex justify-between gap-3">
-                <span className="text-text-muted">Montant RUB</span>
-                <span className="font-semibold tabular-nums text-text-dark">
-                  {formatRUB(tx.amountRub)}
-                </span>
-              </div>
-              {tx.commissionAmount > 0 ? (
-                <div className="flex justify-between gap-3 text-xs">
-                  <span className="text-text-muted">Commission (réf.)</span>
-                  <span className="tabular-nums">
-                    {formatMinorForSendRail(tx, tx.commissionAmount)}
+
+              <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-text-secondary">
+                <span className="inline-flex items-center gap-2">
+                  <span className="grid h-8 w-8 place-items-center rounded-2xl bg-primary/[0.06] text-primary ring-1 ring-primary/15">
+                    <UserRound className="h-4 w-4" aria-hidden />
                   </span>
-                </div>
-              ) : null}
-            </>
-          )}
-          <div className="flex justify-between gap-3 border-t border-slate-100 pt-2.5 text-xs">
-            <span className="text-text-muted">Taux Google (réf.)</span>
-            <span className="font-medium tabular-nums text-text-dark">
-              1 000 CFA ≈ {rubDisplayFor1000Cfa(rateRef)} ₽
-            </span>
+                  <span>
+                    Opérateur :{" "}
+                    <span className="font-semibold text-text-dark">
+                      {operatorShortName(tx.operator.name)}
+                    </span>
+                  </span>
+                </span>
+                <span className="hidden text-slate-300 sm:inline" aria-hidden>
+                  ·
+                </span>
+                <span className="inline-flex items-center gap-1 font-semibold text-amber-800/90">
+                  <Star
+                    className="h-4 w-4 fill-amber-400 text-amber-500"
+                    strokeWidth={1.5}
+                    aria-hidden
+                  />
+                  {tx.operator.ratingAvg != null ? tx.operator.ratingAvg.toFixed(1) : "—"}
+                </span>
+              </p>
+
+              <p className="mt-2 text-sm text-text-muted">{stepMeta.description}</p>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              <Link
+                href={`/transactions/${id}/chat`}
+                className={cn(
+                  "inline-flex shrink-0 items-center justify-center gap-2 rounded-pill border border-primary/15 bg-white px-4 py-2 text-sm font-semibold text-text-dark shadow-sm ring-1 ring-slate-900/[0.04] transition",
+                  "hover:border-primary/30 hover:bg-primary/[0.04]",
+                )}
+              >
+                <MessageCircle className="h-4 w-4 text-primary" strokeWidth={2} />
+                Chat
+              </Link>
+            </div>
+          </div>
+
+          <div className="relative mt-5 grid gap-3 sm:grid-cols-2">
+            {tx.grossAmount != null && tx.netAmount != null ? (
+              <>
+                <StatCard
+                  label="Montant (net)"
+                  value={formatMinorForSendRail(tx, tx.netAmount)}
+                  tone="emerald"
+                  icon={<TrendingUp className="h-5 w-5" />}
+                />
+                <StatCard
+                  label="Commission DoniSend"
+                  value={formatMinorForSendRail(tx, tx.commissionAmount)}
+                  tone="rose"
+                  icon={<Receipt className="h-5 w-5" />}
+                />
+                <StatCard
+                  label="Total à envoyer"
+                  value={formatMinorForSendRail(tx, tx.grossAmount)}
+                  hint="Total = net + commission"
+                  tone="indigo"
+                  icon={<Coins className="h-5 w-5" />}
+                />
+                <StatCard
+                  label="Taux Google (réf.)"
+                  value={`1 000 CFA ≈ ${rubDisplayFor1000Cfa(rateRef)} ₽`}
+                  tone="amber"
+                  icon={<TrendingUp className="h-5 w-5" />}
+                />
+              </>
+            ) : (
+              <>
+                <StatCard
+                  label="Montant CFA"
+                  value={formatCFA(tx.amountCfa)}
+                  tone="emerald"
+                  icon={<TrendingUp className="h-5 w-5" />}
+                />
+                <StatCard
+                  label="Montant RUB"
+                  value={formatRUB(tx.amountRub)}
+                  tone="indigo"
+                  icon={<Coins className="h-5 w-5" />}
+                />
+                <StatCard
+                  label="Commission (réf.)"
+                  value={tx.commissionAmount > 0 ? formatMinorForSendRail(tx, tx.commissionAmount) : "—"}
+                  tone="rose"
+                  icon={<Receipt className="h-5 w-5" />}
+                />
+                <StatCard
+                  label="Taux Google (réf.)"
+                  value={`1 000 CFA ≈ ${rubDisplayFor1000Cfa(rateRef)} ₽`}
+                  tone="amber"
+                  icon={<TrendingUp className="h-5 w-5" />}
+                />
+              </>
+            )}
           </div>
         </Card>
 
-        <div className={cn(surfaceCard, "p-4")}>
-          <TransactionTimeline status={tx.status} />
-        </div>
+        <div className="grid gap-4 lg:grid-cols-3">
+          <div className="space-y-4 lg:col-span-2">
+            <div className={cn(surfaceCard, "p-4")}>
+              <TransactionTimeline status={tx.status} />
+            </div>
 
         {tx.status === "INITIATED" && donisendDestination ? (
           <Card
@@ -383,74 +463,87 @@ export default function TransactionDetailPage() {
           </div>
         ) : null}
 
-        {tx.status === "INITIATED" ? (
-          <ClientSendButton
-            transactionId={id}
-            onWhatsappNotify={() => {
-              if (notifyPhone) showWhatsappToast(notifyPhone);
-            }}
-          />
-        ) : null}
-
-        {tx.status === "CLIENT_SENT" || tx.status === "OPERATOR_VERIFIED" ? (
-          <p
-            className={cn(
-              surfaceCard,
-              "py-3 text-center text-sm font-medium text-text-muted",
-            )}
-          >
-            L’opérateur vérifie votre reçu…
-          </p>
-        ) : null}
-
-        {tx.operatorProofUrl &&
-        (tx.status === "OPERATOR_SENT" || tx.status === "COMPLETED") ? (
-          <div className={cn(surfaceCard, "p-4")}>
-            <div className="mb-3 flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                <Receipt className="h-4 w-4" strokeWidth={2} />
+            {tx.operatorProofUrl &&
+            (tx.status === "OPERATOR_SENT" || tx.status === "COMPLETED") ? (
+              <div className={cn(surfaceCard, "p-4")}>
+                <div className="mb-3 flex items-center gap-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <Receipt className="h-4 w-4" strokeWidth={2} />
+                  </div>
+                  <p className="text-sm font-bold text-text-dark">
+                    Reçu de l’opérateur
+                  </p>
+                </div>
+                <ProofViewer url={tx.operatorProofUrl} label="Reçu opérateur" />
               </div>
-              <p className="text-sm font-bold text-text-dark">
-                Reçu de l’opérateur
-              </p>
-            </div>
-            <ProofViewer url={tx.operatorProofUrl} label="Reçu opérateur" />
+            ) : null}
           </div>
-        ) : null}
 
-        {tx.status === "OPERATOR_SENT" ? (
-          <ClientConfirmButton
-            transactionId={id}
-            onWhatsappNotify={() => {
-              if (notifyPhone) showWhatsappToast(notifyPhone);
-            }}
-          />
-        ) : null}
+          <div className="space-y-3">
+            {tx.status === "INITIATED" ? (
+              <ClientSendButton
+                transactionId={id}
+                onWhatsappNotify={() => {
+                  if (notifyPhone) showWhatsappToast(notifyPhone);
+                }}
+              />
+            ) : null}
 
-        <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
-          {tx.status === "COMPLETED" ? (
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full gap-2 rounded-xl border-slate-200 shadow-sm sm:flex-1"
-              onClick={() => setReviewOpen(true)}
-            >
-              <Star className="h-4 w-4" />
-              Laisser un avis
-            </Button>
-          ) : null}
+            {tx.status === "CLIENT_SENT" || tx.status === "OPERATOR_VERIFIED" ? (
+              <div
+                className={cn(
+                  surfaceCard,
+                  "flex gap-3 border-primary/15 bg-gradient-to-br from-white via-primary/[0.03] to-white p-4 text-sm",
+                )}
+              >
+                <div className="mt-0.5 grid h-9 w-9 place-items-center rounded-2xl bg-amber-500/[0.14] text-amber-800 ring-1 ring-amber-500/15">
+                  <AlertTriangle className="h-4 w-4" aria-hidden />
+                </div>
+                <div>
+                  <p className="font-semibold text-text-dark">En vérification</p>
+                  <p className="mt-0.5 text-sm text-text-secondary">
+                    L’opérateur vérifie votre reçu…
+                  </p>
+                </div>
+              </div>
+            ) : null}
 
-          {showDispute ? (
-            <Button
-              type="button"
-              variant="ghost"
-              className="w-full rounded-xl text-danger hover:bg-danger/[0.06] sm:flex-1"
-              onClick={() => setDisputeOpen(true)}
-            >
-              <AlertTriangle className="mr-2 inline h-4 w-4" />
-              Signaler un problème
-            </Button>
-          ) : null}
+            {tx.status === "OPERATOR_SENT" ? (
+              <ClientConfirmButton
+                transactionId={id}
+                onWhatsappNotify={() => {
+                  if (notifyPhone) showWhatsappToast(notifyPhone);
+                }}
+              />
+            ) : null}
+
+            <Card className={cn(surfaceCard, "space-y-2 p-4 shadow-none")}>
+              <p className="text-sm font-semibold text-text-dark">Actions</p>
+              {tx.status === "COMPLETED" ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full gap-2 rounded-xl border-slate-200 shadow-sm"
+                  onClick={() => setReviewOpen(true)}
+                >
+                  <Star className="h-4 w-4" />
+                  Laisser un avis
+                </Button>
+              ) : null}
+
+              {showDispute ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="w-full rounded-xl text-danger hover:bg-danger/[0.06]"
+                  onClick={() => setDisputeOpen(true)}
+                >
+                  <AlertTriangle className="mr-2 inline h-4 w-4" />
+                  Signaler un problème
+                </Button>
+              ) : null}
+            </Card>
+          </div>
         </div>
 
         <BottomSheet

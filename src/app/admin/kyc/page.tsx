@@ -16,7 +16,7 @@ export default function AdminKycPage() {
   return (
     <div className="space-y-8">
       <div>
-        <p className="text-xs font-medium text-ink-muted">
+        <p className="text-xs font-medium text-text-muted">
           <Link
             href="/admin"
             className="text-primary transition-colors hover:text-primary-dark"
@@ -24,12 +24,12 @@ export default function AdminKycPage() {
             ← Tableau de bord
           </Link>
         </p>
-        <h1 className="mt-3 font-display text-3xl font-bold tracking-tight text-ink">
+        <h1 className="mt-3 font-display text-3xl font-bold tracking-tight text-text-dark">
           Vérifications d’identité
         </h1>
-        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-ink-secondary">
+        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-text-secondary">
           Dossiers en attente (
-          <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-[11px]">
+          <code className="rounded bg-white px-1.5 py-0.5 font-mono text-[11px] text-text-muted shadow-sm ring-1 ring-slate-900/[0.06]">
             GET /admin/kyc/pending
           </code>
           ). Approuvez ou rejetez après contrôle. Les liens ouvrent les fichiers si
@@ -37,8 +37,8 @@ export default function AdminKycPage() {
         </p>
       </div>
 
-      <Card variant="glass" className="border-line/90 p-6 shadow-card-lg">
-        <h2 className="mb-6 font-display text-xl font-semibold text-ink">
+      <Card className="p-6 shadow-lg">
+        <h2 className="mb-6 font-display text-xl font-semibold text-text-dark">
           Dossiers à traiter
           <span className="ml-2 inline-flex h-7 min-w-7 items-center justify-center rounded-pill bg-primary/12 px-2 text-sm font-bold text-primary">
             {pendingKyc.length}

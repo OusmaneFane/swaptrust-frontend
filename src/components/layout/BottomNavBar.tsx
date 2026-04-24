@@ -25,13 +25,14 @@ const items = [
 
 export function BottomNavBar() {
   const pathname = usePathname();
+  const path = pathname ?? "";
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-primary/10 bg-white/95 pb-safe pt-2 shadow-nav backdrop-blur-lg lg:hidden">
       <ul className="flex justify-around px-2">
         {items.map((item) => {
           const { href, label, Icon } = item;
           const home = 'home' in item && item.home === true;
-          const active = pathname === href || pathname.startsWith(`${href}/`);
+          const active = path === href || path.startsWith(`${href}/`);
           return (
             <li key={href}>
               <Link

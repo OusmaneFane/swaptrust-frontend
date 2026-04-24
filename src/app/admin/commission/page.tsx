@@ -195,8 +195,10 @@ export default function AdminCommissionPage() {
 
   if (isError) {
     return (
-      <Card variant="glass" className="max-w-2xl space-y-3 border-line/90 p-6">
-        <h1 className="font-display text-2xl font-bold text-ink">Commission</h1>
+      <Card className="max-w-2xl space-y-3 border border-primary/10 p-6 shadow-lg">
+        <h1 className="font-display text-2xl font-bold text-text-dark">
+          Commission
+        </h1>
         <p className="text-sm text-danger">
           Impossible de charger la commission actuelle.
         </p>
@@ -226,34 +228,34 @@ export default function AdminCommissionPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-display text-3xl font-bold tracking-tight text-ink">
+        <h1 className="font-display text-3xl font-bold tracking-tight text-text-dark">
           Commission
         </h1>
-        <p className="mt-2 max-w-3xl text-sm leading-relaxed text-ink-secondary">
+        <p className="mt-2 max-w-3xl text-sm leading-relaxed text-text-secondary">
           Cette valeur est appliquée aux demandes (montant envoyé = montant net
           + commission) et peut être modifiée sans redéploiement via{" "}
-          <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] text-ink-secondary">
+          <code className="rounded bg-white px-1.5 py-0.5 font-mono text-[11px] text-text-muted shadow-sm ring-1 ring-slate-900/[0.06]">
             PUT /admin/settings/commission
           </code>
           .
         </p>
       </div>
 
-      <Card variant="glass" className="max-w-2xl space-y-5 border-line/90 p-6">
+      <Card className="max-w-2xl space-y-5 border border-primary/10 p-6 shadow-lg">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
+            <p className="text-xs font-semibold uppercase tracking-wide text-text-muted">
               Commission actuelle
             </p>
-            <p className="mt-1 font-display text-3xl font-bold text-ink">
+            <p className="mt-1 font-display text-3xl font-bold text-text-dark">
               {current}%
             </p>
           </div>
-          <div className="rounded-card border border-primary/15 bg-primary/[0.04] px-4 py-3 text-sm">
-            <p className="font-semibold text-ink">Impact</p>
-            <p className="mt-1 text-ink-secondary">
+          <div className="rounded-card border border-primary/10 bg-white px-4 py-3 text-sm shadow-sm">
+            <p className="font-semibold text-text-dark">Impact</p>
+            <p className="mt-1 text-text-secondary">
               Commission{" "}
-              <span className="font-semibold text-ink">{watched}%</span> sur le
+              <span className="font-semibold text-text-dark">{watched}%</span> sur le
               montant net.
             </p>
           </div>
@@ -264,6 +266,7 @@ export default function AdminCommissionPage() {
           className="space-y-4"
         >
           <Input
+            variant="dark"
             label="Pourcentage"
             type="number"
             step="0.01"
@@ -274,7 +277,7 @@ export default function AdminCommissionPage() {
           />
 
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-ink">
+            <label className="block text-sm font-medium text-text-dark">
               Ajuster rapidement
             </label>
             <input
@@ -290,7 +293,7 @@ export default function AdminCommissionPage() {
               }
               className="w-full accent-primary"
             />
-            <p className="text-xs text-ink-muted">
+            <p className="text-xs text-text-muted">
               Plage rapide 0–20% (tu peux saisir jusqu’à 100% au champ).
             </p>
           </div>
@@ -311,22 +314,22 @@ export default function AdminCommissionPage() {
         </form>
       </Card>
 
-      <Card variant="glass" className="max-w-2xl space-y-5 border-line/90 p-6">
+      <Card className="max-w-2xl space-y-5 border border-primary/10 p-6 shadow-lg">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h2 className="font-display text-xl font-semibold text-ink">
+            <h2 className="font-display text-xl font-semibold text-text-dark">
               Promo commission
             </h2>
-            <p className="mt-1 text-xs text-ink-muted">
-              <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] text-ink-secondary">
+            <p className="mt-1 text-xs text-text-muted">
+              <code className="rounded bg-white px-1.5 py-0.5 font-mono text-[11px] text-text-muted shadow-sm ring-1 ring-slate-900/[0.06]">
                 GET /admin/settings/commission/config
               </code>
-              <span className="mx-1.5 text-ink-faint">·</span>
-              <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] text-ink-secondary">
+              <span className="mx-1.5 text-slate-300">·</span>
+              <code className="rounded bg-white px-1.5 py-0.5 font-mono text-[11px] text-text-muted shadow-sm ring-1 ring-slate-900/[0.06]">
                 POST /admin/settings/commission/promo
               </code>
-              <span className="mx-1.5 text-ink-faint">·</span>
-              <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] text-ink-secondary">
+              <span className="mx-1.5 text-slate-300">·</span>
+              <code className="rounded bg-white px-1.5 py-0.5 font-mono text-[11px] text-text-muted shadow-sm ring-1 ring-slate-900/[0.06]">
                 DELETE /admin/settings/commission/promo/:id
               </code>
             </p>
@@ -354,32 +357,32 @@ export default function AdminCommissionPage() {
         ) : null}
 
         {cfg ? (
-          <div className="grid gap-3 rounded-card border border-primary/15 bg-primary/[0.04] p-4 text-sm">
+          <div className="grid gap-3 rounded-card border border-primary/10 bg-white p-4 text-sm shadow-sm">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="text-ink-secondary">Base</span>
-              <strong className="text-ink">{cfg.commissionBasePercent}%</strong>
+              <span className="text-text-secondary">Base</span>
+              <strong className="text-text-dark">{cfg.commissionBasePercent}%</strong>
             </div>
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="text-ink-secondary">Promo</span>
-              <strong className="text-ink">
+              <span className="text-text-secondary">Promo</span>
+              <strong className="text-text-dark">
                 {cfg.commissionPromoPercent == null
                   ? "—"
                   : `${cfg.commissionPromoPercent}%`}
               </strong>
             </div>
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="text-ink-secondary">Effective</span>
-              <strong className="text-ink">{cfg.commissionPercent}%</strong>
+              <span className="text-text-secondary">Effective</span>
+              <strong className="text-text-dark">{cfg.commissionPercent}%</strong>
             </div>
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="text-ink-secondary">Promo active</span>
-              <strong className={promoActive ? "text-success" : "text-ink"}>
+              <span className="text-text-secondary">Promo active</span>
+              <strong className={promoActive ? "text-success" : "text-text-dark"}>
                 {promoActive ? "Oui" : "Non"}
               </strong>
             </div>
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="text-ink-secondary">Fin promo</span>
-              <strong className="text-ink">
+              <span className="text-text-secondary">Fin promo</span>
+              <strong className="text-text-dark">
                 {formatFr(cfg.commissionPromoEndsAt)}
               </strong>
             </div>
@@ -387,12 +390,12 @@ export default function AdminCommissionPage() {
         ) : null}
 
         {promo ? (
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-line/90 bg-muted/30 p-4 text-sm">
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-primary/10 bg-white p-4 text-sm shadow-sm">
             <div className="space-y-1">
-              <p className="font-semibold text-ink">
+              <p className="font-semibold text-text-dark">
                 Promo #{promo.id} — {promo.percent}%
               </p>
-              <p className="text-xs text-ink-muted">
+              <p className="text-xs text-text-muted">
                 Début: {formatFr(promo.startsAt)} · Fin:{" "}
                 {formatFr(promo.endsAt)} · isActive: {String(promo.isActive)}
               </p>
@@ -407,14 +410,14 @@ export default function AdminCommissionPage() {
             </Button>
           </div>
         ) : (
-          <p className="text-sm text-ink-secondary">
+          <p className="text-sm text-text-secondary">
             Aucune promo enregistrée.
           </p>
         )}
 
         <div className="space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-sm font-semibold text-ink">Toutes les promos</p>
+            <p className="text-sm font-semibold text-text-dark">Toutes les promos</p>
             {promosQuery.isError ? (
               <Button
                 type="button"
@@ -438,22 +441,22 @@ export default function AdminCommissionPage() {
           ) : null}
 
           {promosQuery.data && promosQuery.data.length > 0 ? (
-            <div className="divide-y divide-line/70 overflow-hidden rounded-card border border-line/90">
+            <div className="divide-y divide-primary/10 overflow-hidden rounded-card border border-primary/10 bg-white shadow-sm">
               {promosQuery.data.map((p) => {
                 const inWindow = p.isCurrentlyInWindow === true;
                 return (
                   <div
                     key={p.id}
-                    className="flex flex-col gap-3 bg-white/60 p-4 sm:flex-row sm:items-center sm:justify-between"
+                    className="flex flex-col gap-3 bg-white p-4 sm:flex-row sm:items-center sm:justify-between"
                   >
                     <div className="min-w-0">
-                      <p className="font-semibold text-ink">
+                      <p className="font-semibold text-text-dark">
                         #{p.id} — {p.percent}%
                       </p>
-                      <p className="mt-1 text-xs text-ink-muted">
+                      <p className="mt-1 text-xs text-text-muted">
                         Début: {formatFr(p.startsAt)} · Fin: {formatFr(p.endsAt)}
                       </p>
-                      <p className="mt-1 text-xs text-ink-muted">
+                      <p className="mt-1 text-xs text-text-muted">
                         Actif: {String(p.isActive)} · Dans fenêtre:{" "}
                         {String(inWindow)}
                       </p>
@@ -465,7 +468,7 @@ export default function AdminCommissionPage() {
                           En cours
                         </span>
                       ) : (
-                        <span className="rounded-pill border border-ink/10 bg-muted/40 px-2.5 py-1 text-[11px] font-semibold text-ink-secondary">
+                        <span className="rounded-pill border border-primary/10 bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-text-secondary">
                           Pas en cours
                         </span>
                       )}
@@ -485,7 +488,7 @@ export default function AdminCommissionPage() {
               })}
             </div>
           ) : (
-            <p className="text-sm text-ink-secondary">
+            <p className="text-sm text-text-secondary">
               Aucune promo enregistrée.
             </p>
           )}

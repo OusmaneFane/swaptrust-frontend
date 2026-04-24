@@ -52,6 +52,7 @@ function formFromRow(row: PlatformAccount): FormState {
 
 export default function AdminPlatformAccountsPage() {
   const qc = useQueryClient();
+  const [period, setPeriod] = useState<'day' | 'week' | 'month' | 'year'>('month');
   const [dialog, setDialog] = useState<
     null | { mode: 'create' } | { mode: 'edit'; row: PlatformAccount }
   >(null);
@@ -64,8 +65,8 @@ export default function AdminPlatformAccountsPage() {
   });
 
   const revenueQuery = useQuery({
-    queryKey: ['admin', 'revenue-summary'],
-    queryFn: () => adminApi.revenueSummary(),
+    queryKey: ['admin', 'revenue-summary', period],
+    queryFn: () => adminApi.revenueSummary(period),
     retry: false,
   });
 
@@ -170,18 +171,18 @@ export default function AdminPlatformAccountsPage() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <p className="text-xs text-ink-muted">
+          <p className="text-xs text-text-muted">
             <Link href="/admin" className="text-primary hover:underline">
               ← Tableau de bord
             </Link>
           </p>
-          <h1 className="mt-3 font-display text-3xl font-bold tracking-tight text-ink">
+          <h1 className="mt-3 font-display text-3xl font-bold tracking-tight text-text-dark">
             Comptes DoniSend
           </h1>
-          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink-secondary">
+          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-text-secondary">
             Réception centralisée des paiements clients avant transfert net aux opérateurs. Gestion
             via{' '}
-            <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-[11px]">
+            <code className="rounded bg-white px-1.5 py-0.5 font-mono text-[11px] text-text-muted shadow-sm ring-1 ring-slate-900/[0.06]">
               /admin/platform-accounts
             </code>{' '}
             (GET, POST, PUT, DELETE).
@@ -198,12 +199,25 @@ export default function AdminPlatformAccountsPage() {
       </div>
 
       <RevenueSummaryCard query={revenueQuery} />
+      <div className="flex flex-wrap items-center justify-end gap-2">
+        <label className="text-xs font-medium text-text-muted">Période</label>
+        <select
+          className="input-field-surface"
+          value={period}
+          onChange={(e) => setPeriod(e.target.value as typeof period)}
+        >
+          <option value="day">Jour</option>
+          <option value="week">Semaine</option>
+          <option value="month">Mois</option>
+          <option value="year">Année</option>
+        </select>
+      </div>
 
       {isLoading ? <Skeleton className="h-52 w-full rounded-card" /> : null}
 
       {isError ? (
-        <Card variant="glass" className="border-warning/30 bg-warning/10 p-4 text-sm text-ink-secondary">
-          <p className="font-medium text-ink">Chargement de la liste impossible</p>
+        <Card className="border border-warning/25 bg-warning/10 p-4 text-sm text-text-secondary shadow-sm">
+          <p className="font-medium text-text-dark">Chargement de la liste impossible</p>
           <p className="mt-1">
             {getApiErrorMessage(error) ?? 'Erreur réseau ou route absente.'}{' '}
             <button
@@ -218,8 +232,8 @@ export default function AdminPlatformAccountsPage() {
       ) : null}
 
       {!isLoading && !isError && data?.length === 0 ? (
-        <Card variant="glass" className="flex flex-col items-center gap-4 p-8 text-center">
-          <p className="text-sm text-ink-muted">Aucun compte enregistré.</p>
+        <Card className="flex flex-col items-center gap-4 p-8 text-center shadow-sm">
+          <p className="text-sm text-text-muted">Aucun compte enregistré.</p>
           <Button type="button" className="gap-2" onClick={() => openCreate()}>
             <Plus className="h-4 w-4" aria-hidden />
             Créer le premier compte
@@ -228,78 +242,138 @@ export default function AdminPlatformAccountsPage() {
       ) : null}
 
       {!isLoading && !isError && data && data.length > 0 ? (
-        <Card variant="glass" className="overflow-x-auto p-0">
-          <table className="w-full min-w-[720px] text-left text-sm">
-            <thead className="border-b border-line bg-muted/30 text-xs uppercase tracking-wide text-ink-muted">
-              <tr>
-                <th className="p-4 font-semibold">Méthode</th>
-                <th className="p-4 font-semibold">Numéro / IBAN</th>
-                <th className="p-4 font-semibold">Nom affiché</th>
-                <th className="p-4 font-semibold">Statut</th>
-                <th className="p-4 font-semibold text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.map((row: PlatformAccount) => (
-                <tr key={row.id} className="border-b border-line/80 last:border-0">
-                  <td className="p-4 font-medium text-ink">
+        <Card className="overflow-hidden p-0 shadow-lg">
+          <div className="divide-y divide-primary/10 bg-white md:hidden">
+            {data.map((row: PlatformAccount) => (
+              <div key={row.id} className="p-4">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <p className="font-semibold text-text-dark">
                     {PAYMENT_METHOD_LABELS[row.method] ?? row.method}
-                  </td>
-                  <td className="p-4 font-mono text-xs text-ink-secondary">
-                    {formatAccountForDisplay(row.accountNumber)}
-                  </td>
-                  <td className="p-4 text-ink-secondary">{row.accountName}</td>
-                  <td className="p-4">
-                    <span
-                      className={
-                        row.isActive
-                          ? 'rounded-pill bg-success/15 px-2 py-0.5 text-xs font-medium text-success'
-                          : 'rounded-pill bg-muted px-2 py-0.5 text-xs font-medium text-ink-muted'
-                      }
+                  </p>
+                  <span
+                    className={
+                      row.isActive
+                        ? 'rounded-pill bg-success/15 px-2 py-0.5 text-xs font-medium text-success'
+                        : 'rounded-pill bg-muted px-2 py-0.5 text-xs font-medium text-text-muted'
+                    }
+                  >
+                    {row.isActive ? 'Actif' : 'Inactif'}
+                  </span>
+                </div>
+                <p className="mt-2 break-all font-mono text-xs text-text-secondary">
+                  {formatAccountForDisplay(row.accountNumber)}
+                </p>
+                <p className="mt-1 text-sm text-text-secondary">{row.accountName}</p>
+                <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full gap-1 px-3 py-2 text-xs sm:flex-1"
+                    onClick={() => openEdit(row)}
+                  >
+                    <Pencil className="h-3.5 w-3.5" aria-hidden />
+                    Modifier
+                  </Button>
+                  {row.isActive ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full gap-1 border-danger/30 px-3 py-2 text-xs text-danger hover:bg-danger/10 sm:flex-1"
+                      disabled={deleteMut.isPending}
+                      onClick={() => confirmDeactivate(row.id)}
                     >
-                      {row.isActive ? 'Actif' : 'Inactif'}
-                    </span>
-                  </td>
-                  <td className="p-4">
-                    <div className="flex flex-wrap justify-end gap-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="gap-1 px-3 py-1.5 text-xs"
-                        onClick={() => openEdit(row)}
+                      <Ban className="h-3.5 w-3.5" aria-hidden />
+                      Désactiver
+                    </Button>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full gap-1 px-3 py-2 text-xs sm:flex-1"
+                      disabled={updateMut.isPending}
+                      onClick={() => reactivate(row.id)}
+                    >
+                      <RotateCcw className="h-3.5 w-3.5" aria-hidden />
+                      Réactiver
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="hidden overflow-x-auto md:block">
+            <table className="w-full min-w-[720px] text-left text-sm">
+              <thead className="border-b border-primary/10 bg-white/70 text-xs uppercase tracking-wide text-text-muted">
+                <tr>
+                  <th className="p-4 font-semibold">Méthode</th>
+                  <th className="p-4 font-semibold">Numéro / IBAN</th>
+                  <th className="p-4 font-semibold">Nom affiché</th>
+                  <th className="p-4 font-semibold">Statut</th>
+                  <th className="p-4 font-semibold text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.map((row: PlatformAccount) => (
+                  <tr key={row.id} className="border-b border-primary/10 last:border-0">
+                    <td className="p-4 font-medium text-text-dark">
+                      {PAYMENT_METHOD_LABELS[row.method] ?? row.method}
+                    </td>
+                    <td className="p-4 font-mono text-xs text-text-secondary">
+                      {formatAccountForDisplay(row.accountNumber)}
+                    </td>
+                    <td className="p-4 text-text-secondary">{row.accountName}</td>
+                    <td className="p-4">
+                      <span
+                        className={
+                          row.isActive
+                            ? 'rounded-pill bg-success/15 px-2 py-0.5 text-xs font-medium text-success'
+                            : 'rounded-pill bg-muted px-2 py-0.5 text-xs font-medium text-text-muted'
+                        }
                       >
-                        <Pencil className="h-3.5 w-3.5" aria-hidden />
-                        Modifier
-                      </Button>
-                      {row.isActive ? (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="gap-1 border-danger/30 px-3 py-1.5 text-xs text-danger hover:bg-danger/10"
-                          disabled={deleteMut.isPending}
-                          onClick={() => confirmDeactivate(row.id)}
-                        >
-                          <Ban className="h-3.5 w-3.5" aria-hidden />
-                          Désactiver
-                        </Button>
-                      ) : (
+                        {row.isActive ? 'Actif' : 'Inactif'}
+                      </span>
+                    </td>
+                    <td className="p-4">
+                      <div className="flex flex-wrap justify-end gap-2">
                         <Button
                           type="button"
                           variant="outline"
                           className="gap-1 px-3 py-1.5 text-xs"
-                          disabled={updateMut.isPending}
-                          onClick={() => reactivate(row.id)}
+                          onClick={() => openEdit(row)}
                         >
-                          <RotateCcw className="h-3.5 w-3.5" aria-hidden />
-                          Réactiver
+                          <Pencil className="h-3.5 w-3.5" aria-hidden />
+                          Modifier
                         </Button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                        {row.isActive ? (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="gap-1 border-danger/30 px-3 py-1.5 text-xs text-danger hover:bg-danger/10"
+                            disabled={deleteMut.isPending}
+                            onClick={() => confirmDeactivate(row.id)}
+                          >
+                            <Ban className="h-3.5 w-3.5" aria-hidden />
+                            Désactiver
+                          </Button>
+                        ) : (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="gap-1 px-3 py-1.5 text-xs"
+                            disabled={updateMut.isPending}
+                            onClick={() => reactivate(row.id)}
+                          >
+                            <RotateCcw className="h-3.5 w-3.5" aria-hidden />
+                            Réactiver
+                          </Button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </Card>
       ) : null}
 
@@ -316,18 +390,18 @@ export default function AdminPlatformAccountsPage() {
       >
         <div className="space-y-4">
           {dialog?.mode === 'edit' ? (
-            <p className="text-xs text-ink-muted">
+            <p className="text-xs text-text-muted">
               Méthode :{' '}
-              <strong className="text-ink">
+              <strong className="text-text-dark">
                 {PAYMENT_METHOD_LABELS[dialog.row.method]}
               </strong>{' '}
               (non modifiable ici — créez un autre compte si besoin.)
             </p>
           ) : (
             <div>
-              <label className="mb-2 block text-sm text-ink-secondary">Méthode</label>
+              <label className="mb-2 block text-sm text-text-secondary">Méthode</label>
               <select
-                className="input-field w-full"
+                className="input-field-surface w-full"
                 value={form.method}
                 onChange={(e) =>
                   setForm((f) => ({ ...f, method: e.target.value as PaymentMethod }))
@@ -356,10 +430,10 @@ export default function AdminPlatformAccountsPage() {
             value={form.accountName}
             onChange={(e) => setForm((f) => ({ ...f, accountName: e.target.value }))}
           />
-          <label className="flex cursor-pointer items-center gap-2 text-sm text-ink-secondary">
+          <label className="flex cursor-pointer items-center gap-2 text-sm text-text-secondary">
             <input
               type="checkbox"
-              className="rounded border-line text-primary focus:ring-primary"
+              className="rounded border-primary/15 text-primary focus:ring-primary"
               checked={form.isActive}
               onChange={(e) => setForm((f) => ({ ...f, isActive: e.target.checked }))}
             />
@@ -388,14 +462,16 @@ function RevenueSummaryCard({
   const { data, isLoading, isError, error, refetch } = query;
 
   return (
-    <Card variant="glass" className="border-primary/15 p-5">
+    <Card className="border border-primary/10 p-5 shadow-lg">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="font-display text-lg font-semibold text-ink">
+          <h2 className="font-display text-lg font-semibold text-text-dark">
             Synthèse revenus & volumes
           </h2>
-          <p className="mt-1 text-xs text-ink-muted">
-            <code className="rounded bg-muted px-1 font-mono">GET /admin/revenue/summary</code>
+          <p className="mt-1 text-xs text-text-muted">
+            <code className="rounded bg-white px-1 font-mono text-text-muted shadow-sm ring-1 ring-slate-900/[0.06]">
+              GET /admin/revenue/summary
+            </code>
           </p>
         </div>
         {isError ? (
@@ -414,50 +490,54 @@ function RevenueSummaryCard({
       ) : null}
 
       {isError ? (
-        <p className="mt-4 text-sm text-ink-secondary">
+        <p className="mt-4 text-sm text-text-secondary">
           {getApiErrorMessage(error) ?? 'Impossible de charger la synthèse.'}
         </p>
       ) : null}
 
       {data ? (
         <dl className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          <div className="rounded-input border border-line bg-surface/50 px-3 py-2">
-            <dt className="text-[11px] font-medium uppercase tracking-wide text-ink-faint">
+          <div className="rounded-input border border-primary/10 bg-white px-3 py-2 shadow-sm">
+            <dt className="text-[11px] font-medium uppercase tracking-wide text-text-muted">
               Période
             </dt>
-            <dd className="mt-0.5 font-medium text-ink">{data.period}</dd>
+            <dd className="mt-0.5 font-medium text-text-dark">{data.period}</dd>
           </div>
-          <div className="rounded-input border border-line bg-surface/50 px-3 py-2">
-            <dt className="text-[11px] font-medium uppercase tracking-wide text-ink-faint">
+          <div className="rounded-input border border-primary/10 bg-white px-3 py-2 shadow-sm">
+            <dt className="text-[11px] font-medium uppercase tracking-wide text-text-muted">
               Transactions
             </dt>
-            <dd className="mt-0.5 font-medium text-ink">{data.transactionCount}</dd>
+            <dd className="mt-0.5 font-medium text-text-dark">{data.transactionCount}</dd>
           </div>
-          <div className="rounded-input border border-line bg-surface/50 px-3 py-2">
-            <dt className="text-[11px] font-medium uppercase tracking-wide text-ink-faint">
+          <div className="rounded-input border border-primary/10 bg-white px-3 py-2 shadow-sm">
+            <dt className="text-[11px] font-medium uppercase tracking-wide text-text-muted">
               Volume total (CFA)
             </dt>
-            <dd className="mt-0.5 font-medium text-ink">{formatCFA(data.totalVolumeCfa)}</dd>
+            <dd className="mt-0.5 font-medium text-text-dark">
+              {formatCFA(data.totalVolumeCfa)}
+            </dd>
           </div>
-          <div className="rounded-input border border-line bg-surface/50 px-3 py-2">
-            <dt className="text-[11px] font-medium uppercase tracking-wide text-ink-faint">
+          <div className="rounded-input border border-primary/10 bg-white px-3 py-2 shadow-sm">
+            <dt className="text-[11px] font-medium uppercase tracking-wide text-text-muted">
               Commissions (CFA)
             </dt>
             <dd className="mt-0.5 font-medium text-accent">
               {formatCFA(data.totalCommissionCfa)}
             </dd>
           </div>
-          <div className="rounded-input border border-line bg-surface/50 px-3 py-2">
-            <dt className="text-[11px] font-medium uppercase tracking-wide text-ink-faint">
+          <div className="rounded-input border border-primary/10 bg-white px-3 py-2 shadow-sm">
+            <dt className="text-[11px] font-medium uppercase tracking-wide text-text-muted">
               Transferts en attente
             </dt>
-            <dd className="mt-0.5 font-medium text-ink">{data.pendingTransfers}</dd>
+            <dd className="mt-0.5 font-medium text-text-dark">{data.pendingTransfers}</dd>
           </div>
-          <div className="rounded-input border border-line bg-surface/50 px-3 py-2">
-            <dt className="text-[11px] font-medium uppercase tracking-wide text-ink-faint">
+          <div className="rounded-input border border-primary/10 bg-white px-3 py-2 shadow-sm">
+            <dt className="text-[11px] font-medium uppercase tracking-wide text-text-muted">
               Montant en attente
             </dt>
-            <dd className="mt-0.5 font-medium text-ink">{formatCFA(data.pendingAmount)}</dd>
+            <dd className="mt-0.5 font-medium text-text-dark">
+              {formatCFA(data.pendingAmount)}
+            </dd>
           </div>
         </dl>
       ) : null}
