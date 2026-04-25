@@ -25,7 +25,6 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
 import { useTransaction } from "@/hooks/useTransaction";
 import { resolveClientSendDestination } from "@/lib/resolve-client-send-destination";
@@ -137,7 +136,9 @@ function StarRating({
           </button>
         );
       })}
-      <span className="ml-2 text-sm font-semibold text-text-dark">{value}/5</span>
+      <span className="ml-2 text-sm font-semibold text-text-dark">
+        {value}/5
+      </span>
     </div>
   );
 }
@@ -258,7 +259,13 @@ export default function TransactionDetailPage() {
       setReviewOpen(false);
       setReviewDone(true);
     } catch (err: unknown) {
-      const status = (err as any)?.response?.status;
+      const status = (() => {
+        if (typeof err !== "object" || err === null) return undefined;
+        const response = (err as Record<string, unknown>).response;
+        if (typeof response !== "object" || response === null) return undefined;
+        const s = (response as Record<string, unknown>).status;
+        return typeof s === "number" ? s : undefined;
+      })();
       if (status === 409) {
         toast.message("Avis déjà envoyé");
         setReviewOpen(false);
@@ -347,7 +354,10 @@ export default function TransactionDetailPage() {
                 <h1 className="font-display text-2xl font-bold tracking-tight text-text-dark sm:text-3xl">
                   Transaction <span className="text-primary">#{tx.id}</span>
                 </h1>
-                <Badge tone={statusBadgeTone(tx.status)} className="text-[10px] shadow-sm">
+                <Badge
+                  tone={statusBadgeTone(tx.status)}
+                  className="text-[10px] shadow-sm"
+                >
                   {stepMeta.label}
                 </Badge>
               </div>
@@ -373,11 +383,15 @@ export default function TransactionDetailPage() {
                     strokeWidth={1.5}
                     aria-hidden
                   />
-                  {tx.operator.ratingAvg != null ? tx.operator.ratingAvg.toFixed(1) : "—"}
+                  {tx.operator.ratingAvg != null
+                    ? tx.operator.ratingAvg.toFixed(1)
+                    : "—"}
                 </span>
               </p>
 
-              <p className="mt-2 text-sm text-text-muted">{stepMeta.description}</p>
+              <p className="mt-2 text-sm text-text-muted">
+                {stepMeta.description}
+              </p>
             </div>
 
             <div className="flex flex-wrap gap-2">
@@ -388,7 +402,10 @@ export default function TransactionDetailPage() {
                   "hover:border-primary/30 hover:bg-primary/[0.04]",
                 )}
               >
-                <MessageCircle className="h-4 w-4 text-primary" strokeWidth={2} />
+                <MessageCircle
+                  className="h-4 w-4 text-primary"
+                  strokeWidth={2}
+                />
                 Chat
               </Link>
             </div>
@@ -433,7 +450,11 @@ export default function TransactionDetailPage() {
                 />
                 <StatCard
                   label="Commission (réf.)"
-                  value={tx.commissionAmount > 0 ? formatMinorForSendRail(tx, tx.commissionAmount) : "—"}
+                  value={
+                    tx.commissionAmount > 0
+                      ? formatMinorForSendRail(tx, tx.commissionAmount)
+                      : "—"
+                  }
                   tone="rose"
                   icon={<Receipt className="h-5 w-5" />}
                 />
@@ -448,21 +469,25 @@ export default function TransactionDetailPage() {
               <TransactionTimeline status={tx.status} />
             </div>
 
-            {(tx.takenAt ||
-              tx.clientSentAt ||
-              tx.platformTransferredAt ||
-              tx.operatorSentAt ||
-              tx.completedAt ||
-              tx.clientProofUrl ||
-              tx.platformToOperatorProofUrl ||
-              tx.operatorProofUrl) ? (
+            {tx.takenAt ||
+            tx.clientSentAt ||
+            tx.platformTransferredAt ||
+            tx.operatorSentAt ||
+            tx.completedAt ||
+            tx.clientProofUrl ||
+            tx.platformToOperatorProofUrl ||
+            tx.operatorProofUrl ? (
               <div className={cn(surfaceCard, "p-4")}>
                 <p className="text-sm font-bold text-text-dark">Historique</p>
                 <div className="mt-3 space-y-4">
                   {tx.takenAt ? (
                     <div className="rounded-xl border border-slate-200/80 bg-white p-3 text-sm">
-                      <p className="font-semibold text-text-dark">Opérateur assigné</p>
-                      <p className="text-xs text-text-muted">{fullDate(tx.takenAt)}</p>
+                      <p className="font-semibold text-text-dark">
+                        Opérateur assigné
+                      </p>
+                      <p className="text-xs text-text-muted">
+                        {fullDate(tx.takenAt)}
+                      </p>
                     </div>
                   ) : null}
 
@@ -470,7 +495,9 @@ export default function TransactionDetailPage() {
                     <div className="rounded-xl border border-slate-200/80 bg-white p-3 text-sm">
                       <div className="flex flex-wrap items-start justify-between gap-2">
                         <div>
-                          <p className="font-semibold text-text-dark">Votre envoi (preuve)</p>
+                          <p className="font-semibold text-text-dark">
+                            Votre envoi (preuve)
+                          </p>
                           <p className="text-xs text-text-muted">
                             {tx.clientSentAt ? fullDate(tx.clientSentAt) : "—"}
                           </p>
@@ -478,7 +505,10 @@ export default function TransactionDetailPage() {
                       </div>
                       {tx.clientProofUrl ? (
                         <div className="mt-3">
-                          <ProofViewer url={tx.clientProofUrl} label="Votre reçu" />
+                          <ProofViewer
+                            url={tx.clientProofUrl}
+                            label="Votre reçu"
+                          />
                         </div>
                       ) : (
                         <p className="mt-3 rounded-xl border border-amber-200/60 bg-amber-50/60 p-3 text-xs text-amber-950/90">
@@ -490,29 +520,38 @@ export default function TransactionDetailPage() {
 
                   {tx.platformTransferredAt || tx.platformToOperatorProofUrl ? (
                     <div className="rounded-xl border border-slate-200/80 bg-white p-3 text-sm">
-                      <p className="font-semibold text-text-dark">Transfert plateforme → opérateur</p>
+                      <p className="font-semibold text-text-dark">
+                        Transfert plateforme → opérateur
+                      </p>
                       <p className="text-xs text-text-muted">
-                        {tx.platformTransferredAt ? fullDate(tx.platformTransferredAt) : "—"}
+                        {tx.platformTransferredAt
+                          ? fullDate(tx.platformTransferredAt)
+                          : "—"}
                       </p>
                       {tx.platformToOperatorProofUrl ? (
                         <p className="mt-3 rounded-xl border border-slate-200/80 bg-slate-50 p-3 text-xs text-text-muted">
-                          Cette preuve est <strong className="text-text-dark">réservée</strong> à
+                          Cette preuve est{" "}
+                          <strong className="text-text-dark">réservée</strong> à
                           l’opérateur assigné et aux administrateurs.
                         </p>
-                      ) : null
-                      }
+                      ) : null}
                     </div>
                   ) : null}
 
                   {tx.operatorSentAt || tx.operatorProofUrl ? (
                     <div className="rounded-xl border border-slate-200/80 bg-white p-3 text-sm">
-                      <p className="font-semibold text-text-dark">Envoi opérateur (preuve)</p>
+                      <p className="font-semibold text-text-dark">
+                        Envoi opérateur (preuve)
+                      </p>
                       <p className="text-xs text-text-muted">
                         {tx.operatorSentAt ? fullDate(tx.operatorSentAt) : "—"}
                       </p>
                       {tx.operatorProofUrl ? (
                         <div className="mt-3">
-                          <ProofViewer url={tx.operatorProofUrl} label="Reçu opérateur" />
+                          <ProofViewer
+                            url={tx.operatorProofUrl}
+                            label="Reçu opérateur"
+                          />
                         </div>
                       ) : (
                         <p className="mt-3 rounded-xl border border-amber-200/60 bg-amber-50/60 p-3 text-xs text-amber-950/90">
@@ -524,80 +563,86 @@ export default function TransactionDetailPage() {
 
                   {tx.completedAt ? (
                     <div className="rounded-xl border border-slate-200/80 bg-white p-3 text-sm">
-                      <p className="font-semibold text-text-dark">Transaction clôturée</p>
-                      <p className="text-xs text-text-muted">{fullDate(tx.completedAt)}</p>
+                      <p className="font-semibold text-text-dark">
+                        Transaction clôturée
+                      </p>
+                      <p className="text-xs text-text-muted">
+                        {fullDate(tx.completedAt)}
+                      </p>
                     </div>
                   ) : null}
                 </div>
               </div>
             ) : null}
 
-        {tx.status === "INITIATED" && donisendDestination ? (
-          <Card
-            className={cn(
-              surfaceCard,
-              "space-y-3 border-primary/15 bg-gradient-to-br from-white via-primary/[0.03] to-white p-4 shadow-none sm:p-5",
-            )}
-          >
-            <p className="text-sm font-semibold text-text-dark">
-              Envoyez <span className="text-accent">exactement</span> sur ce
-              compte DoniSend
-            </p>
-            <div className="rounded-xl border-2 border-primary/20 bg-gradient-to-br from-primary/[0.06] to-white p-4 shadow-sm ring-1 ring-primary/10">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-primary">
-                Réception officielle
-              </p>
-              <p className="mt-1 text-sm font-semibold text-text-dark">
-                {donisendDestination.accountName}
-              </p>
-              <div className="mt-3">
-                <CopyableAccountValue raw={donisendDestination.accountNumber} />
-              </div>
-              <p className="mt-4 rounded-xl bg-slate-900/[0.04] px-3 py-2.5 text-center font-display text-base font-bold tabular-nums text-text-dark sm:text-lg">
-                Montant exact : {formatGrossSendForClient(tx)}
-              </p>
-            </div>
-            <div className="flex gap-2.5 rounded-xl border border-amber-200/60 bg-amber-50/80 p-3 text-xs leading-relaxed text-amber-950/90">
-              <AlertTriangle
-                className="mt-0.5 h-4 w-4 shrink-0 text-amber-600"
-                aria-hidden
-              />
-              <p>
-                N’envoyez <strong className="text-text-dark">pas</strong>{" "}
-                directement à l’opérateur : les fonds passent toujours par
-                DoniSend.
-              </p>
-            </div>
-          </Card>
-        ) : null}
+            {tx.status === "INITIATED" && donisendDestination ? (
+              <Card
+                className={cn(
+                  surfaceCard,
+                  "space-y-3 border-primary/15 bg-gradient-to-br from-white via-primary/[0.03] to-white p-4 shadow-none sm:p-5",
+                )}
+              >
+                <p className="text-sm font-semibold text-text-dark">
+                  Envoyez <span className="text-accent">exactement</span> sur ce
+                  compte DoniSend
+                </p>
+                <div className="rounded-xl border-2 border-primary/20 bg-gradient-to-br from-primary/[0.06] to-white p-4 shadow-sm ring-1 ring-primary/10">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-primary">
+                    Réception officielle
+                  </p>
+                  <p className="mt-1 text-sm font-semibold text-text-dark">
+                    {donisendDestination.accountName}
+                  </p>
+                  <div className="mt-3">
+                    <CopyableAccountValue
+                      raw={donisendDestination.accountNumber}
+                    />
+                  </div>
+                  <p className="mt-4 rounded-xl bg-slate-900/[0.04] px-3 py-2.5 text-center font-display text-base font-bold tabular-nums text-text-dark sm:text-lg">
+                    Montant exact : {formatGrossSendForClient(tx)}
+                  </p>
+                </div>
+                <div className="flex gap-2.5 rounded-xl border border-amber-200/60 bg-amber-50/80 p-3 text-xs leading-relaxed text-amber-950/90">
+                  <AlertTriangle
+                    className="mt-0.5 h-4 w-4 shrink-0 text-amber-600"
+                    aria-hidden
+                  />
+                  <p>
+                    N’envoyez <strong className="text-text-dark">pas</strong>{" "}
+                    directement à l’opérateur : les fonds passent toujours par
+                    DoniSend.
+                  </p>
+                </div>
+              </Card>
+            ) : null}
 
-        {tx.status === "INITIATED" && !donisendDestination ? (
-          <div
-            className={cn(
-              surfaceCard,
-              "flex gap-3 border-amber-200/70 bg-amber-50/50 p-4 text-sm text-amber-950/90",
-            )}
-          >
-            <AlertTriangle
-              className="h-5 w-5 shrink-0 text-amber-600"
-              aria-hidden
-            />
-            <div>
-              <p className="font-semibold text-text-dark">
-                Numéro DoniSend indisponible
-              </p>
-              <p className="mt-1 text-xs leading-relaxed">
-                Le compte de réception officiel n’est pas encore renvoyé par
-                l’API ou configuré (variables{" "}
-                <code className="rounded-md border border-slate-200 bg-white px-1.5 py-0.5 font-mono text-[11px] text-text-dark">
-                  NEXT_PUBLIC_*
-                </code>{" "}
-                de réception). Contactez le support en indiquant la transaction
-                #{tx.id}.
-              </p>
-            </div>
-          </div>
-        ) : null}
+            {tx.status === "INITIATED" && !donisendDestination ? (
+              <div
+                className={cn(
+                  surfaceCard,
+                  "flex gap-3 border-amber-200/70 bg-amber-50/50 p-4 text-sm text-amber-950/90",
+                )}
+              >
+                <AlertTriangle
+                  className="h-5 w-5 shrink-0 text-amber-600"
+                  aria-hidden
+                />
+                <div>
+                  <p className="font-semibold text-text-dark">
+                    Numéro DoniSend indisponible
+                  </p>
+                  <p className="mt-1 text-xs leading-relaxed">
+                    Le compte de réception officiel n’est pas encore renvoyé par
+                    l’API ou configuré (variables{" "}
+                    <code className="rounded-md border border-slate-200 bg-white px-1.5 py-0.5 font-mono text-[11px] text-text-dark">
+                      NEXT_PUBLIC_*
+                    </code>{" "}
+                    de réception). Contactez le support en indiquant la
+                    transaction #{tx.id}.
+                  </p>
+                </div>
+              </div>
+            ) : null}
 
             {/* Preuves : désormais gérées dans "Historique" (ci-dessus). */}
           </div>
@@ -612,7 +657,8 @@ export default function TransactionDetailPage() {
               />
             ) : null}
 
-            {tx.status === "CLIENT_SENT" || tx.status === "OPERATOR_VERIFIED" ? (
+            {tx.status === "CLIENT_SENT" ||
+            tx.status === "OPERATOR_VERIFIED" ? (
               <div
                 className={cn(
                   surfaceCard,
@@ -623,7 +669,9 @@ export default function TransactionDetailPage() {
                   <AlertTriangle className="h-4 w-4" aria-hidden />
                 </div>
                 <div>
-                  <p className="font-semibold text-text-dark">En vérification</p>
+                  <p className="font-semibold text-text-dark">
+                    En vérification
+                  </p>
                   <p className="mt-0.5 text-sm text-text-secondary">
                     L’opérateur vérifie votre reçu…
                   </p>

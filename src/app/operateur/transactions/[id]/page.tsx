@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import {
   ArrowLeft,
@@ -41,16 +41,17 @@ const ORDERED_STEPS = Object.values(TRANSACTION_STEPS)
   .sort((a, b) => a.step - b.step)
   .filter((s) => s.step >= 0 && s.step <= 4);
 
-function StatusBadge({
-  label,
-  status,
-}: {
-  label: string;
-  status: string;
-}) {
-  const tone = status === "COMPLETED" ? "success" : status === "DISPUTED" ? "warning" : status === "CANCELLED" ? "danger" : "muted";
+function StatusBadge({ label, status }: { label: string; status: string }) {
+  const tone: "success" | "warning" | "danger" | "muted" =
+    status === "COMPLETED"
+      ? "success"
+      : status === "DISPUTED"
+        ? "warning"
+        : status === "CANCELLED"
+          ? "danger"
+          : "muted";
   return (
-    <Badge tone={tone as any} className="shadow-sm">
+    <Badge tone={tone} className="shadow-sm">
       {label}
     </Badge>
   );
@@ -199,8 +200,15 @@ export default function OperateurTransactionDetailPage() {
 
   const meta = TRANSACTION_STEPS[tx.status];
   const req = tx.request;
-  const commissionCfa = Number((tx as any).commissionAmount ?? 0) || 0;
-  const netApprox = Math.max(0, (Number(tx.amountCfa ?? 0) || 0) - commissionCfa);
+  const commissionRaw = (tx as { commissionAmount?: unknown }).commissionAmount;
+  const commissionCfa =
+    typeof commissionRaw === "number"
+      ? commissionRaw
+      : Number(commissionRaw ?? 0) || 0;
+  const netApprox = Math.max(
+    0,
+    (Number(tx.amountCfa ?? 0) || 0) - commissionCfa,
+  );
   const statusLabel = meta?.label ?? tx.status;
   const statusDescription = meta?.description ?? "";
   const stepIndex = meta?.step ?? 0;
@@ -406,7 +414,9 @@ export default function OperateurTransactionDetailPage() {
                 </span>
               </p>
               {tx.operatorNote ? (
-                <p className="text-xs text-text-muted">Note : {tx.operatorNote}</p>
+                <p className="text-xs text-text-muted">
+                  Note : {tx.operatorNote}
+                </p>
               ) : null}
             </Card>
           </div>
@@ -508,9 +518,12 @@ export default function OperateurTransactionDetailPage() {
             <Card className="relative overflow-hidden border border-primary/10 bg-gradient-to-br from-indigo-500/[0.14] via-white to-white p-5 shadow-sm">
               <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-indigo-500/[0.18] blur-2xl" />
               <div className="relative space-y-3">
-                <h2 className="font-semibold text-text-dark">Envoi au client</h2>
+                <h2 className="font-semibold text-text-dark">
+                  Envoi au client
+                </h2>
                 <p className="text-sm text-text-secondary">
-                  Envoyez les fonds puis joignez la capture de votre preuve d’envoi.
+                  Envoyez les fonds puis joignez la capture de votre preuve
+                  d’envoi.
                 </p>
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-text-dark">
@@ -545,7 +558,9 @@ export default function OperateurTransactionDetailPage() {
               {(tx.operatorLogs ?? []).length ? (
                 tx.operatorLogs.map((log: OperatorLog) => (
                   <li key={log.id} className="text-sm">
-                    <span className="text-text-muted">{fullDate(log.createdAt)}</span>{" "}
+                    <span className="text-text-muted">
+                      {fullDate(log.createdAt)}
+                    </span>{" "}
                     <span className="font-semibold text-primary">
                       {ACTION_LABEL[log.action]}
                     </span>

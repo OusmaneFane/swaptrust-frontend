@@ -10,7 +10,6 @@ import {
   User,
   ArrowRight,
   ChevronRight,
-  Eye,
 } from "lucide-react";
 import { RequestCard } from "@/components/exchange/RequestCard";
 import { Card } from "@/components/ui/Card";
@@ -274,7 +273,6 @@ export default function TableauDeBordPage() {
                     )}
                   </div>
                 </div>
-                
               </div>
             </div>
           </div>
