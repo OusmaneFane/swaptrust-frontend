@@ -454,6 +454,32 @@ export default function OperateurTransactionDetailPage() {
               </div>
             </Card>
           ) : null}
+
+          {tx.platformToOperatorProofUrl ? (
+            <Card className="border border-primary/10 p-5 shadow-sm">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <h2 className="font-display text-lg font-semibold text-text-dark">
+                    Transfert plateforme → opérateur
+                  </h2>
+                  <p className="mt-1 text-xs text-text-muted">
+                    {tx.platformTransferredAt
+                      ? `Effectué ${fullDate(tx.platformTransferredAt)}`
+                      : "Preuve disponible."}
+                  </p>
+                </div>
+                <span className="grid h-10 w-10 place-items-center rounded-2xl bg-emerald-500/[0.12] text-emerald-700 ring-1 ring-emerald-500/15 shadow-sm">
+                  <Receipt className="h-5 w-5" />
+                </span>
+              </div>
+              <div className="mt-4">
+                <ProofViewer
+                  url={tx.platformToOperatorProofUrl}
+                  label="Preuve transfert plateforme"
+                />
+              </div>
+            </Card>
+          ) : null}
         </div>
 
         <div className="space-y-4">
@@ -488,11 +514,11 @@ export default function OperateurTransactionDetailPage() {
                 </p>
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-text-dark">
-                    Preuve de votre envoi (image)
+                    Preuve de votre envoi (image ou PDF)
                   </label>
                   <input
                     type="file"
-                    accept="image/*"
+                    accept="image/*,application/pdf"
                     className="w-full rounded-input border border-primary/10 bg-white px-3 py-2 text-sm text-text-secondary shadow-sm"
                     onChange={(e) => setProofFile(e.target.files?.[0] ?? null)}
                   />

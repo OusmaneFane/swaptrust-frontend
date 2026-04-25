@@ -29,13 +29,12 @@ import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
 import { useTransaction } from "@/hooks/useTransaction";
 import { resolveClientSendDestination } from "@/lib/resolve-client-send-destination";
-import { rubDisplayFor1000Cfa } from "@/lib/rate-xof-rub";
 import { formatAccountForDisplay } from "@/lib/donisend-receive";
 import {
   formatGrossSendForClient,
   formatMinorForSendRail,
 } from "@/lib/transaction-display";
-import { cn, formatCFA, formatRUB } from "@/lib/utils";
+import { cn, formatCFA, formatRUB, fullDate } from "@/lib/utils";
 import { sameUserId } from "@/lib/same-user";
 import { authApi, transactionsApi, reviewsApi } from "@/services/api";
 import { toast } from "sonner";
@@ -100,6 +99,47 @@ function operatorShortName(name: string): string {
   if (parts.length === 0) return "?";
   if (parts.length === 1) return parts[0]!.slice(0, 1) + ".";
   return `${parts[0]!.charAt(0)}. ${parts[parts.length - 1]}`;
+}
+
+function StarRating({
+  value,
+  onChange,
+}: {
+  value: number;
+  onChange: (next: number) => void;
+}) {
+  return (
+    <div className="flex items-center gap-1">
+      {Array.from({ length: 5 }).map((_, i) => {
+        const n = i + 1;
+        const active = n <= value;
+        return (
+          <button
+            key={n}
+            type="button"
+            className={cn(
+              "grid h-10 w-10 place-items-center rounded-xl border transition",
+              active
+                ? "border-amber-300/70 bg-amber-50 text-amber-600"
+                : "border-slate-200 bg-white text-slate-400 hover:bg-slate-50",
+            )}
+            onClick={() => onChange(n)}
+            aria-label={`Donner ${n} étoile${n > 1 ? "s" : ""}`}
+          >
+            <Star
+              className={cn(
+                "h-5 w-5",
+                active ? "fill-amber-400 text-amber-500" : "fill-transparent",
+              )}
+              strokeWidth={1.8}
+              aria-hidden
+            />
+          </button>
+        );
+      })}
+      <span className="ml-2 text-sm font-semibold text-text-dark">{value}/5</span>
+    </div>
+  );
 }
 
 function StatCard({
@@ -187,6 +227,7 @@ export default function TransactionDetailPage() {
   const [disputeOpen, setDisputeOpen] = useState(false);
   const [disputeReason, setDisputeReason] = useState("");
   const [reviewOpen, setReviewOpen] = useState(false);
+  const [reviewDone, setReviewDone] = useState(false);
   const [rating, setRating] = useState(5);
   const [reviewComment, setReviewComment] = useState("");
 
@@ -215,13 +256,38 @@ export default function TransactionDetailPage() {
       });
       toast.success("Merci pour votre avis");
       setReviewOpen(false);
-    } catch {
+      setReviewDone(true);
+    } catch (err: unknown) {
+      const status = (err as any)?.response?.status;
+      if (status === 409) {
+        toast.message("Avis déjà envoyé");
+        setReviewOpen(false);
+        setReviewDone(true);
+        return;
+      }
       toast.error("Envoi de l’avis impossible");
     }
   }
 
   const showDispute =
     tx && tx.status !== "COMPLETED" && tx.status !== "CANCELLED";
+
+  const reviewQuery = useQuery({
+    queryKey: ["review", "transaction", id, tx?.operator?.id, me?.id],
+    queryFn: async () => {
+      if (!tx?.operator?.id || !me?.id) return null;
+      const rows = await reviewsApi.getForUser(tx.operator.id);
+      return (
+        rows.find(
+          (r) => r.transactionId === id && sameUserId(r.author.id, me.id),
+        ) ?? null
+      );
+    },
+    enabled: Boolean(tx && me && tx.status === "COMPLETED" && tx.operator?.id),
+    staleTime: 30_000,
+  });
+
+  const hasReviewed = reviewDone || Boolean(reviewQuery.data);
 
   if (isLoading || !tx) {
     return (
@@ -257,8 +323,6 @@ export default function TransactionDetailPage() {
   }
 
   const donisendDestination = resolveClientSendDestination(tx);
-  const rateRef =
-    tx.googleRate != null && tx.googleRate > 0 ? tx.googleRate : tx.rate;
   const stepMeta = TRANSACTION_STEPS[tx.status];
 
   return (
@@ -352,12 +416,6 @@ export default function TransactionDetailPage() {
                   tone="indigo"
                   icon={<Coins className="h-5 w-5" />}
                 />
-                <StatCard
-                  label="Taux Google (réf.)"
-                  value={`1 000 CFA ≈ ${rubDisplayFor1000Cfa(rateRef)} ₽`}
-                  tone="amber"
-                  icon={<TrendingUp className="h-5 w-5" />}
-                />
               </>
             ) : (
               <>
@@ -379,12 +437,6 @@ export default function TransactionDetailPage() {
                   tone="rose"
                   icon={<Receipt className="h-5 w-5" />}
                 />
-                <StatCard
-                  label="Taux Google (réf.)"
-                  value={`1 000 CFA ≈ ${rubDisplayFor1000Cfa(rateRef)} ₽`}
-                  tone="amber"
-                  icon={<TrendingUp className="h-5 w-5" />}
-                />
               </>
             )}
           </div>
@@ -395,6 +447,90 @@ export default function TransactionDetailPage() {
             <div className={cn(surfaceCard, "p-4")}>
               <TransactionTimeline status={tx.status} />
             </div>
+
+            {(tx.takenAt ||
+              tx.clientSentAt ||
+              tx.platformTransferredAt ||
+              tx.operatorSentAt ||
+              tx.completedAt ||
+              tx.clientProofUrl ||
+              tx.platformToOperatorProofUrl ||
+              tx.operatorProofUrl) ? (
+              <div className={cn(surfaceCard, "p-4")}>
+                <p className="text-sm font-bold text-text-dark">Historique</p>
+                <div className="mt-3 space-y-4">
+                  {tx.takenAt ? (
+                    <div className="rounded-xl border border-slate-200/80 bg-white p-3 text-sm">
+                      <p className="font-semibold text-text-dark">Opérateur assigné</p>
+                      <p className="text-xs text-text-muted">{fullDate(tx.takenAt)}</p>
+                    </div>
+                  ) : null}
+
+                  {tx.clientSentAt || tx.clientProofUrl ? (
+                    <div className="rounded-xl border border-slate-200/80 bg-white p-3 text-sm">
+                      <div className="flex flex-wrap items-start justify-between gap-2">
+                        <div>
+                          <p className="font-semibold text-text-dark">Votre envoi (preuve)</p>
+                          <p className="text-xs text-text-muted">
+                            {tx.clientSentAt ? fullDate(tx.clientSentAt) : "—"}
+                          </p>
+                        </div>
+                      </div>
+                      {tx.clientProofUrl ? (
+                        <div className="mt-3">
+                          <ProofViewer url={tx.clientProofUrl} label="Votre reçu" />
+                        </div>
+                      ) : (
+                        <p className="mt-3 rounded-xl border border-amber-200/60 bg-amber-50/60 p-3 text-xs text-amber-950/90">
+                          Aucune preuve renvoyée par l’API pour l’instant.
+                        </p>
+                      )}
+                    </div>
+                  ) : null}
+
+                  {tx.platformTransferredAt || tx.platformToOperatorProofUrl ? (
+                    <div className="rounded-xl border border-slate-200/80 bg-white p-3 text-sm">
+                      <p className="font-semibold text-text-dark">Transfert plateforme → opérateur</p>
+                      <p className="text-xs text-text-muted">
+                        {tx.platformTransferredAt ? fullDate(tx.platformTransferredAt) : "—"}
+                      </p>
+                      {tx.platformToOperatorProofUrl ? (
+                        <p className="mt-3 rounded-xl border border-slate-200/80 bg-slate-50 p-3 text-xs text-text-muted">
+                          Cette preuve est <strong className="text-text-dark">réservée</strong> à
+                          l’opérateur assigné et aux administrateurs.
+                        </p>
+                      ) : null
+                      }
+                    </div>
+                  ) : null}
+
+                  {tx.operatorSentAt || tx.operatorProofUrl ? (
+                    <div className="rounded-xl border border-slate-200/80 bg-white p-3 text-sm">
+                      <p className="font-semibold text-text-dark">Envoi opérateur (preuve)</p>
+                      <p className="text-xs text-text-muted">
+                        {tx.operatorSentAt ? fullDate(tx.operatorSentAt) : "—"}
+                      </p>
+                      {tx.operatorProofUrl ? (
+                        <div className="mt-3">
+                          <ProofViewer url={tx.operatorProofUrl} label="Reçu opérateur" />
+                        </div>
+                      ) : (
+                        <p className="mt-3 rounded-xl border border-amber-200/60 bg-amber-50/60 p-3 text-xs text-amber-950/90">
+                          Aucune preuve renvoyée par l’API pour l’instant.
+                        </p>
+                      )}
+                    </div>
+                  ) : null}
+
+                  {tx.completedAt ? (
+                    <div className="rounded-xl border border-slate-200/80 bg-white p-3 text-sm">
+                      <p className="font-semibold text-text-dark">Transaction clôturée</p>
+                      <p className="text-xs text-text-muted">{fullDate(tx.completedAt)}</p>
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            ) : null}
 
         {tx.status === "INITIATED" && donisendDestination ? (
           <Card
@@ -429,7 +565,7 @@ export default function TransactionDetailPage() {
               <p>
                 N’envoyez <strong className="text-text-dark">pas</strong>{" "}
                 directement à l’opérateur : les fonds passent toujours par
-                DoniSend, qui reverse le net à l’opérateur après commission.
+                DoniSend.
               </p>
             </div>
           </Card>
@@ -463,20 +599,7 @@ export default function TransactionDetailPage() {
           </div>
         ) : null}
 
-            {tx.operatorProofUrl &&
-            (tx.status === "OPERATOR_SENT" || tx.status === "COMPLETED") ? (
-              <div className={cn(surfaceCard, "p-4")}>
-                <div className="mb-3 flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                    <Receipt className="h-4 w-4" strokeWidth={2} />
-                  </div>
-                  <p className="text-sm font-bold text-text-dark">
-                    Reçu de l’opérateur
-                  </p>
-                </div>
-                <ProofViewer url={tx.operatorProofUrl} label="Reçu opérateur" />
-              </div>
-            ) : null}
+            {/* Preuves : désormais gérées dans "Historique" (ci-dessus). */}
           </div>
 
           <div className="space-y-3">
@@ -519,7 +642,7 @@ export default function TransactionDetailPage() {
 
             <Card className={cn(surfaceCard, "space-y-2 p-4 shadow-none")}>
               <p className="text-sm font-semibold text-text-dark">Actions</p>
-              {tx.status === "COMPLETED" ? (
+              {tx.status === "COMPLETED" && !hasReviewed ? (
                 <Button
                   type="button"
                   variant="outline"
@@ -572,14 +695,18 @@ export default function TransactionDetailPage() {
           title="Votre avis"
         >
           <div className="space-y-3">
-            <Input
-              label="Note (1–5)"
-              type="number"
-              min={1}
-              max={5}
-              value={String(rating)}
-              onChange={(e) => setRating(Number(e.target.value) || 5)}
-            />
+            <div>
+              <p className="text-sm font-semibold text-text-dark">Note</p>
+              <p className="mt-1 text-xs text-text-muted">
+                Appuyez sur les étoiles pour choisir.
+              </p>
+              <div className="mt-2">
+                <StarRating
+                  value={rating}
+                  onChange={(n) => setRating(Math.min(5, Math.max(1, n)))}
+                />
+              </div>
+            </div>
             <textarea
               className="input-field-surface min-h-[80px] rounded-xl"
               placeholder="Commentaire (optionnel)"

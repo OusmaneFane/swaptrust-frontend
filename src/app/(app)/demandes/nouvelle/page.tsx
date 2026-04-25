@@ -252,16 +252,20 @@ export default function NouvelleDemandePage() {
               [
                 {
                   id: "NEED_RUB" as const,
+                  flag: "🇷🇺",
+                  flagLabel: "Russie",
                   title: "Roubles (₽)",
                   sub: "Je paie en CFA",
                 },
                 {
                   id: "NEED_CFA" as const,
+                  flag: "🇲🇱",
+                  flagLabel: "Mali",
                   title: "Francs CFA",
                   sub: "Je paie en ₽",
                 },
               ] as const
-            ).map(({ id, title, sub }) => (
+            ).map(({ id, flag, flagLabel, title, sub }) => (
               <button
                 key={id}
                 type="button"
@@ -273,7 +277,12 @@ export default function NouvelleDemandePage() {
                     : "border-primary/15 hover:border-primary/30",
                 )}
               >
-                <p className="font-semibold text-text-dark">{title}</p>
+                <p className="flex items-center gap-2 font-semibold text-text-dark">
+                  <span aria-label={flagLabel} title={flagLabel}>
+                    {flag}
+                  </span>
+                  <span>{title}</span>
+                </p>
                 <p className="text-xs text-text-muted">{sub}</p>
               </button>
             ))}

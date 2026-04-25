@@ -488,6 +488,15 @@ export const authApi = {
   refresh: (refreshToken: string) =>
     postUnwrapped<AuthTokens>("/auth/refresh", { refreshToken }),
   me: () => getUnwrapped<User>("/auth/me"),
+  passwordForgot: (email: string) =>
+    postUnwrapped<{ sent: true }>("/auth/password/forgot", { email }),
+  passwordResetValidate: (token: string) =>
+    getUnwrapped<{ valid: boolean }>("/auth/password/reset/validate", { token }),
+  passwordReset: (token: string, newPassword: string) =>
+    postUnwrapped<{ reset: true }>("/auth/password/reset", {
+      token,
+      newPassword,
+    }),
 };
 
 // ─── USERS ──────────────────────────────────────────────────────────────────

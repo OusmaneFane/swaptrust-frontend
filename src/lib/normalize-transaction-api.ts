@@ -58,15 +58,37 @@ function normalizePlatformAccount(raw: unknown): PlatformReceiveAccount | null {
 export function normalizeTransactionFromApi(raw: unknown): Transaction {
   const o = isRecord(raw) ? raw : {};
   const base = { ...o } as unknown as Transaction;
+  const clientProofViewUrl = strOrNull(o.clientProofViewUrl ?? o.client_proof_view_url);
+  const operatorProofViewUrl = strOrNull(
+    o.operatorProofViewUrl ?? o.operator_proof_view_url,
+  );
+  const platformToOperatorProofViewUrl = strOrNull(
+    o.platformToOperatorProofViewUrl ?? o.platform_to_operator_proof_view_url,
+  );
   const rawClientProof = strOrNull(
-    o.clientProofUrl ??
+    // Champs "prêts à afficher" (backend)
+    o.clientProofViewUrl ??
+      o.client_proof_view_url ??
+      // Champs historiques
+      o.clientProofUrl ??
       o.client_proof_url ??
       o.proofUrl ??
       o.proof_url ??
       base.clientProofUrl,
   );
   const rawOperatorProof = strOrNull(
-    o.operatorProofUrl ?? o.operator_proof_url ?? base.operatorProofUrl,
+    // Champs "prêts à afficher" (backend)
+    o.operatorProofViewUrl ??
+      o.operator_proof_view_url ??
+      // Champs historiques
+      o.operatorProofUrl ??
+      o.operator_proof_url ??
+      // Quelques variantes legacy / backend
+      o.operatorProof ??
+      o.operator_proof ??
+      o.operatorSendProofUrl ??
+      o.operator_send_proof_url ??
+      base.operatorProofUrl,
   );
   const req = isRecord(o.request) ? o.request : null;
   const paymentMethod = (o.paymentMethod ??
@@ -79,6 +101,9 @@ export function normalizeTransactionFromApi(raw: unknown): Transaction {
   /** Clé brute (`proofs/uuid.ext`) — affichage via GET /proofs/:filename + Bearer. */
   return {
     ...base,
+    clientProofViewUrl,
+    operatorProofViewUrl,
+    platformToOperatorProofViewUrl,
     clientProofUrl: rawClientProof,
     operatorProofUrl: rawOperatorProof,
     ...(paymentMethod ? { paymentMethod } : {}),
@@ -91,7 +116,12 @@ export function normalizeTransactionFromApi(raw: unknown): Transaction {
     ...(platformAccount ? { platformAccount } : {}),
     platformToOperatorProofUrl:
       strOrNull(
-        o.platformToOperatorProofUrl ?? o.platform_to_operator_proof_url,
+        // Champs "prêts à afficher" (backend)
+        o.platformToOperatorProofViewUrl ??
+          o.platform_to_operator_proof_view_url ??
+          // Champs historiques
+          o.platformToOperatorProofUrl ??
+          o.platform_to_operator_proof_url,
       ) ?? base.platformToOperatorProofUrl,
     platformTransferredAt:
       strOrNull(o.platformTransferredAt ?? o.platform_transferred_at) ??

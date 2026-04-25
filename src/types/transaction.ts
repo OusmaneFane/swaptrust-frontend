@@ -28,6 +28,13 @@ export interface Transaction {
   rate: number;
   commissionAmount: number;
   status: TransactionStatus;
+  /**
+   * Champs "view" renvoyés par l’API (URL prêtes à ouvrir), ex. `/api/v1/proofs/<uuid>.pdf`.
+   * Utile pour debug; côté UI on continue d’utiliser `ProofViewer` (fetch blob + Bearer).
+   */
+  clientProofViewUrl?: string | null;
+  operatorProofViewUrl?: string | null;
+  platformToOperatorProofViewUrl?: string | null;
   clientProofUrl: string | null;
   operatorProofUrl: string | null;
   operatorPaymentNumber: string | null;

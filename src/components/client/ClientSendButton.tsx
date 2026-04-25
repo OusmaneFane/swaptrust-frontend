@@ -9,6 +9,10 @@ type Props = {
   onWhatsappNotify?: () => void;
 };
 
+function isPdfFile(f: File): boolean {
+  return f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf');
+}
+
 export function ClientSendButton({ transactionId, onWhatsappNotify }: Props) {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -19,11 +23,11 @@ export function ClientSendButton({ transactionId, onWhatsappNotify }: Props) {
       <label className="flex cursor-pointer flex-col items-center gap-2 rounded-card border border-dashed border-primary/25 bg-white p-4 shadow-card transition-colors hover:border-primary/45 hover:bg-primary/[0.02]">
         <Upload className="text-primary" size={24} />
         <span className="text-center text-sm text-text-muted">
-          Appuyez pour prendre une photo ou choisir un fichier
+          Appuyez pour prendre une photo ou choisir un fichier (image ou PDF)
         </span>
         <input
           type="file"
-          accept="image/*"
+          accept="image/*,application/pdf"
           className="hidden"
           onChange={(e) => {
             const f = e.target.files?.[0];
@@ -36,12 +40,20 @@ export function ClientSendButton({ transactionId, onWhatsappNotify }: Props) {
       </label>
       {preview ? (
         <div className="relative">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={preview}
-            alt="Aperçu du reçu"
-            className="max-h-48 w-full rounded-card object-cover"
-          />
+          {file && isPdfFile(file) ? (
+            <iframe
+              title="Aperçu du reçu (PDF)"
+              src={preview}
+              className="h-48 w-full rounded-card border-0 bg-white"
+            />
+          ) : (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img
+              src={preview}
+              alt="Aperçu du reçu"
+              className="max-h-48 w-full rounded-card object-cover"
+            />
+          )}
           <button
             type="button"
             onClick={() => {
@@ -49,7 +61,7 @@ export function ClientSendButton({ transactionId, onWhatsappNotify }: Props) {
               setPreview(null);
             }}
             className="absolute right-2 top-2 rounded-full bg-danger/80 p-1 text-white"
-            aria-label="Retirer l’image"
+            aria-label="Retirer la preuve"
           >
             <X size={14} />
           </button>

@@ -74,6 +74,11 @@ export function ConnexionForm() {
           error={errors.password?.message}
           {...register("password")}
         />
+        <p className="text-center text-sm">
+          <Link href="/forgot-password" className="text-accent hover:underline">
+            Mot de passe oublié ?
+          </Link>
+        </p>
         <label className="flex cursor-pointer items-center justify-center gap-2 text-sm text-text-muted">
           <input
             type="checkbox"
@@ -93,7 +98,7 @@ export function ConnexionForm() {
         </Button>
       </form>
       <p className="mt-6 text-center text-xs text-text-muted">
-        copyright © {new Date().getFullYear()} DoniTech Inc. <br />
+        copyright © {new Date().getFullYear()} DoniSend Inc. <br />
         Tous droits réservés.
       </p>
     </Card>
