@@ -766,6 +766,20 @@ export const settingsApi = {
   },
 };
 
+// ─── RECEIPTS (PUBLIC) ────────────────────────────────────────────────────────
+
+export type PublicReceiptVerifyResult = {
+  valid: boolean;
+  transactionId?: number;
+  receiptFilename?: string;
+  completedAt?: string;
+};
+
+export const publicReceiptsApi = {
+  verify: (token: string) =>
+    getUnwrapped<PublicReceiptVerifyResult>("/public/receipts/verify", { token }),
+};
+
 // ─── OPÉRATEUR ───────────────────────────────────────────────────────────────
 
 export const operatorApi = {
