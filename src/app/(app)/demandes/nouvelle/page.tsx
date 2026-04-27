@@ -220,10 +220,14 @@ export default function NouvelleDemandePage() {
       ? `Soit ${commissionDisplaySecondary} (réf. API).`
       : null;
 
+  // Toujours prendre le taux venant de l’endpoint `/rates/current`.
+  // On préfère `rateWithSpread` (taux effectif côté API) si fourni, sinon `rate` (brut).
   const googleRatePerCfa =
-    rateData?.rate != null && rateData.rate > 0
-      ? rateData.rate
-      : (calc?.rate ?? 0);
+    rateData?.rateWithSpread != null && rateData.rateWithSpread > 0
+      ? rateData.rateWithSpread
+      : rateData?.rate != null && rateData.rate > 0
+        ? rateData.rate
+        : 0;
 
   const cfaNetWarning =
     watchedType === "NEED_RUB" &&

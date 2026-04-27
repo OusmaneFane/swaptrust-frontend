@@ -7,7 +7,7 @@ import type { RequestType } from "@/types";
 
 export interface CommissionBreakdownProps {
   type: RequestType;
-  /** Même échelle que GET /rates/current `.rate` (₽ pour 1 F CFA). */
+  /** Même échelle que GET /rates/current `.rate` / `.rateWithSpread` (₽ pour 1 F CFA). */
   googleRatePerCfa: number;
   percentChange24h?: number;
   trend?: "up" | "down" | "stable";
@@ -51,11 +51,16 @@ export function CommissionBreakdown({
         ? "text-danger"
         : "text-text-muted";
 
-  const rateLine = `1 000 F CFA = ${rubDisplayFor1000Cfa(googleRatePerCfa)} ₽`;
+  const rubPerCfa = Number.isFinite(googleRatePerCfa) ? googleRatePerCfa : 0;
+  const cfaPerRub = rubPerCfa > 0 ? 1 / rubPerCfa : 0;
+  const rubPerCfaDisplay = rubPerCfa > 0 ? rubPerCfa.toFixed(4) : "—";
+  const cfaPerRubDisplay = cfaPerRub > 0 ? cfaPerRub.toFixed(2) : "—";
+  const rateLine = `1 F CFA = ${rubPerCfaDisplay} ₽`;
+  const inverseRateLine = `1 ₽ = ${cfaPerRubDisplay} F CFA`;
 
   const netFootnote = sendIsCfa
-    ? `Calculé sur ${formatCFA(netSendMinor)} au taux Google (référence ci-dessus).`
-    : `Calculé sur ${formatRUB(netSendMinor)} ; référence taux Google : ${rateLine}.`;
+    ? `Calculé sur ${formatCFA(netSendMinor)} au taux (référence ci-dessus).`
+    : `Calculé sur ${formatRUB(netSendMinor)} ; référence taux : ${rateLine} (${inverseRateLine}).`;
 
   return (
     <div
@@ -72,12 +77,17 @@ export function CommissionBreakdown({
             aria-hidden
           />
           <span className="text-sm font-medium text-slate-600">
-            Taux Google (référence)
+            Taux actuel (endpoint)
           </span>
         </div>
-        <span className="font-display text-sm font-bold tabular-nums text-text-dark md:text-base">
-          {rateLine}
-        </span>
+        <div className="text-right">
+          <span className="block font-display text-sm font-bold tabular-nums text-text-dark md:text-base">
+            {rateLine}
+          </span>
+          <span className="block text-[11px] tabular-nums text-slate-500">
+            {inverseRateLine}
+          </span>
+        </div>
         {!compact ? (
           <div
             className={cn("flex w-full items-center gap-1 text-xs", trendColor)}
@@ -153,8 +163,8 @@ export function CommissionBreakdown({
 
       {!compact ? (
         <p className="text-center text-[10px] leading-snug text-slate-500">
-          Taux indicatif vérifiable (ex. Google Finance). La commission est
-          affichée à part — rien n’est « caché » dans le taux.
+          Le taux provient de l’API. La commission est affichée à part — rien
+          n’est « caché » dans le taux.
         </p>
       ) : null}
     </div>

@@ -1,5 +1,5 @@
 /** Appels serveur → Nest (authorize, fetchAuthMe…). Pas d’origine navigateur. */
-const DEFAULT_SERVER = 'http://localhost:3001/api/v1';
+const DEFAULT_SERVER = "http://localhost:3001/api/v1";
 
 /**
  * Navigateur : même origine que le front → rewrite Next (`next.config.mjs`)
@@ -7,10 +7,10 @@ const DEFAULT_SERVER = 'http://localhost:3001/api/v1';
  * Surcharge : définir `NEXT_PUBLIC_API_URL` pour pointer directement vers l’API
  * (il faut alors autoriser l’origine du front côté Nest).
  */
-const CLIENT_PROXY_BASE = '/api/backend';
+const CLIENT_PROXY_BASE = "/api/backend";
 
 function trimSlash(s: string): string {
-  return s.replace(/\/+$/, '');
+  return s.replace(/\/+$/, "");
 }
 
 /**
@@ -19,7 +19,7 @@ function trimSlash(s: string): string {
  * - **Serveur** : `API_URL` ou `NEXT_PUBLIC_API_URL`, sinon localhost.
  */
 export function getApiBaseUrl(): string {
-  if (typeof window !== 'undefined') {
+  if (typeof window !== "undefined") {
     const direct = process.env.NEXT_PUBLIC_API_URL?.trim();
     if (direct) return trimSlash(direct);
     return CLIENT_PROXY_BASE;
