@@ -77,7 +77,7 @@ export function CommissionBreakdown({
             aria-hidden
           />
           <span className="text-sm font-medium text-slate-600">
-            Taux actuel (endpoint)
+            Taux actuel 
           </span>
         </div>
         <div className="text-right">
