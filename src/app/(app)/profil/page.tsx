@@ -286,6 +286,34 @@ export default function ProfilPage() {
           </Link>
         </div>
 
+        <div
+          className={cn(
+            surfaceCard,
+            'p-4 text-sm sm:p-5',
+          )}
+        >
+          <p className="text-xs font-semibold uppercase tracking-wide text-text-muted">
+            Légal
+          </p>
+          <div className="mt-3 flex flex-wrap gap-3">
+            <Link href="/terms" className="font-semibold text-primary hover:underline">
+              CGU
+            </Link>
+            <Link
+              href="/privacy-policy"
+              className="font-semibold text-primary hover:underline"
+            >
+              Confidentialité
+            </Link>
+            <Link
+              href="/disclaimer"
+              className="font-semibold text-primary hover:underline"
+            >
+              Disclaimer
+            </Link>
+          </div>
+        </div>
+
         <LogoutButton
           className={cn(
             'w-full justify-center rounded-xl border border-slate-200/90 bg-white py-3 text-sm font-semibold text-text-dark shadow-sm ring-1 ring-slate-900/[0.04] transition',

@@ -2,7 +2,6 @@
 
 import { TrendingDown, TrendingUp, Minus } from "lucide-react";
 import { cn, formatCFA, formatRUB } from "@/lib/utils";
-import { rubDisplayFor1000Cfa } from "@/lib/rate-xof-rub";
 import type { RequestType } from "@/types";
 
 export interface CommissionBreakdownProps {

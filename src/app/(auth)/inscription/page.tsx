@@ -24,6 +24,9 @@ const registerSchema = z
     name: z.string().min(2, 'Nom requis'),
     email: z.string().email('Email invalide'),
     password: z.string().min(8, 'Minimum 8 caractères'),
+    acceptTerms: z
+      .boolean()
+      .refine((v) => v === true, { message: 'Vous devez accepter les CGU' }),
     phoneMali: z
       .string()
       .transform((s) => s.replace(/\D/g, ''))
@@ -64,6 +67,7 @@ export default function InscriptionPage() {
       countryResidence: 'MALI',
       phoneMali: '',
       phoneRussia: '',
+      acceptTerms: false,
     },
   });
 
@@ -71,7 +75,7 @@ export default function InscriptionPage() {
     const fields: Record<number, (keyof FormValues)[]> = {
       1: ['name', 'email', 'countryResidence'],
       2: ['phoneMali', 'phoneRussia'],
-      3: ['password'],
+      3: ['password', 'acceptTerms'],
       4: [],
     };
     const ok = await trigger(fields[step] ?? [], { shouldFocus: true });
@@ -157,12 +161,33 @@ export default function InscriptionPage() {
           />
         ) : null}
         {step === 3 ? (
-          <Input
-            label="Mot de passe"
-            type="password"
-            error={errors.password?.message}
-            {...register("password")}
-          />
+          <>
+            <Input
+              label="Mot de passe"
+              type="password"
+              error={errors.password?.message}
+              {...register("password")}
+            />
+            <label className="flex items-start gap-3 rounded-xl border border-slate-200/80 bg-white/70 p-4 text-sm">
+              <input
+                type="checkbox"
+                className="mt-0.5 h-4 w-4 accent-primary"
+                {...register('acceptTerms')}
+              />
+              <span className="text-ink-secondary">
+                J’accepte les{' '}
+                <Link href="/terms" className="font-semibold text-accent hover:underline">
+                  Conditions d’utilisation (CGU)
+                </Link>
+                .
+                {errors.acceptTerms?.message ? (
+                  <span className="mt-1 block font-semibold text-danger">
+                    {errors.acceptTerms.message}
+                  </span>
+                ) : null}
+              </span>
+            </label>
+          </>
         ) : null}
         {step === 4 ? (
           <div className="space-y-3 text-sm text-ink-secondary">

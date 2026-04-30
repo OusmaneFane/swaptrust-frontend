@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { formatCFA, formatRUB, fullDate } from '@/lib/utils';
 import { cn } from '@/lib/utils';
+import { parseDecimalLike } from '@/lib/parse-decimal-json';
 import {
   Bar,
   BarChart,
@@ -37,6 +38,11 @@ const statusTone: Record<string, string> = {
 };
 
 type PeriodPreset = 'today' | 'month' | 'year' | 'all';
+
+function n(v: unknown): number {
+  const x = parseDecimalLike(v);
+  return Number.isFinite(x) ? x : 0;
+}
 
 function txDateIso(t: Transaction): string {
   return (
@@ -162,14 +168,16 @@ export default function AdminTransactionsPage() {
     let netCfa = 0;
     let disputed = 0;
     let completed = 0;
+    let cancelled = 0;
 
     for (const t of filtered) {
-      volumeCfa += Number(t.amountCfa ?? 0) || 0;
-      commissionCfa += Number(t.commissionAmount ?? 0) || 0;
-      if (typeof t.grossAmount === 'number') grossCfa += t.grossAmount;
-      if (typeof t.netAmount === 'number') netCfa += t.netAmount;
+      volumeCfa += n(t.amountCfa);
+      commissionCfa += n(t.commissionAmount);
+      grossCfa += n((t as unknown as { grossAmount?: unknown }).grossAmount);
+      netCfa += n((t as unknown as { netAmount?: unknown }).netAmount);
       if (t.status === 'DISPUTED') disputed += 1;
       if (t.status === 'COMPLETED') completed += 1;
+      if (t.status === 'CANCELLED') cancelled += 1;
     }
 
     const count = filtered.length;
@@ -178,6 +186,7 @@ export default function AdminTransactionsPage() {
       count,
       disputed,
       completed,
+      cancelled,
       volumeCfa,
       commissionCfa,
       netApprox,
@@ -193,8 +202,8 @@ export default function AdminTransactionsPage() {
       if (Number.isNaN(d.getTime())) continue;
       const key = format(d, 'yyyy-MM-dd');
       const row = map.get(key) ?? { day: key, volumeCfa: 0, commissionCfa: 0, count: 0 };
-      row.volumeCfa += Number(t.amountCfa ?? 0) || 0;
-      row.commissionCfa += Number(t.commissionAmount ?? 0) || 0;
+      row.volumeCfa += n(t.amountCfa);
+      row.commissionCfa += n(t.commissionAmount);
       row.count += 1;
       map.set(key, row);
     }
@@ -411,7 +420,7 @@ export default function AdminTransactionsPage() {
               {totals.count}
             </p>
             <p className="mt-1 text-xs text-text-muted">
-              Terminées: {totals.completed} · Litiges: {totals.disputed}
+              Terminées: {totals.completed} · Annulées: {totals.cancelled} · Litiges: {totals.disputed}
             </p>
           </div>
           <div className="rounded-card border border-primary/10 bg-white p-4 shadow-sm">
@@ -576,7 +585,7 @@ export default function AdminTransactionsPage() {
                         Com
                       </p>
                       <p className="mt-0.5 text-xs font-semibold text-accent">
-                        {formatCFA(Number(t.commissionAmount ?? 0) || 0)}
+                        {formatCFA(n(t.commissionAmount))}
                       </p>
                     </div>
                     <div className="rounded-card border border-primary/10 bg-white p-2 shadow-sm">
@@ -630,7 +639,7 @@ export default function AdminTransactionsPage() {
                       <td className="p-4 text-text-secondary">{t.operator.name}</td>
                       <td className="p-4 font-medium text-text-dark">{formatCFA(t.amountCfa)}</td>
                       <td className="p-4 font-medium text-accent">
-                        {formatCFA(Number(t.commissionAmount ?? 0) || 0)}
+                        {formatCFA(n(t.commissionAmount))}
                       </td>
                       <td className="p-4 font-medium text-text-dark">{formatRUB(t.amountRub)}</td>
                       <td className={cn('p-4 text-xs font-bold', statusTone[t.status])}>
@@ -674,7 +683,7 @@ export default function AdminTransactionsPage() {
             <p className="text-sm">
               Commission :{' '}
               <span className="font-semibold text-accent">
-                {formatCFA(Number(detail.commissionAmount ?? 0) || 0)}
+                {formatCFA(n(detail.commissionAmount))}
               </span>
             </p>
             <p>Preuve client : {detail.clientProofUrl ?? '—'}</p>

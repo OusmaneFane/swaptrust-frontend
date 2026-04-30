@@ -907,7 +907,7 @@ export function LandingView({ initialRate }: { initialRate: ExchangeRate }) {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-text-muted">
                     Sections
@@ -953,6 +953,37 @@ export function LandingView({ initialRate }: { initialRate: ExchangeRate }) {
                         className="font-semibold text-primary hover:underline"
                       >
                         Inscription
+                      </Link>
+                    </li>
+                  </ul>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-text-muted">
+                    Légal
+                  </p>
+                  <ul className="mt-3 space-y-2 text-sm">
+                    <li>
+                      <Link
+                        href="/terms"
+                        className="font-semibold text-primary hover:underline"
+                      >
+                        Conditions (CGU)
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        href="/privacy-policy"
+                        className="font-semibold text-primary hover:underline"
+                      >
+                        Confidentialité
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        href="/disclaimer"
+                        className="font-semibold text-primary hover:underline"
+                      >
+                        Disclaimer
                       </Link>
                     </li>
                   </ul>

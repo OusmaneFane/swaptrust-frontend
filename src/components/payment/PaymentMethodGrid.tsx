@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useState } from 'react';
+import Image from 'next/image';
 import { Check } from 'lucide-react';
 import type { PaymentMethod } from '@/types/order';
 import type { RequestType } from '@/types/request';
@@ -52,12 +53,13 @@ function BrandImage({
 
   return (
     <span className={cn(imgBox, className)}>
-      <img
+      <Image
         src={src}
         alt=""
+        width={64}
+        height={64}
         className="max-h-full max-w-full object-contain p-1.5 sm:p-2"
         loading="lazy"
-        decoding="async"
         onError={onError}
       />
     </span>

@@ -93,8 +93,8 @@ export function AppFooter({ className, variant = 'light' }: AppFooterProps) {
               </p>
               <ul className="mt-3 space-y-2 text-sm">
                 <li>
-                  <a
-                    href="#"
+                  <Link
+                    href="/terms"
                     className={cn(
                       'font-semibold',
                       dark
@@ -103,11 +103,11 @@ export function AppFooter({ className, variant = 'light' }: AppFooterProps) {
                     )}
                   >
                     Conditions
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a
-                    href="#"
+                  <Link
+                    href="/privacy-policy"
                     className={cn(
                       'font-semibold',
                       dark
@@ -116,7 +116,20 @@ export function AppFooter({ className, variant = 'light' }: AppFooterProps) {
                     )}
                   >
                     Confidentialité
-                  </a>
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/disclaimer"
+                    className={cn(
+                      'font-semibold',
+                      dark
+                        ? 'text-ink hover:text-accent'
+                        : 'text-primary hover:underline',
+                    )}
+                  >
+                    Disclaimer
+                  </Link>
                 </li>
               </ul>
             </div>
