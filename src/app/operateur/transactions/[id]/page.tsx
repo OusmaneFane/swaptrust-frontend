@@ -24,6 +24,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { ProofViewer } from "@/components/shared/ProofViewer";
 import { formatCFA, formatRUB, fullDate } from "@/lib/utils";
+import { isRubPaymentRail } from "@/lib/transaction-display";
 import { TRANSACTION_STEPS } from "@/types/transaction";
 import type { OperatorLog, OperatorLogAction } from "@/types";
 import { PAYMENT_METHOD_LABELS } from "@/constants/payment-methods";
@@ -201,14 +202,21 @@ export default function OperateurTransactionDetailPage() {
   const meta = TRANSACTION_STEPS[tx.status];
   const req = tx.request;
   const commissionRaw = (tx as { commissionAmount?: unknown }).commissionAmount;
-  const commissionCfa =
+  const commissionMinor =
     typeof commissionRaw === "number"
       ? commissionRaw
       : Number(commissionRaw ?? 0) || 0;
-  const netApprox = Math.max(
-    0,
-    (Number(tx.amountCfa ?? 0) || 0) - commissionCfa,
-  );
+  const commissionIsRub = isRubPaymentRail(tx.paymentMethod);
+  const amountRubMinor = Number((tx as { amountRub?: unknown }).amountRub ?? 0) || 0;
+  const rateRubPerCfa = Number((tx as { rate?: unknown }).rate ?? 0) || 0;
+  const commissionCfaApproxMinor =
+    commissionIsRub && rateRubPerCfa > 0
+      ? Math.round(commissionMinor / rateRubPerCfa)
+      : null;
+  const netSendMinor =
+    commissionIsRub
+      ? Math.max(0, amountRubMinor - commissionMinor)
+      : null;
   const statusLabel = meta?.label ?? tx.status;
   const statusDescription = meta?.description ?? "";
   const stepIndex = meta?.step ?? 0;
@@ -303,15 +311,29 @@ export default function OperateurTransactionDetailPage() {
             icon={<Coins className="h-5 w-5" />}
           />
           <StatCard
-            label="Commission (CFA)"
-            value={formatCFA(commissionCfa)}
+            label={commissionIsRub ? "Commission (RUB)" : "Commission (CFA)"}
+            value={commissionIsRub ? formatRUB(commissionMinor) : formatCFA(commissionMinor)}
+            hint={
+              commissionIsRub && commissionCfaApproxMinor != null
+                ? `≈ ${formatCFA(commissionCfaApproxMinor)} (réf. API)`
+                : undefined
+            }
             tone="rose"
             icon={<Receipt className="h-5 w-5" />}
           />
           <StatCard
-            label="Net approx. (CFA)"
-            value={formatCFA(netApprox)}
-            hint="Volume − Commission"
+            label={commissionIsRub ? "Net (RUB)" : "Net (CFA)"}
+            value={
+              commissionIsRub
+                ? formatRUB(netSendMinor ?? 0)
+                : formatCFA(
+                    Math.max(
+                      0,
+                      (Number(tx.amountCfa ?? 0) || 0) - commissionMinor,
+                    ),
+                  )
+            }
+            hint={commissionIsRub ? "Total − Commission" : "Volume − Commission"}
             tone="amber"
             icon={<BadgeCheck className="h-5 w-5" />}
           />
