@@ -93,8 +93,11 @@ function CopyableAccountValue({ raw }: { raw: string }) {
   );
 }
 
-function operatorShortName(name: string): string {
-  const parts = name.trim().split(/\s+/);
+function operatorShortName(name?: string | null): string {
+  const parts = String(name ?? "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
   if (parts.length === 0) return "?";
   if (parts.length === 1) return parts[0]!.slice(0, 1) + ".";
   return `${parts[0]!.charAt(0)}. ${parts[parts.length - 1]}`;
@@ -370,7 +373,7 @@ export default function TransactionDetailPage() {
                   <span>
                     Opérateur :{" "}
                     <span className="font-semibold text-text-dark">
-                      {operatorShortName(tx.operator.name)}
+                      {operatorShortName(tx.operator?.name)}
                     </span>
                   </span>
                 </span>
