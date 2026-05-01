@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/Button';
 import { formatCFA, formatRUB, fullDate } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import { parseDecimalLike } from '@/lib/parse-decimal-json';
+import { isRubPaymentRail } from '@/lib/transaction-display';
 import {
   Bar,
   BarChart,
@@ -42,6 +43,37 @@ type PeriodPreset = 'today' | 'month' | 'year' | 'all';
 function n(v: unknown): number {
   const x = parseDecimalLike(v);
   return Number.isFinite(x) ? x : 0;
+}
+
+function commissionBoth(t: Transaction): {
+  cfaMinor: number | null;
+  rubMinor: number | null;
+} {
+  const rateRubPerCfa = n((t as unknown as { rate?: unknown }).rate);
+  const commissionNative = n((t as unknown as { commissionAmount?: unknown }).commissionAmount);
+  const req = (t as unknown as { request?: unknown }).request as
+    | { currencyToSend?: unknown; paymentMethod?: unknown }
+    | undefined;
+  const currencyToSend = String(req?.currencyToSend ?? '').toUpperCase();
+  const nativeIsRub =
+    currencyToSend === 'RUB'
+      ? true
+      : currencyToSend === 'XOF'
+        ? false
+        : isRubPaymentRail(
+            ((t as unknown as { paymentMethod?: unknown }).paymentMethod ??
+              (req as any)?.paymentMethod) as any,
+          );
+
+  if (nativeIsRub) {
+    const rubMinor = commissionNative;
+    const cfaMinor = rateRubPerCfa > 0 ? Math.round(rubMinor / rateRubPerCfa) : null;
+    return { cfaMinor, rubMinor };
+  }
+
+  const cfaMinor = commissionNative;
+  const rubMinor = rateRubPerCfa > 0 ? Math.round(cfaMinor * rateRubPerCfa) : null;
+  return { cfaMinor, rubMinor };
 }
 
 function txDateIso(t: Transaction): string {
@@ -164,6 +196,7 @@ export default function AdminTransactionsPage() {
   const totals = useMemo(() => {
     let volumeCfa = 0;
     let commissionCfa = 0;
+    let commissionRub = 0;
     let grossCfa = 0;
     let netCfa = 0;
     let disputed = 0;
@@ -172,7 +205,9 @@ export default function AdminTransactionsPage() {
 
     for (const t of filtered) {
       volumeCfa += n(t.amountCfa);
-      commissionCfa += n(t.commissionAmount);
+      const both = commissionBoth(t);
+      if (both.cfaMinor != null) commissionCfa += both.cfaMinor;
+      if (both.rubMinor != null) commissionRub += both.rubMinor;
       grossCfa += n((t as unknown as { grossAmount?: unknown }).grossAmount);
       netCfa += n((t as unknown as { netAmount?: unknown }).netAmount);
       if (t.status === 'DISPUTED') disputed += 1;
@@ -189,6 +224,7 @@ export default function AdminTransactionsPage() {
       cancelled,
       volumeCfa,
       commissionCfa,
+      commissionRub,
       netApprox,
       grossCfa: grossCfa > 0 ? grossCfa : null,
       netCfa: netCfa > 0 ? netCfa : null,
@@ -203,7 +239,8 @@ export default function AdminTransactionsPage() {
       const key = format(d, 'yyyy-MM-dd');
       const row = map.get(key) ?? { day: key, volumeCfa: 0, commissionCfa: 0, count: 0 };
       row.volumeCfa += n(t.amountCfa);
-      row.commissionCfa += n(t.commissionAmount);
+      const both = commissionBoth(t);
+      row.commissionCfa += both.cfaMinor ?? 0;
       row.count += 1;
       map.set(key, row);
     }
@@ -438,6 +475,9 @@ export default function AdminTransactionsPage() {
             <p className="mt-1 font-display text-2xl font-bold text-accent">
               {formatCFA(totals.commissionCfa)}
             </p>
+            <p className="mt-1 text-xs text-text-muted">
+              ≈ {formatRUB(totals.commissionRub)}
+            </p>
           </div>
           <div className="rounded-card border border-primary/10 bg-white p-4 shadow-sm">
             <p className="text-xs font-semibold uppercase tracking-wide text-text-muted">
@@ -585,8 +625,17 @@ export default function AdminTransactionsPage() {
                         Com
                       </p>
                       <p className="mt-0.5 text-xs font-semibold text-accent">
-                        {formatCFA(n(t.commissionAmount))}
+                      {(() => {
+                        const both = commissionBoth(t);
+                        return both.cfaMinor != null ? formatCFA(both.cfaMinor) : '—';
+                      })()}
                       </p>
+                    <p className="mt-0.5 text-[10px] text-text-muted">
+                      {(() => {
+                        const both = commissionBoth(t);
+                        return both.rubMinor != null ? `≈ ${formatRUB(both.rubMinor)}` : '';
+                      })()}
+                    </p>
                     </div>
                     <div className="rounded-card border border-primary/10 bg-white p-2 shadow-sm">
                       <p className="text-[10px] font-semibold uppercase tracking-wide text-text-muted">
@@ -620,7 +669,7 @@ export default function AdminTransactionsPage() {
                     <th className="p-4 font-medium">Client</th>
                     <th className="p-4 font-medium">Opérateur</th>
                     <th className="p-4 font-medium">CFA</th>
-                    <th className="p-4 font-medium">Commission</th>
+                    <th className="p-4 font-medium">Commission (CFA / RUB)</th>
                     <th className="p-4 font-medium">RUB</th>
                     <th className="p-4 font-medium">Statut</th>
                     <th className="p-4 font-medium">Date</th>
@@ -639,7 +688,17 @@ export default function AdminTransactionsPage() {
                       <td className="p-4 text-text-secondary">{t.operator.name}</td>
                       <td className="p-4 font-medium text-text-dark">{formatCFA(t.amountCfa)}</td>
                       <td className="p-4 font-medium text-accent">
-                        {formatCFA(n(t.commissionAmount))}
+                        {(() => {
+                          const both = commissionBoth(t);
+                          return (
+                            <div className="leading-tight">
+                              <div className="font-semibold">{both.cfaMinor != null ? formatCFA(both.cfaMinor) : '—'}</div>
+                              <div className="text-[11px] text-text-muted">
+                                {both.rubMinor != null ? `≈ ${formatRUB(both.rubMinor)}` : ''}
+                              </div>
+                            </div>
+                          );
+                        })()}
                       </td>
                       <td className="p-4 font-medium text-text-dark">{formatRUB(t.amountRub)}</td>
                       <td className={cn('p-4 text-xs font-bold', statusTone[t.status])}>
@@ -683,7 +742,12 @@ export default function AdminTransactionsPage() {
             <p className="text-sm">
               Commission :{' '}
               <span className="font-semibold text-accent">
-                {formatCFA(n(detail.commissionAmount))}
+                {(() => {
+                  const both = commissionBoth(detail);
+                  const cfa = both.cfaMinor != null ? formatCFA(both.cfaMinor) : '—';
+                  const rub = both.rubMinor != null ? ` (≈ ${formatRUB(both.rubMinor)})` : '';
+                  return cfa + rub;
+                })()}
               </span>
             </p>
             <p>Preuve client : {detail.clientProofUrl ?? '—'}</p>
