@@ -162,10 +162,24 @@ export interface RegisterDto {
   name: string;
   email: string;
   password: string;
+  /**
+   * Numéro principal (recommandé) — idéalement E.164 (ex: +33612345678) ou national.
+   * Si `phone` n'est pas déjà en E.164, envoyer aussi `countryCallingCode`.
+   */
+  phone?: string;
+  /** Indicatif pays (ex: 33, 223, 7). */
+  countryCallingCode?: string;
+  /** ISO2 pour la UI (ex: FR). */
+  countryIso2?: string;
   /** `223` + 8 chiffres, sans `+` */
   phoneMali?: string;
   /** `7` + 10 chiffres, sans `+` */
   phoneRussia?: string;
+  /**
+   * @deprecated Ancien champ multi-pays (indicatif + national, chiffres uniquement, sans `+`).
+   * Préférer `phone` + `countryCallingCode`.
+   */
+  whatsappPhone?: string;
   countryResidence: 'MALI' | 'RUSSIA' | 'OTHER';
 }
 
@@ -176,6 +190,12 @@ export interface LoginDto {
 
 export interface UpdateUserDto {
   name?: string;
+  /** Numéro principal (recommandé) — idéalement E.164 (ex: +22370123456). */
+  phone?: string;
+  /** Indicatif pays (ex: 33, 223, 7) si `phone` n'est pas déjà en E.164. */
+  countryCallingCode?: string;
+  /** ISO2 pour la UI (ex: FR). */
+  countryIso2?: string;
   /** `223` + 8 chiffres, sans `+` */
   phoneMali?: string;
   /** `7` + 10 chiffres, sans `+` */

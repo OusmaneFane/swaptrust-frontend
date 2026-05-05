@@ -10,17 +10,40 @@ import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { WhatsappSection } from '@/components/profile/WhatsappSection';
-import { profileMaliToApi, profileRussiaToApi } from '@/lib/phone-api-format';
+import axios from 'axios';
+import { PHONE_SEND_DIAL_OPTIONS } from '@/constants/phone-send-dial';
+import {
+  profileMaliToApi,
+  profileRussiaToApi,
+  universalPhonePayload,
+} from '@/lib/phone-api-format';
 import { authApi, usersApi } from '@/services/api';
 
 const schema = z
   .object({
     name: z.string().min(2),
+    phone: z.string().optional(),
+    countryCallingCode: z.string().optional(),
+    countryIso2: z.string().optional(),
     phoneMali: z.string().optional(),
     phoneRussia: z.string().optional(),
     countryResidence: z.enum(['MALI', 'RUSSIA', 'OTHER']).optional(),
   })
   .superRefine((data, ctx) => {
+    const p = data.phone?.trim() ?? '';
+    if (p) {
+      const isE164 = /^\+\d{7,15}$/.test(p);
+      if (!isE164) {
+        const cc = (data.countryCallingCode ?? '').replace(/\D/g, '');
+        if (!cc) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'Indicatif requis si le téléphone n’est pas en E.164 (+...)',
+            path: ['countryCallingCode'],
+          });
+        }
+      }
+    }
     if (data.phoneMali?.trim() && !profileMaliToApi(data.phoneMali)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -61,6 +84,9 @@ export default function ModifierProfilPage() {
     if (me) {
       reset({
         name: me.name,
+        phone: me.phone ?? '',
+        countryCallingCode: '',
+        countryIso2: '',
         phoneMali: me.phoneMali ?? '',
         phoneRussia: me.phoneRussia ?? '',
         countryResidence: me.countryResidence,
@@ -74,7 +100,19 @@ export default function ModifierProfilPage() {
       void qc.invalidateQueries({ queryKey: ['auth', 'me'] });
       toast.success('Profil mis à jour');
     },
-    onError: () => toast.error('Mise à jour impossible'),
+    onError: (err: unknown) => {
+      const ax = axios.isAxiosError(err);
+      const status = ax ? err.response?.status : undefined;
+      const msg =
+        ax && typeof err.response?.data === 'object' && err.response?.data !== null
+          ? (err.response?.data as Record<string, unknown>).message
+          : undefined;
+      if (status === 409 && typeof msg === 'string' && msg.includes('Phone number already in use')) {
+        toast.error('Numéro déjà utilisé');
+        return;
+      }
+      toast.error('Mise à jour impossible');
+    },
   });
 
   const avatarMut = useMutation({
@@ -90,8 +128,14 @@ export default function ModifierProfilPage() {
   function onSubmit(values: FormValues) {
     const m = values.phoneMali?.trim();
     const r = values.phoneRussia?.trim();
+    const uni = universalPhonePayload({
+      phoneRaw: values.phone,
+      countryCallingCodeDigits: values.countryCallingCode,
+      countryIso2: values.countryIso2,
+    });
     updateMut.mutate({
       name: values.name,
+      ...uni,
       phoneMali: m ? profileMaliToApi(m) ?? undefined : undefined,
       phoneRussia: r ? profileRussiaToApi(r) ?? undefined : undefined,
       countryResidence: values.countryResidence,
@@ -130,6 +174,32 @@ export default function ModifierProfilPage() {
           </div>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <Input label="Nom" error={errors.name?.message} {...register('name')} />
+            <Input
+              label="Téléphone principal (E.164 ou national)"
+              placeholder="+22370123456"
+              {...register('phone')}
+            />
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <div>
+                <label className="mb-2 block text-sm text-slate-600">Indicatif (si national)</label>
+                <select className="input-field-surface" {...register('countryCallingCode')}>
+                  <option value="">—</option>
+                  {PHONE_SEND_DIAL_OPTIONS.map((o) => (
+                    <option key={`${o.iso2}-${o.dial}`} value={o.dial}>
+                      {o.label} (+{o.dialDisplay})
+                    </option>
+                  ))}
+                </select>
+                {errors.countryCallingCode?.message ? (
+                  <p className="mt-1 text-xs text-danger">{errors.countryCallingCode.message}</p>
+                ) : null}
+              </div>
+              <Input
+                label="ISO2 (optionnel)"
+                placeholder="FR"
+                {...register('countryIso2')}
+              />
+            </div>
             <Input label="Téléphone Mali" {...register('phoneMali')} />
             <Input label="Téléphone Russie" {...register('phoneRussia')} />
             <div>

@@ -8,6 +8,8 @@ export interface User {
   email: string;
   role: UserRole;
   kycStatus: KycStatus;
+  /** Numéro principal normalisé côté backend (E.164), sinon null. */
+  phone: string | null;
   phoneMali: string | null;
   phoneRussia: string | null;
   /** Numéro WhatsApp actif côté backend (souvent égal à l’un des deux). */

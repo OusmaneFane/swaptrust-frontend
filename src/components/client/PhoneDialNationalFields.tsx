@@ -68,7 +68,7 @@ export function PhoneDialNationalFields({
         {...nationalRegister}
       />
       <p className="text-xs text-text-muted">
-        Envoyé à l’API en un seul bloc, chiffres uniquement, sans « + »
+        En un seul bloc, chiffres uniquement, sans « + »
         {dial === '223' ? (
           <>
             {' '}

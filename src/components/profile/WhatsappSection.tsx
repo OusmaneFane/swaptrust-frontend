@@ -33,7 +33,7 @@ function dtoForVerifiedPhone(apiDigits: string): UpdateUserDto {
 }
 
 function subtitleWhatsapp(user: User): string {
-  const p = user.whatsappPhone ?? user.phoneMali ?? user.phoneRussia;
+  const p = user.phone ?? user.whatsappPhone ?? user.phoneMali ?? user.phoneRussia;
   return p ? `Actif sur ${p}` : 'Non configuré';
 }
 
@@ -127,6 +127,12 @@ export function WhatsappSection({ user }: { user: User }) {
 
       {!editing ? (
         <div className="space-y-2">
+          {user.phone ? (
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-text-muted">Principal</span>
+              <span className="font-mono text-text-dark">{user.phone}</span>
+            </div>
+          ) : null}
           {user.phoneMali ? (
             <div className="flex items-center justify-between text-sm">
               <span className="text-text-muted">Mali</span>
@@ -139,7 +145,7 @@ export function WhatsappSection({ user }: { user: User }) {
               <span className="font-mono text-text-dark">{user.phoneRussia}</span>
             </div>
           ) : null}
-          {!user.phoneMali && !user.phoneRussia ? (
+          {!user.phone && !user.phoneMali && !user.phoneRussia ? (
             <p className="text-xs text-danger">
               Aucun numéro — vous ne recevrez pas de notifications WhatsApp
             </p>

@@ -13,10 +13,18 @@ export interface RegisterPayload {
   name: string;
   email: string;
   password: string;
+  /** Numéro principal (E.164 recommandé), ou national avec `countryCallingCode`. */
+  phone?: string;
+  /** Indicatif pays (ex: 33, 223, 7). */
+  countryCallingCode?: string;
+  /** ISO2 pour la UI (ex: FR). */
+  countryIso2?: string;
   /** `223` + 8 chiffres, sans `+` (ex. `22382791234`) */
   phoneMali?: string;
   /** `7` + 10 chiffres, sans `+` (ex. `79968414684`) */
   phoneRussia?: string;
+  /** Indicatif + numéro, chiffres uniquement, sans `+` (E.164 7..15 chiffres) */
+  whatsappPhone?: string;
   countryResidence: 'MALI' | 'RUSSIA' | 'OTHER';
 }
 

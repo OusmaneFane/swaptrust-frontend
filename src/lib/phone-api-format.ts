@@ -24,6 +24,41 @@ export function registerPayloadPhones(args: {
   };
 }
 
+function isE164(raw: string): boolean {
+  const t = raw.trim();
+  return /^\+\d{7,15}$/.test(t);
+}
+
+/**
+ * Payload universel (multi-pays) :
+ * - `phone` peut être en national (chiffres) ou déjà en E.164 (`+...`)
+ * - `countryCallingCode` requis si `phone` n'est pas en E.164
+ */
+export function universalPhonePayload(args: {
+  phoneRaw?: string;
+  countryCallingCodeDigits?: string;
+  countryIso2?: string;
+}): { phone?: string; countryCallingCode?: string; countryIso2?: string } {
+  const phone = (args.phoneRaw ?? '').trim();
+  const calling = (args.countryCallingCodeDigits ?? '').replace(/\D/g, '');
+  const iso2 = (args.countryIso2 ?? '').trim().toUpperCase();
+
+  if (!phone) return {};
+  if (isE164(phone)) {
+    return {
+      phone,
+      ...(iso2 ? { countryIso2: iso2 } : {}),
+    };
+  }
+  const digits = phone.replace(/\D/g, '');
+  if (!digits) return {};
+  return {
+    phone: digits,
+    ...(calling ? { countryCallingCode: calling } : {}),
+    ...(iso2 ? { countryIso2: iso2 } : {}),
+  };
+}
+
 /** Champ Mali profil : `223` + 8 chiffres, ou saisie nationale 8 chiffres, ou `+223…`. */
 export function profileMaliToApi(raw: string): string | null {
   const d = digitsOnly(raw);
@@ -67,6 +102,23 @@ export function combineDialAndNational(
   if (dial === '223' && /^\d{8}$/.test(nat)) return `223${nat}`;
   if (dial === '7' && /^\d{10}$/.test(nat)) return `7${nat}`;
   return null;
+}
+
+/**
+ * Indicatif (1-4 chiffres) + numéro national (chiffres uniquement), **sans** `+`.
+ * Validation légère E.164: longueur totale 7..15 chiffres.
+ */
+export function combineDialAndNationalAny(
+  dialRaw: string,
+  nationalRaw: string,
+): string | null {
+  const dial = dialRaw.replace(/\D/g, '');
+  const nat = nationalRaw.replace(/\D/g, '');
+  if (!/^\d{1,4}$/.test(dial)) return null;
+  if (!/^\d{4,14}$/.test(nat)) return null;
+  const full = `${dial}${nat}`;
+  if (!/^\d{7,15}$/.test(full)) return null;
+  return full;
 }
 
 /** Francs CFA → numéro malien ; roubles (₽) → numéro russe. */

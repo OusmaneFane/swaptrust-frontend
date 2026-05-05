@@ -16,6 +16,7 @@ import { formatCFA, formatRUB, fullDate } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import { parseDecimalLike } from '@/lib/parse-decimal-json';
 import { isRubPaymentRail } from '@/lib/transaction-display';
+import type { PaymentMethod } from '@/types/order';
 import {
   Bar,
   BarChart,
@@ -55,14 +56,17 @@ function commissionBoth(t: Transaction): {
     | { currencyToSend?: unknown; paymentMethod?: unknown }
     | undefined;
   const currencyToSend = String(req?.currencyToSend ?? '').toUpperCase();
+  const paymentMethodRaw =
+    (t as unknown as { paymentMethod?: unknown }).paymentMethod ?? req?.paymentMethod;
+  const paymentMethod: PaymentMethod | undefined =
+    typeof paymentMethodRaw === 'string' ? (paymentMethodRaw as PaymentMethod) : undefined;
   const nativeIsRub =
     currencyToSend === 'RUB'
       ? true
       : currencyToSend === 'XOF'
         ? false
         : isRubPaymentRail(
-            ((t as unknown as { paymentMethod?: unknown }).paymentMethod ??
-              (req as any)?.paymentMethod) as any,
+            paymentMethod,
           );
 
   if (nativeIsRub) {

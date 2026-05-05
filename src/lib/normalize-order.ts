@@ -41,6 +41,7 @@ function listUserToUser(raw: OrderApiRaw): User {
     id,
     name: u?.name ?? 'Utilisateur',
     email: typeof u?.email === 'string' ? u.email : '',
+    phone: typeof ur?.phone === 'string' ? ur.phone : null,
     phoneMali: typeof ur?.phoneMali === 'string' ? ur.phoneMali : null,
     phoneRussia: typeof ur?.phoneRussia === 'string' ? ur.phoneRussia : null,
     whatsappPhone:

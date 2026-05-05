@@ -7,7 +7,7 @@ import type { User } from '@/types/user';
 const STORAGE_KEY = 'donisend:dismiss-no-whatsapp-banner';
 
 function hasAnyPhone(user: User): boolean {
-  return Boolean(user.phoneMali || user.phoneRussia);
+  return Boolean(user.phone || user.phoneMali || user.phoneRussia);
 }
 
 export function NoWhatsappBanner({ user }: { user: User }) {
