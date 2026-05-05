@@ -220,13 +220,13 @@ export default function NouvelleDemandePage() {
       ? `Soit ${commissionDisplaySecondary} (réf. API).`
       : null;
 
-  // Toujours prendre le taux venant de l’endpoint `/rates/current`.
-  // On préfère `rateWithSpread` (taux effectif côté API) si fourni, sinon `rate` (brut).
+  // Taux affiché identique au tableau de bord : `rate` = Google Finance brut (API `/rates/current`).
+  // `rateWithSpread` est informatif et ne doit pas remplacer le taux "client".
   const googleRatePerCfa =
-    rateData?.rateWithSpread != null && rateData.rateWithSpread > 0
-      ? rateData.rateWithSpread
-      : rateData?.rate != null && rateData.rate > 0
-        ? rateData.rate
+    rateData?.rate != null && rateData.rate > 0
+      ? rateData.rate
+      : rateData?.rateWithSpread != null && rateData.rateWithSpread > 0
+        ? rateData.rateWithSpread
         : 0;
 
   const cfaNetWarning =
@@ -310,6 +310,7 @@ export default function NouvelleDemandePage() {
               <CommissionBreakdown
                 type={watchedType}
                 googleRatePerCfa={googleRatePerCfa}
+                inverseRatePerRub={rateData?.inverseRate}
                 percentChange24h={rateData?.percentChange ?? 0}
                 trend={rateData?.trend ?? "stable"}
                 fetchedAt={rateData?.fetchedAt ?? null}
@@ -392,6 +393,7 @@ export default function NouvelleDemandePage() {
                 className="min-w-0"
                 type={watchedType}
                 googleRatePerCfa={googleRatePerCfa}
+                inverseRatePerRub={rateData?.inverseRate}
                 percentChange24h={rateData?.percentChange ?? 0}
                 trend={rateData?.trend ?? "stable"}
                 fetchedAt={rateData?.fetchedAt ?? null}

@@ -8,6 +8,8 @@ export interface CommissionBreakdownProps {
   type: RequestType;
   /** Même échelle que GET /rates/current `.rate` / `.rateWithSpread` (₽ pour 1 F CFA). */
   googleRatePerCfa: number;
+  /** Optionnel : taux inverse direct API (F CFA pour 1 ₽). */
+  inverseRatePerRub?: number;
   percentChange24h?: number;
   trend?: "up" | "down" | "stable";
   fetchedAt?: string | null;
@@ -25,6 +27,7 @@ export interface CommissionBreakdownProps {
 export function CommissionBreakdown({
   type,
   googleRatePerCfa,
+  inverseRatePerRub,
   percentChange24h = 0,
   trend = "stable",
   fetchedAt,
@@ -51,7 +54,12 @@ export function CommissionBreakdown({
         : "text-text-muted";
 
   const rubPerCfa = Number.isFinite(googleRatePerCfa) ? googleRatePerCfa : 0;
-  const cfaPerRub = rubPerCfa > 0 ? 1 / rubPerCfa : 0;
+  const cfaPerRub =
+    inverseRatePerRub != null && Number.isFinite(inverseRatePerRub) && inverseRatePerRub > 0
+      ? inverseRatePerRub
+      : rubPerCfa > 0
+        ? 1 / rubPerCfa
+        : 0;
   const rubPerCfaDisplay = rubPerCfa > 0 ? rubPerCfa.toFixed(4) : "—";
   const cfaPerRubDisplay = cfaPerRub > 0 ? cfaPerRub.toFixed(2) : "—";
   const rateLine = `1 F CFA = ${rubPerCfaDisplay} ₽`;
